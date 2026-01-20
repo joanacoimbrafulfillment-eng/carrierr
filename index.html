@@ -145,9 +145,78 @@
     .modal .box { width: min(980px, 96vw); max-height: 86vh; overflow:hidden; border:1px solid var(--line); border-radius: 18px; background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.12)); box-shadow: var(--shadow); }
     .modal .mh { padding: 12px 14px; border-bottom: 1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:10px;}
     .modal .mb { padding: 12px 14px; max-height: calc(86vh - 56px); overflow:auto;}
+    
+    .tabs { display:flex; gap:10px; margin: 10px 0 6px; }
+    .tab {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      padding: 8px 12px;
+      border-radius: 999px;
+      cursor:pointer;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: .2px;
+      transition: .15s transform ease, .15s background ease, .15s color ease;
+    }
+    .tab:hover { transform: translateY(-1px); background: rgba(255,255,255,.08); color: var(--text); }
+    .tab.active { border-color: rgba(94,234,212,.45); background: rgba(94,234,212,.12); color: var(--text); }
+
+    .section { border: 1px solid var(--line); border-radius: 14px; background: rgba(0,0,0,.16); overflow:hidden; margin-bottom: 12px; }
+    .section .sh { padding: 10px 12px; border-bottom: 1px solid var(--line); display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .section .sh b { font-size: 12px; letter-spacing: .2px; }
+    .section .sb { padding: 10px 12px; }
+    .kv { display:grid; grid-template-columns: 160px 1fr; gap: 8px 12px; }
+    .kv div { font-size: 12px; }
+    .kv .k { color: var(--muted); }
+    .pillRow { display:flex; gap:8px; flex-wrap:wrap; }
+    .mini { font-size: 11px; color: var(--muted); }
+    .tableWrap { overflow:auto; }
+    .tmini th, .tmini td { font-size: 12px; }
+    details.raw { border: 1px solid var(--line); border-radius: 14px; background: rgba(0,0,0,.16); padding: 10px 12px; }
+    details.raw summary { cursor:pointer; font-weight:800; font-size: 12px; color: var(--text); }
+
     pre.json { margin:0; white-space: pre-wrap; word-break: break-word; font-size: 12px; line-height:1.35; background: rgba(0,0,0,.22); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; }
 
-  </style>
+
+    /* --- High-contrast modal (readability) --- */
+    .modal .box{ background:#f8fafc !important; color:#0f172a !important; border-color: rgba(15,23,42,.18) !important; }
+    .modal .mh{ background:#eef2ff !important; border-bottom-color: rgba(15,23,42,.12) !important; }
+    .modal .mb{ background:#f8fafc !important; }
+    .modal .mh .mini, .modal .box .mini{ color:#334155 !important; }
+    .modal .box .badge{ background:#ffffff !important; border-color: rgba(15,23,42,.18) !important; color:#334155 !important; }
+    .modal .box .badge.good{ border-color: rgba(5,150,105,.35) !important; color:#047857 !important; }
+    .modal .box .badge.bad{ border-color: rgba(225,29,72,.25) !important; color:#be123c !important; }
+    .modal .box .badge.warn{ border-color: rgba(217,119,6,.25) !important; color:#b45309 !important; }
+    .modal .box .section{ background:#ffffff !important; border-color: rgba(15,23,42,.14) !important; }
+    .modal .box .section .sh{ background:#f1f5f9 !important; border-bottom-color: rgba(15,23,42,.10) !important; }
+    .modal .box .kv .k{ color:#475569 !important; }
+    .modal .box table th{ color:#475569 !important; }
+    .modal .box table th, .modal .box table td{ border-bottom-color: rgba(15,23,42,.10) !important; }
+    .modal .box details.raw{ background:#ffffff !important; border-color: rgba(15,23,42,.14) !important; }
+    .modal .box details.raw summary{ color:#0f172a !important; }
+    .modal .box pre.json{ background:#ffffff !important; color:#0f172a !important; border-color: rgba(15,23,42,.14) !important; }
+    .modal .box a{ color:#0f172a !important; text-decoration: underline; }
+    .modal .box .tab{ background:#ffffff !important; color:#334155 !important; border-color: rgba(15,23,42,.18) !important; }
+    .modal .box .tab:hover{ background:#f1f5f9 !important; color:#0f172a !important; }
+    .modal .box .tab.active{ background:#dbeafe !important; border-color: rgba(37,99,235,.35) !important; color:#0f172a !important; }
+    .modal .box .btn{ background:#ffffff !important; color:#0f172a !important; border-color: rgba(15,23,42,.18) !important; }
+    .modal .box .btn:hover{ background:#f1f5f9 !important; }
+    .modal .box .btn.primary{ background:#dbeafe !important; border-color: rgba(37,99,235,.35) !important; }
+    .modal .box .btn.danger{ background:#ffe4e6 !important; border-color: rgba(225,29,72,.25) !important; }
+
+  
+  /* --- Cancel warning banner --- */
+  .cancel-banner{display:none; position:sticky; top:0; z-index:30; background:#fff3f3; border:1px solid #ffb3b3; color:#5a0000;
+    padding:10px 12px; border-radius:12px; margin-bottom:10px; box-shadow:0 2px 12px rgba(0,0,0,.08);}
+  .cancel-banner .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;}
+  .cancel-banner .row .left{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .cancel-banner .cancel-pill{background:#b00020; color:#fff; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:800; letter-spacing:.2px;}
+  .cancel-banner .mini{opacity:.9;}
+  .cancel-banner .ids{width:100%; margin-top:8px; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    white-space:pre-wrap; background:#fff; border:1px dashed #ffb3b3; padding:8px; border-radius:10px; max-height:160px; overflow:auto;}
+
+</style>
 </head>
 <body>
 
@@ -214,14 +283,16 @@
             </div>
           </div>
 
+          <div class="tabs" role="tablist" aria-label="Modo">
+            <button id="tabShip" class="tab active" onclick="setTab('SHIP')" type="button">ENVIOS</button>
+            <button id="tabReturns" class="tab" onclick="setTab('RETURNS')" type="button">RETURNS</button>
+          </div>
+          <div class="hint" id="tabHint">Modo atual: <b>ENVIOS</b> — compara a lista da transportadora com IDs EXPECTED/PACKED/CANCELLED no intervalo.</div>
+
           <div class="row">
             <div>
               <label>Comparar com</label>
-              <select id="compareMode">
-                
-                <option value="ALL">ALL (EXPECTED + PACKED + CANCELLED)</option><option value="PACKED">PACKED no intervalo (registos)</option>
-                <option value="EXPECTED">EXPECTED no intervalo (lotes)</option>
-              </select>
+              <select id="compareMode"></select>
               <div class="hint">
                 • PACKED = IDs processados em PACKING dentro do intervalo para essa(s) transportadora(s).<br/>
                 • EXPECTED = expected_ids dos lotes dentro do intervalo (exclui cancelled_ids).
@@ -272,6 +343,7 @@ Ex:
           </div>
         </div>
         <div class="bd">
+          <div id="cancelBanner" class="cancel-banner"></div>
           <div class="kpis">
             <div class="kpi good">
               <div class="n" id="kMatched">0</div>
@@ -333,6 +405,7 @@ Ex:
                       <th>Na lista?</th>
                       <th>EXPECTED</th>
                       <th>PACKED</th>
+                      <th>RETURNS</th>
                       <th>CANCELLED</th>
                       <th>Ultimo evento</th>
                       <th>Lote(s)</th>
@@ -364,7 +437,7 @@ Ex:
         </div>
       </div>
       <div class="mb">
-        <pre class="json" id="idModalBody">(sem dados)</pre>
+        <div id="idModalBody">(sem dados)</div>
       </div>
     </div>
   </div>
@@ -402,7 +475,65 @@ Ex:
     matched: [], missing: [], extra: [],
     carrierIdsCount: 0, systemIdsCount: 0,
     batchKeys: []
+  
   };
+
+  // --- Tabs (ENVIOS vs RETURNS) ---
+  let currentTab = 'SHIP';
+
+  const compareOptions = {
+    SHIP: [
+      { v: 'ALL', t: 'ALL (EXPECTED + PACKED + CANCELLED)' },
+      { v: 'PACKED', t: 'PACKED no intervalo (registos)' },
+      { v: 'EXPECTED', t: 'EXPECTED no intervalo (lotes)' },
+    ],
+    RETURNS: [
+      { v: 'RETURNS', t: 'RETURNS no intervalo (registos mode=RETURNS)' },
+      { v: 'PACKED_RETURNS', t: 'PACKED + RETURNS (union)' },
+      { v: 'ALL_PLUS_RETURNS', t: 'ALL + RETURNS (EXPECTED + PACKED + RETURNS + CANCELLED)' },
+    ]
+  };
+
+  function fillCompareMode(){
+    const sel = $('compareMode');
+    const cur = sel.value;
+    sel.innerHTML = '';
+    (compareOptions[currentTab] || []).forEach(o=>{
+      const opt = document.createElement('option');
+      opt.value = o.v;
+      opt.textContent = o.t;
+      sel.appendChild(opt);
+    });
+    // keep previous if compatible
+    const values = new Set(Array.from(sel.options).map(o=>o.value));
+    if(values.has(cur)) sel.value = cur;
+  }
+
+  function setTab(tab){
+    currentTab = tab;
+    $('tabShip').classList.toggle('active', tab === 'SHIP');
+    $('tabReturns').classList.toggle('active', tab === 'RETURNS');
+
+    fillCompareMode();
+
+    if(tab === 'SHIP'){
+      $('tabHint').innerHTML = 'Modo atual: <b>ENVIOS</b> — compara a lista da transportadora com IDs EXPECTED/PACKED/CANCELLED no intervalo.';
+      $('extraFilter').disabled = false;
+      $('extraFilter').closest('div').querySelector('.hint').textContent = 'Só aplicado quando “Comparar com = PACKED”.';
+    } else {
+      $('tabHint').innerHTML = 'Modo atual: <b>RETURNS</b> — compara a lista da transportadora com IDs que aparecem em <b>RETURNS</b> no intervalo (filtrado pelos lotes das transportadoras selecionadas).';
+      // extraFilter não faz sentido aqui; mantemos enabled apenas para PACKED dentro dos modos UNION
+      $('extraFilter').disabled = false;
+      $('extraFilter').closest('div').querySelector('.hint').textContent = 'Aplicado apenas ao componente PACKED (quando o modo inclui PACKED).';
+    }
+
+    // reset results visually
+    setStatus('');
+    setKPIs([], [], []);
+    $('detailsTable').querySelector('tbody').innerHTML = '';
+    $('cDetails').textContent = '0';
+    $('techHint').textContent = '';
+  }
 
   function getSelectedCarriers(){
     const sel = $('carriers');
@@ -419,6 +550,78 @@ Ex:
 
   function setStatus(msg) {
     $('status').textContent = msg || '';
+  }
+
+  function _summCancelLine(id, cancelledToday){
+    const arr = (cancelledToday && cancelledToday[id]) ? cancelledToday[id] : [];
+    if(!arr.length) return id;
+    const c0 = arr[0] || {};
+    const info = c0.cancelInfo || {};
+    const reason = info.reason || info.motivo || info.note || '';
+    const who = info.user || info.by || info.username || '';
+    const when = info.DateTime || info.datetime || info.ts || info.time || '';
+    const bits = [];
+    if(reason) bits.push(reason);
+    if(who) bits.push(who);
+    if(when) bits.push(when);
+    return bits.length ? `${id} — ${bits.join(' · ')}` : id;
+  }
+
+  async function _copyText(txt){
+    try { await navigator.clipboard.writeText(txt); setStatus('Copiado ✅'); }
+    catch(e){ alert('Nao consegui copiar.'); }
+  }
+
+  function hideCancelBanner(){
+    const el = $('cancelBanner'); if(!el) return;
+    el.style.display = 'none';
+    el.innerHTML = '';
+  }
+
+  function showCancelBanner(payload){
+    const el = $('cancelBanner'); if(!el) return;
+    const {cancelAll, cancelInCarrier, cancelOnlySystem, cancelledToday} = payload || {};
+    const nAll = (cancelAll||[]).length;
+    const nIn = (cancelInCarrier||[]).length;
+    const nOnly = (cancelOnlySystem||[]).length;
+
+    if(!nAll){ hideCancelBanner(); return; }
+
+    const linesIn = (cancelInCarrier||[]).slice(0, 80).map(id=>_summCancelLine(id, cancelledToday));
+    const linesOnly = (cancelOnlySystem||[]).slice(0, 80).map(id=>_summCancelLine(id, cancelledToday));
+
+    let details = '';
+    if(nIn){
+      details += `\n\n📌 Cancelados E aparecem na lista da transportadora (${nIn}):\n` + linesIn.join('\n');
+      if(nIn>80) details += `\n... (+${nIn-80})`;
+    }
+    if(nOnly){
+      details += `\n\n🧾 Cancelados no sistema (não estavam na lista colada) (${nOnly}):\n` + linesOnly.join('\n');
+      if(nOnly>80) details += `\n... (+${nOnly-80})`;
+    }
+    const headline = `⚠️ Encontrados ${nAll} ID(s) CANCELADOS no sistema dentro do intervalo/transportadoras selecionadas.`;
+
+    el.innerHTML = `
+      <div class="row">
+        <div class="left">
+          <span class="cancel-pill">CANCELADOS</span>
+          <b>${_esc(headline)}</b>
+          <span class="mini">Isto pode explicar “Missing” (o sistema tinha o ID mas foi cancelado).</span>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn" onclick="copyCancelledSummary()">Copiar</button>
+          <button class="btn" onclick="hideCancelBanner()">Fechar</button>
+        </div>
+      </div>
+      <div class="ids" id="cancelBannerTxt">${_esc(details.trim() || '(sem detalhe)')}</div>
+    `;
+    el.style.display = 'block';
+  }
+
+  function copyCancelledSummary(){
+    const txtEl = $('cancelBannerTxt');
+    if(!txtEl) return;
+    _copyText(txtEl.textContent || '');
   }
 
   function setLoginMsg(msg) {
@@ -512,6 +715,8 @@ function toSet(arr) {
     if (!$('dateFrom').value) $('dateFrom').value = todayISO();
     if (!$('dateTo').value) $('dateTo').value = $('dateFrom').value;
     loadCarriersForRange();
+    fillCompareMode();
+    setTab('SHIP');
   });
 
   async function loadCarriersForRange() {
@@ -812,17 +1017,196 @@ Extra: ${r.extra.length}`;
     if(evt && evt.target && evt.target.id !== 'idModal') return;
     $('idModal').style.display = 'none';
   }
+
+  let currentModalId = null;
+  async function copyModalJson(){
+    if(!currentModalId){ return alert('Sem ID no modal.'); }
+    const d = (lastResult && lastResult.detailsById) ? lastResult.detailsById[currentModalId] : null;
+    const txt = d ? JSON.stringify(d, null, 2) : '';
+    try {
+      await navigator.clipboard.writeText(txt);
+      setStatus('JSON copiado ✅');
+    } catch(e){
+      alert('Nao consegui copiar.');
+    }
+  }
+
+  
+  function _fmt(v){
+    if(v === null || v === undefined) return '';
+    if(typeof v === 'object'){
+      try { return JSON.stringify(v); } catch(e) { return String(v); }
+    }
+    return String(v);
+  }
+
+  function _safeTxt(s){ return _esc(String(s ?? '')); }
+
+  function _modeBadge(label, n){
+    const cls = n ? 'good' : '';
+    return `<span class="badge ${cls}">${_safeTxt(label)}: ${Number(n||0)}</span>`;
+  }
+
+  function _renderMiniTable(rows, cols){
+    if(!rows || !rows.length) return `<div class="mini">(sem registos)</div>`;
+    const head = cols.map(c=>`<th>${_safeTxt(c.h)}</th>`).join('');
+    const body = rows.map(r=>{
+      return '<tr>' + cols.map(c=>`<td>${_safeTxt(c.f(r))}</td>`).join('') + '</tr>';
+    }).join('');
+    return `<div class="tableWrap"><table class="tmini"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+  }
+
   function openIdModal(id){
     const d = (lastResult && lastResult.detailsById) ? lastResult.detailsById[id] : null;
     $('idModalTitle').textContent = id;
-    const sub = [];
-    if(d){
-      sub.push('EXPECTED:' + (d.expectedToday?.length||0));
-      sub.push('PACKED:' + (d.packedToday?.length||0));
-      sub.push('CANCELLED:' + (d.cancelledToday?.length||0));
+    currentModalId = id;
+
+    if(!d){
+      $('idModalSubtitle').textContent = '';
+      $('idModalBody').innerHTML = '<div class="mini">(sem dados)</div>';
+      $('idModal').style.display = 'flex';
+      return;
     }
+
+    const expN = (d.expectedToday||[]).length;
+    const packN = (d.packedToday||[]).length;
+    const retN = (d.returnsToday||[]).length;
+    const canN = (d.cancelledToday||[]).length;
+
+    const sub = [];
+    sub.push(`${d.dateFrom} → ${d.dateTo}`);
+    sub.push(carriersLabel(d.carriers));
     $('idModalSubtitle').textContent = sub.join(' • ');
-    $('idModalBody').textContent = d ? JSON.stringify(d, null, 2) : '(sem dados)';
+
+    const batches = (d.expectedToday||[]).map(x=>x.batchKey)
+      .concat((d.cancelledToday||[]).map(x=>x.batchKey))
+      .concat((d.packedToday||[]).map(x=>x.batch))
+      .concat((d.returnsToday||[]).map(x=>x.batch))
+      .filter(Boolean);
+    const uniqB = Array.from(new Set(batches));
+
+    const orderDet = (d.expectedToday && d.expectedToday[0] && d.expectedToday[0].orderDetails) ? d.expectedToday[0].orderDetails : null;
+
+    const summaryHtml = `
+      <div class="section">
+        <div class="sh">
+          <b>Resumo</b>
+          <div class="pillRow">
+            ${_modeBadge('IN LIST', d.inCarrierList ? 1 : 0)}
+            ${_modeBadge('EXPECTED', expN)}
+            ${_modeBadge('PACKED', packN)}
+            ${_modeBadge('RETURNS', retN)}
+            ${_modeBadge('CANCELLED', canN)}
+          </div>
+        </div>
+        <div class="sb">
+          <div class="kv">
+            <div class="k">ID</div><div><b>${_safeTxt(id)}</b></div>
+            <div class="k">No intervalo</div><div>${_safeTxt(d.dateFrom)} → ${_safeTxt(d.dateTo)}</div>
+            <div class="k">Transportadoras</div><div>${_safeTxt(carriersLabel(d.carriers))}</div>
+            <div class="k">Lotes</div><div>${_safeTxt(uniqB.join(', ') || '(nenhum)')}</div>
+            <div class="k">Order details</div><div>${orderDet ? _safeTxt(JSON.stringify(orderDet)) : '<span class="mini">(sem order_details)</span>'}</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const expectedHtml = `
+      <div class="section">
+        <div class="sh"><b>EXPECTED (lotes)</b><span class="mini">${expN} registo(s)</span></div>
+        <div class="sb">
+          ${_renderMiniTable(d.expectedToday, [
+            {h:'Data', f:(r)=>r.dateClean||''},
+            {h:'Batch', f:(r)=>r.batchKey||''},
+            {h:'Processado?', f:(r)=>r.processed?'YES':'NO'},
+            {h:'Cliente', f:(r)=> (r.orderDetails && (r.orderDetails.name||r.orderDetails.customer||'')) || ''},
+            {h:'Conteudo', f:(r)=> (r.orderDetails && (r.orderDetails.content||'')) || ''},
+          ])}
+        </div>
+      </div>
+    `;
+
+    const packedHtml = `
+      <div class="section">
+        <div class="sh"><b>PACKED (registos)</b><span class="mini">${packN} registo(s)</span></div>
+        <div class="sb">
+          ${_renderMiniTable(d.packedToday, [
+            {h:'Data', f:(r)=>r.dateClean||''},
+            {h:'Hora', f:(r)=>r.endTime||r.time||r.startTime||''},
+            {h:'User', f:(r)=>r.user||''},
+            {h:'Batch', f:(r)=>r.batch||''},
+            {h:'Track', f:(r)=>r.track||r.tracking||''},
+            {h:'Items', f:(r)=>r.prods||''},
+          ])}
+        </div>
+      </div>
+    `;
+
+    const returnsHtml = `
+      <div class="section">
+        <div class="sh"><b>RETURNS (registos)</b><span class="mini">${retN} registo(s)</span></div>
+        <div class="sb">
+          ${_renderMiniTable(d.returnsToday, [
+            {h:'Data', f:(r)=>r.dateClean||''},
+            {h:'Hora', f:(r)=>r.endTime||r.time||r.startTime||''},
+            {h:'User', f:(r)=>r.user||''},
+            {h:'Batch', f:(r)=>r.batch||''},
+            {h:'Items', f:(r)=>r.prods||''},
+          ])}
+        </div>
+      </div>
+    `;
+
+    const cancelledHtml = `
+      <div class="section">
+        <div class="sh"><b>CANCELLED (lotes)</b><span class="mini">${canN} registo(s)</span></div>
+        <div class="sb">
+          ${_renderMiniTable(d.cancelledToday, [
+            {h:'Data', f:(r)=>r.dateClean||''},
+            {h:'Batch', f:(r)=>r.batchKey||''},
+            {h:'Reason', f:(r)=> (r.cancelInfo && (r.cancelInfo.reason||'')) || ''},
+            {h:'User', f:(r)=> (r.cancelInfo && (r.cancelInfo.user||'')) || ''},
+            {h:'When', f:(r)=> (r.cancelInfo && (r.cancelInfo.DateTime||r.cancelInfo.time||'')) || ''},
+          ])}
+        </div>
+      </div>
+    `;
+
+    const hist = (d.idHistory||[]).slice(0, 40);
+    const histHtml = `
+      <div class="section">
+        <div class="sh"><b>id_history</b><span class="mini">${(d.idHistory||[]).length} evento(s)</span></div>
+        <div class="sb">
+          ${_renderMiniTable(hist, [
+            {h:'Type', f:(r)=>r.Type||r.type||''},
+            {h:'DateTime', f:(r)=>r.DateTime||''},
+            {h:'User', f:(r)=>r.user||''},
+            {h:'Batch', f:(r)=>r.batch||r.batchKey||''},
+            {h:'Obs', f:(r)=>r.note||r.obs||''},
+          ])}
+        </div>
+      </div>
+    `;
+
+    const regAll = (d.registosAll||[]).slice(0, 60);
+    const regAllHtml = `
+      <div class="section">
+        <div class="sh"><b>registos (historico)</b><span class="mini">${(d.registosAll||[]).length} registo(s) • (mostra 60 mais recentes)</span></div>
+        <div class="sb">
+          ${_renderMiniTable(regAll, [
+            {h:'Modo', f:(r)=>r.mode||r.Type||''},
+            {h:'Data', f:(r)=>r.dateClean||''},
+            {h:'Hora', f:(r)=>r.endTime||r.time||r.startTime||''},
+            {h:'Batch', f:(r)=>r.batch||''},
+            {h:'User', f:(r)=>r.user||''},
+          ])}
+        </div>
+      </div>
+    `;
+
+    const rawJson = `<details class="raw"><summary>JSON completo</summary><pre class="json">${_safeTxt(JSON.stringify(d, null, 2))}</pre></details>`;
+
+    $('idModalBody').innerHTML = summaryHtml + expectedHtml + packedHtml + returnsHtml + cancelledHtml + histHtml + regAllHtml + rawJson;
     $('idModal').style.display = 'flex';
   }
 
@@ -845,8 +1229,9 @@ Extra: ${r.extra.length}`;
       const inList = carrierSet.has(id);
       const expN = (d.expectedToday||[]).length;
       const packN = (d.packedToday||[]).length;
+      const retN = (d.returnsToday||[]).length;
       const canN = (d.cancelledToday||[]).length;
-      const batches = (d.expectedToday||[]).map(x=>x.batchKey).concat((d.cancelledToday||[]).map(x=>x.batchKey)).concat((d.packedToday||[]).map(x=>x.batch)).filter(Boolean);
+      const batches = (d.expectedToday||[]).map(x=>x.batchKey).concat((d.cancelledToday||[]).map(x=>x.batchKey)).concat((d.packedToday||[]).map(x=>x.batch)).concat((d.returnsToday||[]).map(x=>x.batch)).filter(Boolean);
       const bUniq = Array.from(new Set(batches)).slice(0,6);
       const lastEv = _lastEventLabel(d.idHistory || []);
 
@@ -856,6 +1241,7 @@ Extra: ${r.extra.length}`;
         <td>${_yesNoBadge(inList)}</td>
         <td>${expN ? `<span class="badge warn">${expN}</span>` : '<span class="badge">0</span>'}</td>
         <td>${packN ? `<span class="badge good">${packN}</span>` : '<span class="badge">0</span>'}</td>
+        <td>${retN ? `<span class="badge warn">${retN}</span>` : '<span class="badge">0</span>'}</td>
         <td>${canN ? `<span class="badge bad">${canN}</span>` : '<span class="badge">0</span>'}</td>
         <td>${_esc(lastEv)}</td>
         <td>${_esc(bUniq.join(', '))}${batches.length>6 ? '…' : ''}</td>
@@ -992,6 +1378,15 @@ Extra: ${r.extra.length}`;
       });
     }
 
+
+    // 2.b) Aviso de cancelamentos
+    const carrierSet_ = toSet(carrierIds);
+    const cancelSet = toSet(cancelledIdsAll);
+    const cancelAll = Array.from(cancelSet);
+    const cancelInCarrier = carrierIds.filter(id=>cancelSet.has(id));
+    const cancelOnlySystem = cancelAll.filter(id=>!carrierSet_.has(id));
+    showCancelBanner({cancelAll, cancelInCarrier, cancelOnlySystem, cancelledToday});
+
     // 3) Buscar PACKED (registos) no intervalo para esses lotes
     let registos = {};
     let usedFallbackReg = false;
@@ -1023,6 +1418,23 @@ Extra: ${r.extra.length}`;
       packedIdsAll.push(id);
     });
 
+    // 3b) Buscar RETURNS (registos) no intervalo para esses lotes
+    const returnsToday = {}; // id -> [registo]
+    const returnsIdsAll = [];
+    Object.entries(registos).forEach(([k,r])=>{
+      if(!r) return;
+      if(!batchSet.has(r.batch)) return;
+      const modeRaw = String(r.mode || r.Type || '').trim().toUpperCase();
+      const isReturn = (modeRaw === 'RETURNS' || modeRaw === 'RETURN' || modeRaw === 'RETURNED');
+      if(!isReturn) return;
+      if(!r.id) return;
+      const id = String(r.id).trim().toUpperCase();
+      if(!returnsToday[id]) returnsToday[id] = [];
+      returnsToday[id].push({ _key:k, ...r });
+      returnsIdsAll.push(id);
+    });
+
+
     // 4) Escolher os IDs do sistema conforme o modo
     let systemIds = [];
     if (compareMode === 'EXPECTED') {
@@ -1032,8 +1444,29 @@ Extra: ${r.extra.length}`;
         req.forEach(id=> systemIds.push(String(id).trim().toUpperCase()));
       });
       systemIds = Array.from(new Set(systemIds));
+
     } else if (compareMode === 'PACKED') {
+      // apenas PACKING (ou ALL_MODES se selecionado no filtro)
       systemIds = Array.from(new Set(packedIdsAll));
+
+    } else if (compareMode === 'RETURNS') {
+      // apenas RETURNS
+      systemIds = Array.from(new Set(returnsIdsAll));
+
+    } else if (compareMode === 'PACKED_RETURNS') {
+      const u = new Set();
+      packedIdsAll.forEach(x=>u.add(x));
+      returnsIdsAll.forEach(x=>u.add(x));
+      systemIds = Array.from(u);
+
+    } else if (compareMode === 'ALL_PLUS_RETURNS') {
+      const u = new Set();
+      expectedIdsAll.forEach(x=>u.add(x));
+      packedIdsAll.forEach(x=>u.add(x));
+      returnsIdsAll.forEach(x=>u.add(x));
+      cancelledIdsAll.forEach(x=>u.add(x));
+      systemIds = Array.from(u);
+
     } else {
       // ALL: union de expected + packed + cancelled
       const u = new Set();
@@ -1043,7 +1476,7 @@ Extra: ${r.extra.length}`;
       systemIds = Array.from(u);
     }
 
-    // 5) Cruzamento
+// 5) Cruzamento
     const carrierSet = toSet(carrierIds);
     const systemSet = toSet(systemIds);
 
@@ -1085,6 +1518,7 @@ Extra: ${r.extra.length}`;
         inCarrierList: carrierSet.has(id),
         expectedToday: expectedToday[id] || [],
         packedToday: packedToday[id] || [],
+        returnsToday: returnsToday[id] || [],
         cancelledToday: cancelledToday[id] || [],
         idHistory: idHistMap[id] || [],
         registosAll: (regAll.map[id] || [])
@@ -1095,10 +1529,10 @@ Extra: ${r.extra.length}`;
     const detailRows = detailIds.map(id=>{
       const d = detailsById[id];
       const lastEv = _lastEventLabel(d.idHistory);
-      const batches = (d.expectedToday||[]).map(x=>x.batchKey).concat((d.cancelledToday||[]).map(x=>x.batchKey)).concat((d.packedToday||[]).map(x=>x.batch)).filter(Boolean);
+      const batches = (d.expectedToday||[]).map(x=>x.batchKey).concat((d.cancelledToday||[]).map(x=>x.batchKey)).concat((d.packedToday||[]).map(x=>x.batch)).concat((d.returnsToday||[]).map(x=>x.batch)).filter(Boolean);
       const uniq = Array.from(new Set(batches));
       // agregar datas onde aparece
-      const dates = (d.expectedToday||[]).map(x=>x.dateClean).concat((d.cancelledToday||[]).map(x=>x.dateClean)).concat((d.packedToday||[]).map(x=>x.dateClean)).filter(Boolean);
+      const dates = (d.expectedToday||[]).map(x=>x.dateClean).concat((d.cancelledToday||[]).map(x=>x.dateClean)).concat((d.packedToday||[]).map(x=>x.dateClean)).concat((d.returnsToday||[]).map(x=>x.dateClean)).filter(Boolean);
       const uniqDates = Array.from(new Set(dates)).sort();
       return {
         DateFrom: dateFrom,
@@ -1108,6 +1542,7 @@ Extra: ${r.extra.length}`;
         InCarrierList: d.inCarrierList ? 'YES' : 'NO',
         ExpectedCount: (d.expectedToday||[]).length,
         PackedCount: (d.packedToday||[]).length,
+        ReturnsCount: (d.returnsToday||[]).length,
         CancelledCount: (d.cancelledToday||[]).length,
         DaysInvolved: uniqDates.join(', '),
         LastEvent: lastEv,
@@ -1135,6 +1570,7 @@ Extra: ${r.extra.length}`;
     const hints = [];
     hints.push(`Intervalo: ${dateFrom} → ${dateTo} • Carriers: ${carriersLabel(carriers)} • Base: ${compareMode}`);
     hints.push(`IDs transportadora: ${carrierIds.length} • IDs sistema: ${systemIds.length} • Lotes: ${batchKeys.length} • Detalhes: ${detailIds.length}`);
+    hints.push(`Registos no intervalo — PACKED: ${new Set(packedIdsAll).size} • RETURNS: ${new Set(returnsIdsAll).size}`);
     if (usedFallbackBatches) hints.push('Nota: query range por dateClean em active_batches falhou → usado fallback full-scan.');
     if ((compareMode === 'PACKED' || compareMode === 'ALL') && usedFallbackReg) hints.push('Nota: query range por dateClean em registos falhou → usado fallback full-scan.');
     if (regAll.used) hints.push('Inclui registos completos: SIM');
