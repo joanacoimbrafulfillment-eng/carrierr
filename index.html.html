@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Carrier IDs Crosscheck (Standalone - Full Details)</title>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #0f1b33;
+      --card2:#0c1730;
+      --text:#e7eefc;
+      --muted:#a8b3cf;
+      --accent:#5eead4;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+      --good:#34d399;
+      --line: rgba(255,255,255,.10);
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
+    body {
+      margin:0; background: radial-gradient(1200px 700px at 20% 0%, rgba(94,234,212,.18), transparent 55%),
+                         radial-gradient(900px 600px at 90% 20%, rgba(59,130,246,.18), transparent 55%),
+                         var(--bg);
+      color:var(--text);
+    }
+    .wrap { max-width: 1100px; margin: 26px auto; padding: 0 16px 42px; }
+    .top {
+      display:flex; align-items:center; justify-content:space-between;
+      gap: 14px; padding: 14px 16px; border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    .brand { display:flex; flex-direction:column; gap:2px; }
+    .brand h1 { margin:0; font-size: 16px; letter-spacing:.3px; }
+    .brand .sub { color: var(--muted); font-size: 12px; }
+    .pill {
+      display:inline-flex; align-items:center; gap:8px;
+      border: 1px solid var(--line); padding: 7px 10px; border-radius: 999px;
+      background: rgba(0,0,0,.18); color: var(--muted); font-size: 12px;
+    }
+    .btn {
+      border: 1px solid var(--line); background: rgba(255,255,255,.06);
+      color: var(--text); padding: 9px 12px; border-radius: 12px;
+      cursor:pointer; transition: .15s transform ease, .15s background ease;
+      font-weight: 600; font-size: 13px;
+    }
+    .btn:hover { transform: translateY(-1px); background: rgba(255,255,255,.10); }
+    .btn.primary { border-color: rgba(94,234,212,.4); background: rgba(94,234,212,.10); }
+    .btn.primary:hover { background: rgba(94,234,212,.16); }
+    .btn.danger { border-color: rgba(251,113,133,.35); background: rgba(251,113,133,.10); }
+    .grid {
+      display:grid; grid-template-columns: 1.1fr .9fr; gap: 16px; margin-top: 16px;
+    }
+    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      border: 1px solid var(--line); background: rgba(255,255,255,.04);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card .hd {
+      padding: 14px 16px; border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), transparent);
+      display:flex; justify-content:space-between; align-items:center; gap: 10px;
+    }
+    .card .hd h2 { margin:0; font-size: 14px; letter-spacing:.2px; }
+    .card .bd { padding: 14px 16px; }
+    label { display:block; color: var(--muted); font-size: 12px; margin: 10px 0 6px; }
+    input, select, textarea {
+      width: 100%; box-sizing:border-box;
+      border: 1px solid var(--line); background: rgba(0,0,0,.20);
+      color: var(--text); border-radius: 12px; padding: 10px 12px;
+      outline: none;
+    }
+    textarea { min-height: 190px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; line-height: 1.35; }
+    .row { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 720px) { .row { grid-template-columns: 1fr; } }
+    .hint { color: var(--muted); font-size: 12px; margin-top: 8px; }
+    .kpis { display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    @media (max-width: 720px) { .kpis { grid-template-columns: 1fr; } }
+    .kpi {
+      border: 1px solid var(--line); border-radius: 14px; padding: 12px 12px;
+      background: rgba(0,0,0,.16);
+    }
+    .kpi .n { font-size: 24px; font-weight: 800; letter-spacing:.3px; }
+    .kpi .t { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .kpi.good .n { color: var(--good); }
+    .kpi.bad .n { color: var(--bad); }
+    .kpi.warn .n { color: var(--warn); }
+
+    .lists { display:grid; grid-template-columns: 1fr; gap: 12px; margin-top: 12px; }
+    .listbox {
+      border: 1px solid var(--line); border-radius: 14px; overflow:hidden;
+      background: rgba(0,0,0,.16);
+    }
+    .listbox .lh {
+      padding: 10px 12px; border-bottom: 1px solid var(--line);
+      display:flex; justify-content:space-between; align-items:center;
+      gap: 8px;
+    }
+    .listbox .lh b { font-size: 12px; letter-spacing:.2px; }
+    .listbox .lh span { color: var(--muted); font-size: 12px; }
+    .listbox pre {
+      margin:0; padding: 10px 12px; max-height: 200px; overflow:auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px; line-height: 1.35;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .status {
+      font-size: 12px; color: var(--muted);
+    }
+    .login {
+      max-width: 520px; margin: 60px auto; padding: 0 16px;
+    }
+    .login .panel {
+      border: 1px solid var(--line); border-radius: var(--radius);
+      background: rgba(255,255,255,.04); box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .login .panel .hd { padding: 16px; border-bottom: 1px solid var(--line); }
+    .login .panel .hd h1 { margin:0; font-size: 16px; }
+    .login .panel .bd { padding: 16px; }
+    .small { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .sep { height: 1px; background: var(--line); margin: 14px 0; }
+  
+    /* --- Full-details additions --- */
+    table { width:100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; font-size: 12px; vertical-align: top; }
+    th { text-align:left; color: var(--muted); font-weight: 700; }
+    .badge { display:inline-flex; align-items:center; gap:6px; padding: 3px 8px; border-radius: 999px; border:1px solid var(--line); background: rgba(255,255,255,.06); font-size: 11px; color: var(--muted);}
+    .badge.good { border-color: rgba(52,211,153,.35); color: var(--good);}
+    .badge.bad { border-color: rgba(251,113,133,.35); color: var(--bad);}
+    .badge.warn { border-color: rgba(251,191,36,.35); color: var(--warn);}
+    .detailsWrap { max-height: 320px; overflow:auto; }
+    .btn.small { padding: 6px 10px; border-radius: 10px; font-size: 12px; }
+    .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; padding: 18px; background: rgba(0,0,0,.55); }
+    .modal .box { width: min(980px, 96vw); max-height: 86vh; overflow:hidden; border:1px solid var(--line); border-radius: 18px; background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.12)); box-shadow: var(--shadow); }
+    .modal .mh { padding: 12px 14px; border-bottom: 1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:10px;}
+    .modal .mb { padding: 12px 14px; max-height: calc(86vh - 56px); overflow:auto;}
+    pre.json { margin:0; white-space: pre-wrap; word-break: break-word; font-size: 12px; line-height:1.35; background: rgba(0,0,0,.22); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+
+  </style>
+</head>
+<body>
+
+  <div id="login" class="login" style="display:none;">
+    <div class="panel">
+      <div class="hd">
+        <h1>Carrier IDs Crosscheck</h1>
+        <div class="small">Standalone • liga ao mesmo Firebase do sistema principal</div>
+      </div>
+      <div class="bd">
+        <label>Email</label>
+        <input id="loginEmail" type="email" placeholder="email" autocomplete="username" />
+        <label>Password</label>
+        <input id="loginPass" type="password" placeholder="password" autocomplete="current-password" />
+        <div style="display:flex; gap:10px; margin-top:12px; align-items:center;">
+          <button class="btn primary" onclick="handleLogin()">Entrar</button>
+          <span id="loginMsg" class="status"></span>
+        </div>
+        <div class="sep"></div>
+        <div class="small">
+          Nota: se as regras da BD exigirem autenticação, tens de entrar com as mesmas credenciais do sistema principal.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="app" class="wrap" style="display:none;">
+    <div class="top">
+      <div class="brand">
+        <h1>Carrier IDs Crosscheck</h1>
+        <div class="sub">Cruzamento de IDs da transportadora vs IDs do sistema (por intervalo de datas e carrier)</div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+        <div class="pill"><span>👤</span><span id="userPill">—</span></div>
+        <div class="pill"><span>🗄️</span><span id="dbPill">DB: …</span></div>
+        <button class="btn danger" onclick="logout()">Sair</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="hd">
+          <h2>Inputs</h2>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <button class="btn" onclick="loadCarriersForRange()">Atualizar transportadoras</button>
+            <button class="btn primary" onclick="runCrosscheck()">Comparar</button>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="row">
+            <div>
+              <label>Data início</label>
+              <input id="dateFrom" type="date" />
+            </div>
+            <div>
+              <label>Data fim</label>
+              <input id="dateTo" type="date" />
+              <div class="hint">Se não escolheres fim, assume a data início.</div>
+            </div>
+            <div>
+              <label>Transportadora(s)</label>
+              <select id="carriers" multiple size="6"></select>
+              <div class="hint">Seleciona 2+ com Ctrl/Cmd + clique. A lista é carregada dos lotes (active_batches) dentro do intervalo.</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label>Comparar com</label>
+              <select id="compareMode">
+                
+                <option value="ALL">ALL (EXPECTED + PACKED + CANCELLED)</option><option value="PACKED">PACKED no intervalo (registos)</option>
+                <option value="EXPECTED">EXPECTED no intervalo (lotes)</option>
+              </select>
+              <div class="hint">
+                • PACKED = IDs processados em PACKING dentro do intervalo para essa(s) transportadora(s).<br/>
+                • EXPECTED = expected_ids dos lotes dentro do intervalo (exclui cancelled_ids).
+              </div>
+            </div>
+            <div>
+              <label>Filtro extra</label>
+              <select id="extraFilter">
+                <option value="ONLY_PACKING">Só mode=PACKING (recomendado)</option>
+                <option value="ALL_MODES">Todos os modos (PACKING/RETURNS/etc.)</option>
+              </select>
+              <div class="hint">Só aplicado quando “Comparar com = PACKED”.</div>
+            </div>
+          </div>
+
+          <div style="margin-top:10px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background: rgba(0,0,0,.16);">
+            <label style="margin:0 0 6px;">Detalhe (dados completos)</label>
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <label style="margin:0; display:flex; gap:8px; align-items:center; color: var(--muted); font-size:12px;">
+                <input type="checkbox" id="includeAllRegistos" checked />
+                Incluir historico completo em registos (pode ser lento)
+              </label>
+              <span class="hint" style="margin:0;">Mesmo com isto desligado, o sistema mostra id_history + dados do lote.</span>
+            </div>
+          </div>
+
+          <label>IDs enviados pela transportadora (colar aqui)</label>
+          <textarea id="carrierIds" placeholder="Cola aqui a lista (linhas, espaços, vírgulas...)
+Ex:
+12345678
+12345679
+..."></textarea>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; align-items:center;">
+            <button class="btn" onclick="pasteFromClipboard()">Colar do clipboard</button>
+            <button class="btn" onclick="clearInput()">Limpar</button>
+            <span id="status" class="status"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="hd">
+          <h2>Resultado</h2>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <button class="btn" onclick="exportXlsx()">Export XLSX</button>
+            <button class="btn" onclick="copySummary()">Copiar resumo</button>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="kpis">
+            <div class="kpi good">
+              <div class="n" id="kMatched">0</div>
+              <div class="t">Matched (OK)</div>
+            </div>
+            <div class="kpi bad">
+              <div class="n" id="kMissing">0</div>
+              <div class="t">Missing (faltam)</div>
+            </div>
+            <div class="kpi warn">
+              <div class="n" id="kExtra">0</div>
+              <div class="t">Extra (sobram)</div>
+            </div>
+          </div>
+
+          <div class="lists">
+            <div class="listbox">
+              <div class="lh">
+                <div><b>Matched</b> <span id="cMatched">0</span></div>
+                <div style="display:flex; gap:8px;">
+                  <button class="btn" onclick="copyList('matched')">Copiar</button>
+                </div>
+              </div>
+              <pre id="matched"></pre>
+            </div>
+
+            <div class="listbox">
+              <div class="lh">
+                <div><b>Missing</b> <span id="cMissing">0</span></div>
+                <div style="display:flex; gap:8px;">
+                  <button class="btn" onclick="copyList('missing')">Copiar</button>
+                </div>
+              </div>
+              <pre id="missing"></pre>
+            </div>
+
+            <div class="listbox">
+              <div class="lh">
+                <div><b>Extra</b> <span id="cExtra">0</span></div>
+                <div style="display:flex; gap:8px;">
+                  <button class="btn" onclick="copyList('extra')">Copiar</button>
+                </div>
+              </div>
+              <pre id="extra"></pre>
+            </div>
+
+            <div class="listbox">
+              <div class="lh">
+                <div><b>Detalhe por ID</b> <span id="cDetails">0</span></div>
+                <div style="display:flex; gap:8px;">
+                  <button class="btn small" onclick="copyDetailsCsv()">Copiar tabela</button>
+                </div>
+              </div>
+              <div class="detailsWrap">
+                <table id="detailsTable">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Na lista?</th>
+                      <th>EXPECTED</th>
+                      <th>PACKED</th>
+                      <th>CANCELLED</th>
+                      <th>Ultimo evento</th>
+                      <th>Lote(s)</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="hint" id="techHint"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="idModal" class="modal" onclick="closeIdModal(event)">
+    <div class="box" onclick="event.stopPropagation()">
+      <div class="mh">
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          <div style="font-weight:800; letter-spacing:.2px;" id="idModalTitle">ID</div>
+          <div style="font-size:12px; color: var(--muted);" id="idModalSubtitle"></div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn small" onclick="copyModalJson()">Copiar JSON</button>
+          <button class="btn small" onclick="closeIdModal()">Fechar</button>
+        </div>
+      </div>
+      <div class="mb">
+        <pre class="json" id="idModalBody">(sem dados)</pre>
+      </div>
+    </div>
+  </div>
+
+
+<script>
+  // --- Firebase init (copiado do sistema principal) ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyDExvgmtrSILCATQgE8ICJX-SVntb5lM2Y",
+    authDomain: "wh-murtede.firebaseapp.com",
+    projectId: "wh-murtede",
+    databaseURL: "https://wh-murtede-default-rtdb.europe-west1.firebasedatabase.app",
+    storageBucket: "wh-murtede.firebasestorage.app",
+    messagingSenderId: "415946575714",
+    appId: "1:415946575714:web:b1516b91b9735b9248e63b"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const auth = firebase.auth();
+
+  // DB connected badge
+  try {
+    db.ref('.info/connected').on('value', (snap) => {
+      const ok = !!snap.val();
+      document.getElementById('dbPill').textContent = 'DB: ' + (ok ? 'CONNECTED' : 'OFFLINE');
+    });
+  } catch(e) {
+    document.getElementById('dbPill').textContent = 'DB: UNKNOWN';
+  }
+
+  // --- UI state ---
+  let lastResult = {
+    date: null, carriers: [], compareMode: null,
+    matched: [], missing: [], extra: [],
+    carrierIdsCount: 0, systemIdsCount: 0,
+    batchKeys: []
+  };
+
+  function getSelectedCarriers(){
+    const sel = $('carriers');
+    if(!sel) return [];
+    return Array.from(sel.selectedOptions).map(o=>String(o.value||'').trim()).filter(Boolean);
+  }
+
+  function carriersLabel(carriers){
+    const arr = Array.isArray(carriers) ? carriers : (carriers ? [carriers] : []);
+    return arr.join(', ');
+  }
+
+  function $(id) { return document.getElementById(id); }
+
+  function setStatus(msg) {
+    $('status').textContent = msg || '';
+  }
+
+  function setLoginMsg(msg) {
+    $('loginMsg').textContent = msg || '';
+  }
+
+  // Parse IDs: aceita linhas/virgulas/espaços e apanha tokens alfanuméricos
+  function parseIds(raw) {
+    const s = (raw || '').toString();
+    const tokens = s.match(/[A-Za-z0-9_-]+/g) || [];
+    const norm = tokens.map(t => t.trim().toUpperCase()).filter(Boolean);
+    // dedupe mantendo ordem
+    const seen = new Set();
+    const out = [];
+    for (const id of norm) {
+      if (!seen.has(id)) { seen.add(id); out.push(id); }
+    }
+    return out;
+  }
+
+  function getRequiredBatchIds(batch) {
+    const expected = (batch && batch.expected_ids) ? batch.expected_ids : [];
+    const cancelled = (batch && batch.cancelled_ids) ? Object.keys(batch.cancelled_ids) : [];
+    const cancelledSet = new Set(cancelled);
+    return expected.filter(id => !cancelledSet.has(id));
+  }
+
+    function inRange(dc, from, to){
+    const s = String(dc||'');
+    return !!s && s >= String(from||'') && s <= String(to||'');
+  }
+
+function toSet(arr) {
+    const s = new Set();
+    (arr || []).forEach(x => s.add(String(x).trim().toUpperCase()));
+    return s;
+  }
+
+  function setKPIs(matched, missing, extra) {
+    $('kMatched').textContent = matched.length;
+    $('kMissing').textContent = missing.length;
+    $('kExtra').textContent   = extra.length;
+
+    $('cMatched').textContent = matched.length;
+    $('cMissing').textContent = missing.length;
+    $('cExtra').textContent   = extra.length;
+
+    $('matched').textContent = matched.join('\n');
+    $('missing').textContent = missing.join('\n');
+    $('extra').textContent   = extra.join('\n');
+  }
+
+  function setTechHint(txt) {
+    $('techHint').textContent = txt || '';
+  }
+
+  function todayISO() {
+    const d = new Date();
+    const tzOff = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - tzOff).toISOString().slice(0,10);
+  }
+
+  async function handleLogin() {
+    setLoginMsg('A entrar…');
+    try {
+      const e = $('loginEmail').value.trim();
+      const p = $('loginPass').value;
+      await auth.signInWithEmailAndPassword(e, p);
+      setLoginMsg('');
+    } catch(err) {
+      console.error(err);
+      setLoginMsg('Credenciais inválidas ou sem permissões.');
+    }
+  }
+
+  async function logout() {
+    try { await auth.signOut(); } catch(e) {}
+  }
+
+  auth.onAuthStateChanged((user) => {
+    if (!user) {
+      $('app').style.display = 'none';
+      $('login').style.display = 'block';
+      return;
+    }
+    $('login').style.display = 'none';
+    $('app').style.display = 'block';
+    $('userPill').textContent = user.email || 'signed-in';
+
+    // default dates = hoje
+    if (!$('dateFrom').value) $('dateFrom').value = todayISO();
+    if (!$('dateTo').value) $('dateTo').value = $('dateFrom').value;
+    loadCarriersForRange();
+  });
+
+  async function loadCarriersForRange() {
+    const dateFrom = $('dateFrom').value;
+    const dateTo = $('dateTo').value || dateFrom;
+    if (!dateFrom) return;
+    if (!dateTo) return;
+
+    if (dateTo < dateFrom) {
+      alert('A data fim não pode ser anterior à data início.');
+      return;
+    }
+
+    setStatus('A carregar transportadoras…');
+    const carriers = new Set();
+    let countBatches = 0;
+    let usedFallback = false;
+
+    try {
+      // melhor cenário: query indexada por dateClean (range)
+      const snap = await db.ref('active_batches').orderByChild('dateClean').startAt(dateFrom).endAt(dateTo).once('value');
+      const batches = snap.val() || {};
+      Object.keys(batches).forEach(k => {
+        const b = batches[k] || {};
+        const dc = String(b.dateClean || '');
+        if (!dc) return;
+        if (dc < dateFrom || dc > dateTo) return;
+        if (b.carrier) carriers.add(String(b.carrier));
+        countBatches++;
+      });
+    } catch(e) {
+      console.warn('Query range por dateClean falhou; fallback full-scan', e);
+      usedFallback = true;
+      const snap = await db.ref('active_batches').once('value');
+      const batches = snap.val() || {};
+      Object.keys(batches).forEach(k => {
+        const b = batches[k] || {};
+        const dc = String(b.dateClean || '');
+        if (!dc) return;
+        if (dc < dateFrom || dc > dateTo) return;
+        if (b.carrier) carriers.add(String(b.carrier));
+        countBatches++;
+      });
+    }
+
+    // preencher select
+    const sel = $('carriers');
+    const prev = Array.from(sel.selectedOptions).map(o=>o.value);
+    sel.innerHTML = '';
+    const arr = Array.from(carriers).sort((a,b)=>a.localeCompare(b));
+    if (arr.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = '— sem lotes nesse intervalo —';
+      sel.appendChild(opt);
+    } else {
+      arr.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        sel.appendChild(opt);
+      });
+      // repor selecao anterior
+      const prevSet = new Set(prev);
+      Array.from(sel.options).forEach(o => { o.selected = prevSet.has(o.value); });
+      // se nao havia selecao, seleciona a primeira por defeito
+      if (getSelectedCarriers().length === 0 && arr.length > 0) sel.options[0].selected = true;
+    }
+
+    setStatus(`Transportadoras carregadas: ${arr.length} • lotes: ${countBatches}${usedFallback ? ' (fallback)' : ''}`);
+  }
+
+  async function runCrosscheck() {
+    const date = $('day').value;
+    const carriers = getSelectedCarriers();
+    const compareMode = $('compareMode').value;
+    const extraFilter = $('extraFilter').value;
+
+    if (!date) { alert('Seleciona o dia.'); return; }
+    if (!carriers.length) { alert('Seleciona pelo menos 1 transportadora.'); return; }
+
+    const carrierIds = parseIds($('carrierIds').value);
+    if (carrierIds.length === 0) {
+      alert('Cola pelo menos 1 ID da transportadora.');
+      return;
+    }
+
+    setStatus('A cruzar…');
+    setTechHint('');
+    setKPIs([], [], []);
+
+    // 1) Buscar lotes do dia + carrier
+    let batches = {};
+    let usedFallbackBatches = false;
+    try {
+      const snap = await db.ref('active_batches').orderByChild('dateClean').equalTo(date).once('value');
+      batches = snap.val() || {};
+    } catch(e) {
+      usedFallbackBatches = true;
+      const snap = await db.ref('active_batches').once('value');
+      const all = snap.val() || {};
+      Object.keys(all).forEach(k => {
+        const b = all[k] || {};
+        if (b.dateClean === date) batches[k] = b;
+      });
+    }
+
+    const carriersSet = new Set(carriers.map(c=>String(c)));
+    const batchKeys = Object.keys(batches).filter(k => {
+      const b = batches[k] || {};
+      return carriersSet.has(String(b.carrier || ''));
+    });
+
+    if (batchKeys.length === 0) {
+      setStatus('Sem lotes encontrados para esse dia/carrier.');
+      setTechHint('Confirma se a transportadora está correta e se os lotes têm dateClean e carrier preenchidos.');
+      return;
+    }
+
+    // 2) IDs do sistema (PACKED ou EXPECTED)
+    let systemIds = [];
+    let usedFallbackReg = false;
+
+    if (compareMode === 'EXPECTED') {
+      batchKeys.forEach(k => {
+        const b = batches[k] || {};
+        const req = getRequiredBatchIds(b);
+        req.forEach(id => systemIds.push(String(id).trim().toUpperCase()));
+      });
+      systemIds = Array.from(new Set(systemIds));
+    } else {
+      let registos = {};
+      try {
+        const snap = await db.ref('registos').orderByChild('dateClean').equalTo(date).once('value');
+        registos = snap.val() || {};
+      } catch(e) {
+        usedFallbackReg = true;
+        const snap = await db.ref('registos').once('value');
+        const all = snap.val() || {};
+        Object.keys(all).forEach(k => {
+          const r = all[k] || {};
+          if (r.dateClean === date) registos[k] = r;
+        });
+      }
+
+      const batchSet = new Set(batchKeys);
+      const ids = [];
+      Object.values(registos).forEach(r => {
+        if (!r) return;
+        if (!batchSet.has(r.batch)) return;
+        if (extraFilter === 'ONLY_PACKING' && String(r.mode) !== 'PACKING') return;
+        if (!r.id) return;
+        ids.push(String(r.id).trim().toUpperCase());
+      });
+      systemIds = Array.from(new Set(ids));
+    }
+
+    // 3) Cruzamento
+    const carrierSet = toSet(carrierIds);
+    const systemSet = toSet(systemIds);
+
+    const matched = [];
+    const missing = [];
+    const extra = [];
+
+    systemIds.forEach(id => {
+      const nid = String(id).trim().toUpperCase();
+      if (carrierSet.has(nid)) matched.push(nid);
+      else missing.push(nid);
+    });
+
+    carrierIds.forEach(id => {
+      const nid = String(id).trim().toUpperCase();
+      if (!systemSet.has(nid)) extra.push(nid);
+    });
+
+    matched.sort();
+    missing.sort();
+    extra.sort();
+
+    lastResult = {
+      date, carriers, compareMode,
+      matched, missing, extra,
+      carrierIdsCount: carrierIds.length,
+      systemIdsCount: systemIds.length,
+      batchKeys
+    };
+
+    setKPIs(matched, missing, extra);
+
+    const hints = [];
+    hints.push(`Intervalo: ${date} • Carriers: ${carriersLabel(carriers)} • Base: ${compareMode}`);
+    hints.push(`IDs transportadora: ${carrierIds.length} • IDs sistema: ${systemIds.length} • Lotes: ${batchKeys.length}`);
+    if (usedFallbackBatches) hints.push('Nota: query por dateClean em active_batches falhou → usado fallback full-scan.');
+    if (compareMode === 'PACKED' && usedFallbackReg) hints.push('Nota: query por dateClean em registos falhou → usado fallback full-scan.');
+    setTechHint(hints.join(' | '));
+
+    setStatus('Concluído ✅');
+  }
+
+  async function pasteFromClipboard() {
+    try {
+      const t = await navigator.clipboard.readText();
+      $('carrierIds').value = t || '';
+    } catch(e) {
+      alert('Não consegui aceder ao clipboard (permite acesso no browser).');
+    }
+  }
+
+  function clearInput() {
+    $('carrierIds').value = '';
+    setStatus('');
+  }
+
+  async function copyList(which) {
+    const map = {
+      matched: lastResult.matched,
+      missing: lastResult.missing,
+      extra: lastResult.extra
+    };
+    const arr = map[which] || [];
+    try {
+      await navigator.clipboard.writeText(arr.join('\n'));
+      setStatus('Lista copiada ✅');
+    } catch(e) {
+      alert('Não consegui copiar.');
+    }
+  }
+
+  async function copySummary() {
+    const r = lastResult;
+    if (!r || !r.dateFrom) { alert('Faz uma comparação primeiro.'); return; }
+    const txt =
+`CROSSCHECK — ${r.dateFrom} → ${r.dateTo} — ${carriersLabel(r.carriers)}
+Base: ${r.compareMode}
+IDs Transportadora: ${r.carrierIdsCount}
+IDs Sistema: ${r.systemIdsCount}
+Lotes: ${r.batchKeys.length}
+
+Matched: ${r.matched.length}
+Missing: ${r.missing.length}
+Extra: ${r.extra.length}`;
+    try {
+      await navigator.clipboard.writeText(txt);
+      setStatus('Resumo copiado ✅');
+    } catch(e) {
+      alert('Não consegui copiar.');
+    }
+  }
+
+  function exportXlsx() {
+    const r = lastResult;
+    if (!r || !r.dateFrom) { alert('Faz uma comparação primeiro.'); return; }
+
+    const rows = [];
+    const add = (status, id) => rows.push({ DateFrom: r.dateFrom, DateTo: r.dateTo, Carriers: carriersLabel(r.carriers), Base: r.compareMode, Status: status, ID: id });
+    r.matched.forEach(id => add('MATCHED', id));
+    r.missing.forEach(id => add('MISSING', id));
+    r.extra.forEach(id => add('EXTRA', id));
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Crosscheck");
+
+    const summary = [
+      { Key: 'DateFrom', Value: r.dateFrom },
+        { Key: 'DateTo', Value: r.dateTo },
+      { Key: 'Carriers', Value: carriersLabel(r.carriers) },
+      { Key: 'Base', Value: r.compareMode },
+      { Key: 'Carrier IDs', Value: r.carrierIdsCount },
+      { Key: 'System IDs', Value: r.systemIdsCount },
+      { Key: 'Batches', Value: r.batchKeys.length },
+      { Key: 'Matched', Value: r.matched.length },
+      { Key: 'Missing', Value: r.missing.length },
+      { Key: 'Extra', Value: r.extra.length },
+    ];
+    const ws2 = XLSX.utils.json_to_sheet(summary);
+    XLSX.utils.book_append_sheet(wb, ws2, "Summary");
+
+    const fname = `carrier_crosscheck_${r.dateFrom}_to_${r.dateTo}_${String(carriersLabel(r.carriers)||'carriers').replace(/\s+/g,'_').replace(/,+/g,'+')}.xlsx`;
+    XLSX.writeFile(wb, fname);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    $('dateFrom').addEventListener('change', () => loadCarriersForRange());
+    $('dateTo').addEventListener('change', () => loadCarriersForRange());
+  });
+
+
+  // ===== Full-details additions =====
+  function _esc(s){
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function _yesNoBadge(ok){
+    return ok ? '<span class="badge good">YES</span>' : '<span class="badge bad">NO</span>';
+  }
+  function closeIdModal(evt){
+    if(evt && evt.target && evt.target.id !== 'idModal') return;
+    $('idModal').style.display = 'none';
+  }
+  function openIdModal(id){
+    const d = (lastResult && lastResult.detailsById) ? lastResult.detailsById[id] : null;
+    $('idModalTitle').textContent = id;
+    const sub = [];
+    if(d){
+      sub.push('EXPECTED:' + (d.expectedToday?.length||0));
+      sub.push('PACKED:' + (d.packedToday?.length||0));
+      sub.push('CANCELLED:' + (d.cancelledToday?.length||0));
+    }
+    $('idModalSubtitle').textContent = sub.join(' • ');
+    $('idModalBody').textContent = d ? JSON.stringify(d, null, 2) : '(sem dados)';
+    $('idModal').style.display = 'flex';
+  }
+
+  function _lastEventLabel(hist){
+    if(!hist || !hist.length) return '';
+    const e = hist[0];
+    const dt = e.DateTime || ((e.dateClean||'') + ' ' + (e.time||''));
+    const t = e.Type || e.type || '';
+    return (t ? t + ' ' : '') + (dt || '');
+  }
+
+  function renderDetailsTable(orderIds, carrierSet){
+    const tbody = $('detailsTable').querySelector('tbody');
+    tbody.innerHTML = '';
+    const ids = orderIds || [];
+    $('cDetails').textContent = ids.length;
+
+    ids.forEach(id => {
+      const d = lastResult.detailsById[id] || {};
+      const inList = carrierSet.has(id);
+      const expN = (d.expectedToday||[]).length;
+      const packN = (d.packedToday||[]).length;
+      const canN = (d.cancelledToday||[]).length;
+      const batches = (d.expectedToday||[]).map(x=>x.batchKey).concat((d.cancelledToday||[]).map(x=>x.batchKey)).concat((d.packedToday||[]).map(x=>x.batch)).filter(Boolean);
+      const bUniq = Array.from(new Set(batches)).slice(0,6);
+      const lastEv = _lastEventLabel(d.idHistory || []);
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><b>${_esc(id)}</b></td>
+        <td>${_yesNoBadge(inList)}</td>
+        <td>${expN ? `<span class="badge warn">${expN}</span>` : '<span class="badge">0</span>'}</td>
+        <td>${packN ? `<span class="badge good">${packN}</span>` : '<span class="badge">0</span>'}</td>
+        <td>${canN ? `<span class="badge bad">${canN}</span>` : '<span class="badge">0</span>'}</td>
+        <td>${_esc(lastEv)}</td>
+        <td>${_esc(bUniq.join(', '))}${batches.length>6 ? '…' : ''}</td>
+        <td><button class="btn small" onclick="openIdModal('${_esc(id)}')">Ver</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function _safeOnce(ref){
+    try{ return (await ref.once('value')).val() || {}; }
+    catch(e){
+      return null;
+    }
+  }
+
+  async function _loadRegistosAllForIds(idsSet){
+    if(!$('includeAllRegistos') || !$('includeAllRegistos').checked) return { used:false, map:{} };
+    setStatus('A carregar registos (historico completo)…');
+    const snap = await db.ref('registos').once('value');
+    const all = snap.val() || {};
+    const map = {};
+    Object.entries(all).forEach(([k,r])=>{
+      if(!r || !r.id) return;
+      const id = String(r.id).trim().toUpperCase();
+      if(!idsSet.has(id)) return;
+      if(!map[id]) map[id] = [];
+      map[id].push({ _key:k, ...r });
+    });
+    Object.keys(map).forEach(id=>{
+      map[id].sort((a,b)=> String(b.dateClean||'').localeCompare(String(a.dateClean||'')) || String(b.time||b.endTime||'').localeCompare(String(a.time||a.endTime||'')));
+    });
+    return { used:true, map };
+  }
+
+  async function _loadIdHistoryForIds(ids){
+    const out = {};
+    await Promise.all(ids.map(async (id)=>{
+      const snap = await db.ref('id_history/' + id).once('value');
+      const v = snap.val() || {};
+      const arr = Object.entries(v).map(([k,e])=>({ _key:k, ...e }));
+      arr.sort((a,b)=> (Number(b.ts||0) - Number(a.ts||0)) || String(b.DateTime||'').localeCompare(String(a.DateTime||'')));
+      out[id] = arr;
+    }));
+    return out;
+  }
+
+  function copyDetailsCsv(){
+    const rows = (lastResult && lastResult.detailRows) ? lastResult.detailRows : [];
+    if(!rows.length){ alert('Sem detalhes para copiar.'); return; }
+    const cols = Object.keys(rows[0]);
+    const lines = [cols.join('\t')].concat(rows.map(r=> cols.map(c=> String(r[c] ?? '')).replace(/\t/g,' ').replace(/\n/g,' ')).join('\t'));
+    navigator.clipboard.writeText(lines.join('\n')).catch(()=>alert('Nao consegui copiar.'));
+  }
+
+  // Redefine runCrosscheck com ALL (expected + packed + cancelled) + detalhes completos por ID (intervalo de datas)
+  runCrosscheck = async function() {
+    const dateFrom = $('dateFrom').value;
+    const dateTo = $('dateTo').value || dateFrom;
+    const carriers = getSelectedCarriers();
+    const compareMode = $('compareMode').value;
+    const extraFilter = $('extraFilter').value;
+
+    if (!dateFrom) { alert('Seleciona a data início.'); return; }
+    if (!dateTo) { alert('Seleciona a data fim (ou deixa em branco para assumir a data início).'); return; }
+    if (dateTo < dateFrom) { alert('A data fim não pode ser anterior à data início.'); return; }
+    if (!carriers.length) { alert('Seleciona pelo menos 1 transportadora.'); return; }
+
+    const carrierIds = parseIds($('carrierIds').value);
+    if (carrierIds.length === 0) { alert('Cola pelo menos 1 ID da transportadora.'); return; }
+
+    setStatus('A cruzar…');
+    setTechHint('');
+    setKPIs([], [], []);
+    $('detailsTable').querySelector('tbody').innerHTML = '';
+    $('cDetails').textContent = '0';
+
+    // 1) Buscar lotes no intervalo
+    let batches = {};
+    let usedFallbackBatches = false;
+    try {
+      const snap = await db.ref('active_batches').orderByChild('dateClean').startAt(dateFrom).endAt(dateTo).once('value');
+      batches = snap.val() || {};
+    } catch(e) {
+      usedFallbackBatches = true;
+      const snap = await db.ref('active_batches').once('value');
+      const all = snap.val() || {};
+      for (const k of Object.keys(all)) {
+        const b = all[k] || {};
+        const dc = String(b.dateClean || '');
+        if (inRange(dc, dateFrom, dateTo)) batches[k] = b;
+      }
+    }
+
+    const carriersSet = new Set(carriers.map(c => String(c||'').trim()));
+    const batchKeys = Object.keys(batches).filter(k => carriersSet.has(String((batches[k]||{}).carrier||'').trim()));
+    if (batchKeys.length === 0) {
+      setStatus('Sem lotes encontrados para esse intervalo/transportadora(s).');
+      setTechHint('Confirma se as transportadoras estão corretas e se os lotes têm dateClean e carrier preenchidos.');
+      return;
+    }
+
+    // 2) Construir mapas de EXPECTED / CANCELLED por ID (dos lotes)
+    const expectedToday = {}; // id -> [ {batchKey,batchName,carrier,dateClean,orderDetails,processed} ]
+    const cancelledToday = {}; // id -> [ {batchKey,batchName,carrier,dateClean,cancelInfo} ]
+    const expectedIdsAll = [];
+    const cancelledIdsAll = [];
+
+    for (const bk of batchKeys) {
+      const b = batches[bk] || {};
+      const bName = b.name || bk;
+      const carr = b.carrier || '';
+      const bDate = String(b.dateClean || '');
+
+      const exp = Array.isArray(b.expected_ids) ? b.expected_ids : [];
+      const processed = b.processed_ids || {};
+      const orderDetails = b.order_details || {};
+
+      exp.forEach(idRaw => {
+        const id = String(idRaw).trim().toUpperCase();
+        if(!id) return;
+        if(!expectedToday[id]) expectedToday[id] = [];
+        expectedToday[id].push({ batchKey: bk, batchName: bName, carrier: carr, dateClean: bDate, processed: !!processed[id], orderDetails: orderDetails[id] || null });
+        expectedIdsAll.push(id);
+      });
+
+      const cancObj = b.cancelled_ids || {};
+      Object.keys(cancObj).forEach(idRaw => {
+        const id = String(idRaw).trim().toUpperCase();
+        if(!id) return;
+        if(!cancelledToday[id]) cancelledToday[id] = [];
+        cancelledToday[id].push({ batchKey: bk, batchName: bName, carrier: carr, dateClean: bDate, cancelInfo: cancObj[idRaw] || null });
+        cancelledIdsAll.push(id);
+      });
+    }
+
+    // 3) Buscar PACKED (registos) no intervalo para esses lotes
+    let registos = {};
+    let usedFallbackReg = false;
+    try {
+      const snap = await db.ref('registos').orderByChild('dateClean').startAt(dateFrom).endAt(dateTo).once('value');
+      registos = snap.val() || {};
+    } catch(e) {
+      usedFallbackReg = true;
+      const snap = await db.ref('registos').once('value');
+      const all = snap.val() || {};
+      for (const k of Object.keys(all)) {
+        const r = all[k] || {};
+        const dc = String(r.dateClean || '');
+        if (inRange(dc, dateFrom, dateTo)) registos[k] = r;
+      }
+    }
+
+    const batchSet = new Set(batchKeys);
+    const packedToday = {}; // id -> [registo]
+    const packedIdsAll = [];
+    Object.entries(registos).forEach(([k,r])=>{
+      if(!r) return;
+      if(!batchSet.has(r.batch)) return;
+      if(extraFilter === 'ONLY_PACKING' && String(r.mode) !== 'PACKING') return;
+      if(!r.id) return;
+      const id = String(r.id).trim().toUpperCase();
+      if(!packedToday[id]) packedToday[id] = [];
+      packedToday[id].push({ _key:k, ...r });
+      packedIdsAll.push(id);
+    });
+
+    // 4) Escolher os IDs do sistema conforme o modo
+    let systemIds = [];
+    if (compareMode === 'EXPECTED') {
+      // expected excluindo cancelados (mantem comportamento antigo)
+      batchKeys.forEach(bk=>{
+        const req = getRequiredBatchIds(batches[bk]||{});
+        req.forEach(id=> systemIds.push(String(id).trim().toUpperCase()));
+      });
+      systemIds = Array.from(new Set(systemIds));
+    } else if (compareMode === 'PACKED') {
+      systemIds = Array.from(new Set(packedIdsAll));
+    } else {
+      // ALL: union de expected + packed + cancelled
+      const u = new Set();
+      expectedIdsAll.forEach(x=>u.add(x));
+      packedIdsAll.forEach(x=>u.add(x));
+      cancelledIdsAll.forEach(x=>u.add(x));
+      systemIds = Array.from(u);
+    }
+
+    // 5) Cruzamento
+    const carrierSet = toSet(carrierIds);
+    const systemSet = toSet(systemIds);
+
+    const matched = [];
+    const missing = [];
+    const extra = [];
+
+    systemIds.forEach(id => {
+      const nid = String(id).trim().toUpperCase();
+      if (carrierSet.has(nid)) matched.push(nid);
+      else missing.push(nid);
+    });
+
+    carrierIds.forEach(id => {
+      const nid = String(id).trim().toUpperCase();
+      if (!systemSet.has(nid)) extra.push(nid);
+    });
+
+    matched.sort();
+    missing.sort();
+    extra.sort();
+
+    // 6) Detalhes por ID: ids colados + ids em falta
+    const detailIds = Array.from(new Set([...carrierIds, ...missing])).slice(0, 500);
+    const detailIdSet = new Set(detailIds);
+
+    // carregar historico por ID (id_history) + (opcional) registos completos
+    setStatus('A carregar historico por ID…');
+    const idHistMap = await _loadIdHistoryForIds(detailIds);
+    const regAll = await _loadRegistosAllForIds(detailIdSet);
+
+    const detailsById = {};
+    detailIds.forEach(id=>{
+      detailsById[id] = {
+        id,
+        dateFrom,
+        dateTo,
+        carriers,
+        inCarrierList: carrierSet.has(id),
+        expectedToday: expectedToday[id] || [],
+        packedToday: packedToday[id] || [],
+        cancelledToday: cancelledToday[id] || [],
+        idHistory: idHistMap[id] || [],
+        registosAll: (regAll.map[id] || [])
+      };
+    });
+
+    // 7) Preparar linhas para export/copia
+    const detailRows = detailIds.map(id=>{
+      const d = detailsById[id];
+      const lastEv = _lastEventLabel(d.idHistory);
+      const batches = (d.expectedToday||[]).map(x=>x.batchKey).concat((d.cancelledToday||[]).map(x=>x.batchKey)).concat((d.packedToday||[]).map(x=>x.batch)).filter(Boolean);
+      const uniq = Array.from(new Set(batches));
+      // agregar datas onde aparece
+      const dates = (d.expectedToday||[]).map(x=>x.dateClean).concat((d.cancelledToday||[]).map(x=>x.dateClean)).concat((d.packedToday||[]).map(x=>x.dateClean)).filter(Boolean);
+      const uniqDates = Array.from(new Set(dates)).sort();
+      return {
+        DateFrom: dateFrom,
+        DateTo: dateTo,
+        Carriers: carriersLabel(carriers),
+        ID: id,
+        InCarrierList: d.inCarrierList ? 'YES' : 'NO',
+        ExpectedCount: (d.expectedToday||[]).length,
+        PackedCount: (d.packedToday||[]).length,
+        CancelledCount: (d.cancelledToday||[]).length,
+        DaysInvolved: uniqDates.join(', '),
+        LastEvent: lastEv,
+        Batches: uniq.join(', '),
+        OrderDetails: (d.expectedToday && d.expectedToday[0] && d.expectedToday[0].orderDetails) ? JSON.stringify(d.expectedToday[0].orderDetails) : '',
+        CancelInfo: (d.cancelledToday && d.cancelledToday[0] && d.cancelledToday[0].cancelInfo) ? JSON.stringify(d.cancelledToday[0].cancelInfo) : '',
+        PackedSample: (d.packedToday && d.packedToday[0]) ? JSON.stringify(d.packedToday[0]) : ''
+      };
+    });
+
+    lastResult = {
+      dateFrom, dateTo, carriers, compareMode,
+      matched, missing, extra,
+      carrierIdsCount: carrierIds.length,
+      systemIdsCount: systemIds.length,
+      batchKeys,
+      detailsById,
+      detailIds,
+      detailRows
+    };
+
+    setKPIs(matched, missing, extra);
+    renderDetailsTable(detailIds, carrierSet);
+
+    const hints = [];
+    hints.push(`Intervalo: ${dateFrom} → ${dateTo} • Carriers: ${carriersLabel(carriers)} • Base: ${compareMode}`);
+    hints.push(`IDs transportadora: ${carrierIds.length} • IDs sistema: ${systemIds.length} • Lotes: ${batchKeys.length} • Detalhes: ${detailIds.length}`);
+    if (usedFallbackBatches) hints.push('Nota: query range por dateClean em active_batches falhou → usado fallback full-scan.');
+    if ((compareMode === 'PACKED' || compareMode === 'ALL') && usedFallbackReg) hints.push('Nota: query range por dateClean em registos falhou → usado fallback full-scan.');
+    if (regAll.used) hints.push('Inclui registos completos: SIM');
+    else hints.push('Inclui registos completos: NAO');
+    setTechHint(hints.join(' | '));
+
+    setStatus('Concluido ✅');
+  };
+
+  // Override exportXlsx para incluir detalhes
+  const _exportXlsxOld = exportXlsx;
+  exportXlsx = function(){
+    const r = lastResult || {};
+    if (!r.dateFrom) return alert('Ainda nao ha resultados.');
+    try {
+      const wb = XLSX.utils.book_new();
+
+      const summary = [
+        { Key: 'DateFrom', Value: r.dateFrom },
+        { Key: 'DateTo', Value: r.dateTo },
+        { Key: 'Carriers', Value: carriersLabel(r.carriers) },
+        { Key: 'Base', Value: r.compareMode },
+        { Key: 'IDs carrier', Value: r.carrierIdsCount },
+        { Key: 'IDs system', Value: r.systemIdsCount },
+        { Key: 'Matched', Value: r.matched.length },
+        { Key: 'Missing', Value: r.missing.length },
+        { Key: 'Extra', Value: r.extra.length },
+        { Key: 'Batches', Value: (r.batchKeys || []).join(', ') }
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summary), 'Summary');
+
+      const listRows = [];
+      const add = (status, id) => listRows.push({ DateFrom: r.dateFrom, DateTo: r.dateTo, Carriers: carriersLabel(r.carriers), Base: r.compareMode, Status: status, ID: id });
+      (r.matched || []).forEach(id => add('Matched', id));
+      (r.missing || []).forEach(id => add('Missing', id));
+      (r.extra || []).forEach(id => add('Extra', id));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(listRows), 'Lists');
+
+      const details = r.detailRows || [];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(details), 'Details');
+
+      const filename = `carrier_crosscheck_fulldetails_${r.dateFrom}_to_${r.dateTo}_${String(carriersLabel(r.carriers)||'carriers').replace(/\s+/g,'_').replace(/,+/g,'+')}.xlsx`;
+      XLSX.writeFile(wb, filename);
+    } catch(e) {
+      console.error(e);
+      alert('Falha ao exportar.');
+    }
+  }
+</script>
+
+</body>
+</html>
