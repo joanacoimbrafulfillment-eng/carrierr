@@ -1580,14 +1580,88 @@ Extra: ${r.extra.length}`;
     setStatus('Concluido ✅');
   };
 
-  // Override exportXlsx para incluir detalhes
+  // Override exportXlsx para incluir detalhes (FULL JSON + Tracking)
   const _exportXlsxOld = exportXlsx;
   exportXlsx = function(){
     const r = lastResult || {};
     if (!r.dateFrom) return alert('Ainda nao ha resultados.');
+
+    // --- helpers ---
+    function _j(v){ try{ return JSON.stringify(v ?? null); }catch(e){ return ''; } }
+    function _safeStr(v){
+      let s = (v === undefined || v === null) ? '' : String(v);
+      // prevent formula injection
+      if(/^[=+\-@]/.test(s)) s = "'" + s;
+      // stop Excel from auto-linking urls (blue hyperlinks)
+      s = s.replace(/(https?:\/\/)/gi, "\u200B$1");
+      return s;
+    }
+    function _trackingFromObj(o){
+      if(!o || typeof o !== 'object') return '';
+      const keys = ['tracking','trackingNumber','tracking_number','track','awb','waybill','wayBill','guia','guiaTransporte','shippingLabel','label','etiqueta','trk','trkId'];
+      for(const k of keys){
+        if(o[k]) return String(o[k]);
+      }
+      if(o.shipment && typeof o.shipment==='object'){
+        for(const k of keys){
+          if(o.shipment[k]) return String(o.shipment[k]);
+        }
+      }
+      return '';
+    }
+    function _extractTracking(d){
+      const pools = []
+        .concat((d && d.packedToday) ? d.packedToday : [])
+        .concat((d && d.returnsToday) ? d.returnsToday : [])
+        .concat((d && d.registosAll) ? d.registosAll : []);
+      for(const rec of pools){
+        const t = _trackingFromObj(rec);
+        if(t) return t;
+      }
+      const exp = (d && d.expectedToday) ? d.expectedToday : [];
+      for(const e of exp){
+        const od = e && e.orderDetails;
+        const t = _trackingFromObj(od);
+        if(t) return t;
+      }
+      const hist = (d && d.idHistory) ? d.idHistory : [];
+      for(const ev of hist){
+        const t = _trackingFromObj(ev);
+        if(t) return t;
+        if(ev && ev.Tracking) return String(ev.Tracking);
+      }
+      return '';
+    }
+    function _statusForId(id){
+      const u = String(id||'').toUpperCase();
+      if((r.matched||[]).includes(u)) return 'MATCHED';
+      if((r.missing||[]).includes(u)) return 'MISSING';
+      if((r.extra||[]).includes(u)) return 'EXTRA';
+      const d = (r.detailsById||{})[u];
+      if(d && d.inCarrierList) return 'IN_LIST';
+      return 'SYSTEM_ONLY';
+    }
+    function _sheetSanitize(ws){
+      const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+      for(let R = range.s.r; R <= range.e.r; ++R){
+        for(let C = range.s.c; C <= range.e.c; ++C){
+          const addr = XLSX.utils.encode_cell({r:R,c:C});
+          const cell = ws[addr];
+          if(!cell) continue;
+          if(cell.t === 's' || typeof cell.v === 'string'){
+            cell.t = 's';
+            cell.v = _safeStr(cell.v);
+            if(cell.l) delete cell.l;
+          }
+        }
+      }
+      return ws;
+    }
+
     try {
       const wb = XLSX.utils.book_new();
 
+      // --- Summary ---
       const summary = [
         { Key: 'DateFrom', Value: r.dateFrom },
         { Key: 'DateTo', Value: r.dateTo },
@@ -1595,31 +1669,111 @@ Extra: ${r.extra.length}`;
         { Key: 'Base', Value: r.compareMode },
         { Key: 'IDs carrier', Value: r.carrierIdsCount },
         { Key: 'IDs system', Value: r.systemIdsCount },
-        { Key: 'Matched', Value: r.matched.length },
-        { Key: 'Missing', Value: r.missing.length },
-        { Key: 'Extra', Value: r.extra.length },
+        { Key: 'Matched', Value: (r.matched||[]).length },
+        { Key: 'Missing', Value: (r.missing||[]).length },
+        { Key: 'Extra', Value: (r.extra||[]).length },
         { Key: 'Batches', Value: (r.batchKeys || []).join(', ') }
       ];
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summary), 'Summary');
+      const wsSummary = _sheetSanitize(XLSX.utils.json_to_sheet(summary));
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
 
+      // --- Lists ---
       const listRows = [];
-      const add = (status, id) => listRows.push({ DateFrom: r.dateFrom, DateTo: r.dateTo, Carriers: carriersLabel(r.carriers), Base: r.compareMode, Status: status, ID: id });
-      (r.matched || []).forEach(id => add('Matched', id));
-      (r.missing || []).forEach(id => add('Missing', id));
-      (r.extra || []).forEach(id => add('Extra', id));
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(listRows), 'Lists');
+      const add = (status, id) => listRows.push({ DateFrom: r.dateFrom, DateTo: r.dateTo, Carriers: carriersLabel(r.carriers), Base: r.compareMode, Status: status, ID: String(id||'') });
+      (r.matched || []).forEach(id => add('MATCHED', id));
+      (r.missing || []).forEach(id => add('MISSING', id));
+      (r.extra || []).forEach(id => add('EXTRA', id));
+      const wsLists = _sheetSanitize(XLSX.utils.json_to_sheet(listRows));
+      XLSX.utils.book_append_sheet(wb, wsLists, 'Lists');
 
-      const details = r.detailRows || [];
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(details), 'Details');
+      // --- Details (light) ---
+      const detailsLight = (r.detailRows || []).map(row=>{
+        const out = {};
+        Object.keys(row||{}).forEach(k=> out[k] = _safeStr(row[k]));
+        return out;
+      });
+      const wsLight = _sheetSanitize(XLSX.utils.json_to_sheet(detailsLight));
+      XLSX.utils.book_append_sheet(wb, wsLight, 'Details_light');
+
+      // --- Details_FULL (all data + tracking + full JSON blobs) ---
+      const detailsById = r.detailsById || {};
+      const ids = (r.detailIds && r.detailIds.length) ? r.detailIds : Object.keys(detailsById);
+      const fullRows = (ids || []).map(idRaw => {
+        const id = String(idRaw||'').trim().toUpperCase();
+        const d = detailsById[id] || {};
+        const exp = d.expectedToday || [];
+        const pack = d.packedToday || [];
+        const ret = d.returnsToday || [];
+        const can = d.cancelledToday || [];
+        const hist = d.idHistory || [];
+        const regAll = d.registosAll || [];
+
+        const batches = []
+          .concat(exp.map(x=>x.batchKey))
+          .concat(can.map(x=>x.batchKey))
+          .concat(pack.map(x=>x.batch))
+          .concat(ret.map(x=>x.batch))
+          .filter(Boolean);
+        const uniqBatches = Array.from(new Set(batches));
+
+        const dates = []
+          .concat(exp.map(x=>x.dateClean))
+          .concat(can.map(x=>x.dateClean))
+          .concat(pack.map(x=>x.dateClean))
+          .concat(ret.map(x=>x.dateClean))
+          .filter(Boolean);
+        const uniqDates = Array.from(new Set(dates)).sort();
+
+        const orderDetails = (exp[0] && exp[0].orderDetails) ? exp[0].orderDetails : null;
+        const cancelInfo = (can[0] && can[0].cancelInfo) ? can[0].cancelInfo : null;
+
+        const tracking = _extractTracking(d);
+
+        return {
+          DateFrom: r.dateFrom,
+          DateTo: r.dateTo,
+          Carriers: carriersLabel(r.carriers),
+          Base: r.compareMode,
+
+          ID: id,
+          Status: _statusForId(id),
+          InCarrierList: d.inCarrierList ? 'YES' : 'NO',
+
+          Tracking: tracking,
+
+          ExpectedCount: exp.length,
+          PackedCount: pack.length,
+          ReturnsCount: ret.length,
+          CancelledCount: can.length,
+
+          DaysInvolved: uniqDates.join(', '),
+          Batches: uniqBatches.join(', '),
+          LastEvent: _safeStr(_lastEventLabel(hist)),
+
+          OrderDetailsJSON: _safeStr(_j(orderDetails)),
+          CancelInfoJSON: _safeStr(_j(cancelInfo)),
+          ExpectedJSON: _safeStr(_j(exp)),
+          PackedJSON: _safeStr(_j(pack)),
+          ReturnsJSON: _safeStr(_j(ret)),
+          CancelledJSON: _safeStr(_j(can)),
+          IdHistoryJSON: _safeStr(_j(hist)),
+          RegistosAllJSON: _safeStr(_j(regAll)),
+          FullDataJSON: _safeStr(_j(d))
+        };
+      });
+
+      const wsFull = _sheetSanitize(XLSX.utils.json_to_sheet(fullRows));
+      XLSX.utils.book_append_sheet(wb, wsFull, 'Details_FULL');
 
       const filename = `carrier_crosscheck_fulldetails_${r.dateFrom}_to_${r.dateTo}_${String(carriersLabel(r.carriers)||'carriers').replace(/\s+/g,'_').replace(/,+/g,'+')}.xlsx`;
       XLSX.writeFile(wb, filename);
     } catch(e) {
       console.error(e);
-      alert('Falha ao exportar.');
+      alert('Falha ao exportar (ver consola).');
     }
   }
 </script>
+
 
 </body>
 </html>
