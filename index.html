@@ -486,9 +486,27 @@
   }
   function dateAddDays(yyyy_mm_dd, delta){
     try{
-      const d = new Date(yyyy_mm_dd + "T00:00:00");
-      d.setDate(d.getDate() + delta);
-      return d.toISOString().slice(0,10);
+      const parts = String(yyyy_mm_dd || "").split("-").map(Number);
+      if(parts.length !== 3 || parts.some(n => Number.isNaN(n))) return yyyy_mm_dd;
+
+      const [year, month, day] = parts;
+
+      if (month < 1 || month > 12) return yyyy_mm_dd;
+      if (day < 1 || day > 31) return yyyy_mm_dd;
+
+      const date = new Date(Date.UTC(year, month - 1, day));
+
+      if (
+        date.getUTCFullYear() !== year ||
+        date.getUTCMonth() + 1 !== month ||
+        date.getUTCDate() !== day
+      ) {
+        return yyyy_mm_dd;
+      }
+
+      date.setUTCDate(date.getUTCDate() + Number(delta || 0));
+
+      return date.toISOString().slice(0,10);
     }catch(e){
       return yyyy_mm_dd;
     }
