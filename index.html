@@ -398,7 +398,8 @@
 
     packedIndex: new Map(), // id -> {tracking, packedAt, user, batchKey} from registos
     histIndex: new Map(), // id -> {events:[], summary:{} } from id_history (DEEP)
-    lastRunMeta: {}
+    lastRunMeta: {},
+    archiveRead: null
   };
 
   // ===== Persistência (localStorage) — só neste ficheiro / browser =====
@@ -510,6 +511,74 @@
     }catch(e){
       return yyyy_mm_dd;
     }
+  }
+  function extractDateFromDateTime(v){
+    const s = String(v || "").trim();
+    const m = s.match(/(\d{4}-\d{2}-\d{2})/);
+    return m ? m[1] : "";
+  }
+
+  function scoreStatus(st){
+    if(st === "PACKED") return 3;
+    if(st === "PENDING") return 2;
+    if(st === "CANCELLED") return 1;
+    return 0;
+  }
+
+  function buildMatchFromHistory(id, allowed){
+    const hist = state.histIndex.get(id);
+    const events = hist && Array.isArray(hist.events) ? hist.events : [];
+    if(!events.length) return null;
+
+    let best = null;
+    let bestScore = "";
+
+    events.forEach(ev => {
+      const carrier = fmt(ev.Carrier || "");
+      if(allowed && carrier && !allowed.has(safeKey(carrier))) return;
+
+      const type = String(ev.Type || "").toUpperCase();
+      let status = "PENDING";
+      if(type.includes("CANCEL")) status = "CANCELLED";
+      else if(type.includes("PACK")) status = "PACKED";
+      else if(type.includes("RETURN")) status = "PACKED";
+
+      const dateClean = extractDateFromDateTime(ev.DateTime);
+      const batch = fmt(ev.Batch || "");
+      const rec = {
+        id,
+        carrier: carrier || "N/A",
+        status,
+        batchKey: batch,
+        batchName: batch,
+        dateClean,
+        customer: "",
+        expectedContent: fmt(ev.Items_or_Content || ""),
+        source: "id_history"
+      };
+      const score = (dateClean || "0000-00-00") + "|" + scoreStatus(status) + "|" + String(ev.ts || 0).padStart(16, '0');
+      if(!best || score > bestScore){
+        best = rec;
+        bestScore = score;
+      }
+    });
+
+    return best;
+  }
+
+  function buildMatchFromPacked(id, packed, inputCarrier){
+    if(!packed) return null;
+    return {
+      id,
+      carrier: inputCarrier || "N/A",
+      status: "PACKED",
+      batchKey: fmt(packed.batchKey || ""),
+      batchName: fmt(packed.batchKey || ""),
+      dateClean: extractDateFromDateTime(packed.packedAt),
+      customer: "",
+      expectedContent: "",
+      source: "registos"
+    };
   }
   function nowDate(){ return new Date().toISOString().slice(0,10); }
   function setStatus(txt, kind=""){
@@ -689,7 +758,7 @@
   }
   window.loadCarriersFromOFF = loadCarriersFromOFF;
 
-  // ===== Build OFF index from active_batches =====
+  // ===== Build OFF index from active_batches + deleted_batches =====
   function statusFromBatch(b, id){
     const cancelled = b && b.cancelled_ids && b.cancelled_ids[id];
     if(cancelled) return "CANCELLED";
@@ -698,9 +767,26 @@
     return "PENDING";
   }
 
+  function sourcePriority(source){
+    if(source === "active_batches") return 2;
+    if(source === "deleted_batches") return 1;
+    return 0;
+  }
+
+  function mergeBatchMaps(activeBatches, archivedBatches){
+    const merged = {};
+    Object.entries(activeBatches || {}).forEach(([k,v])=>{
+      if(v) merged[k] = Object.assign({}, v, { __source: "active_batches" });
+    });
+    Object.entries(archivedBatches || {}).forEach(([k,v])=>{
+      if(v && !merged[k]) merged[k] = Object.assign({}, v, { __source: "deleted_batches" });
+    });
+    return merged;
+  }
+
   function collectMatchesFromBatches(batches, start, end){
-    const idx = new Map();       // id -> best match (prefer same day end, then latest date)
-    const all = new Map();       // id -> []
+    const idx = new Map();
+    const all = new Map();
     const byCarrierIds = new Map();
     const byCarrierBatches = new Map();
     const batchEntries = Object.entries(batches || {});
@@ -725,29 +811,26 @@
           batchName: fmt(b.name || batchKey),
           dateClean: dc,
           customer: fmt(det.name || ""),
-          expectedContent: fmt(det.content || "")
+          expectedContent: fmt(det.content || ""),
+          source: fmt(b.__source || "active_batches")
         };
         if(!all.has(id)) all.set(id, []);
         all.get(id).push(rec);
 
-        // carrier -> ids / batches
         const cKey = safeKey(carrier);
         if(!byCarrierIds.has(cKey)) byCarrierIds.set(cKey, new Set());
         byCarrierIds.get(cKey).add(id);
         if(!byCarrierBatches.has(cKey)) byCarrierBatches.set(cKey, new Set());
         byCarrierBatches.get(cKey).add(batchKey);
 
-        // pick "best" for single summary:
-        // prefer latest dateClean, and if tie prefer PACKED over others (so you see packed quickly)
         const prev = idx.get(id);
-        const curScore = (rec.dateClean) + "|" + (rec.status==="PACKED" ? "2" : (rec.status==="PENDING" ? "1" : "0"));
-        const prevScore = prev ? (prev.dateClean + "|" + (prev.status==="PACKED" ? "2" : (prev.status==="PENDING" ? "1" : "0"))) : "";
+        const curScore = (rec.dateClean || "0000-00-00") + "|" + scoreStatus(rec.status) + "|" + sourcePriority(rec.source);
+        const prevScore = prev ? ((prev.dateClean || "0000-00-00") + "|" + scoreStatus(prev.status) + "|" + sourcePriority(prev.source)) : "";
         if(!prev || curScore > prevScore) idx.set(id, rec);
       });
     });
-    // sort all arrays by date
-    all.forEach((arr, id)=>{
-      arr.sort((a,b)=> (a.dateClean||"").localeCompare(b.dateClean||""));
+    all.forEach((arr)=>{
+      arr.sort((a,b)=> (a.dateClean||"").localeCompare(b.dateClean||"") || sourcePriority(a.source) - sourcePriority(b.source));
     });
     state.offIndex = idx;
     state.offAllMatches = all;
@@ -837,11 +920,24 @@
     $("btnRun").disabled = true;
 
     try{
-      // 1) load active_batches in eff range
-      let ref = db.ref("active_batches").orderByChild("dateClean").startAt(effStart).endAt(end);
-      const snap = await ref.once("value");
-      const batches = snap.val() || {};
-      collectMatchesFromBatches(batches, effStart, end);
+      // 1) load active_batches + deleted_batches in eff range
+      const activeRef = db.ref("active_batches").orderByChild("dateClean").startAt(effStart).endAt(end);
+      const activeSnap = await activeRef.once("value");
+      const activeBatches = activeSnap.val() || {};
+
+      let archivedBatches = {};
+      state.archiveRead = true;
+      try{
+        const deletedRef = db.ref("deleted_batches").orderByChild("dateClean").startAt(effStart).endAt(end);
+        const deletedSnap = await deletedRef.once("value");
+        archivedBatches = deletedSnap.val() || {};
+      }catch(err){
+        console.warn("deleted_batches not available for this user", err);
+        state.archiveRead = false;
+      }
+
+      const mergedBatches = mergeBatchMaps(activeBatches, archivedBatches);
+      collectMatchesFromBatches(mergedBatches, effStart, end);
 
       // 2) packed tracking from registos in eff range
       await loadPackedIndex(effStart, end);
@@ -876,6 +972,11 @@
         await loadHistoryForIds(uniq(allIds));
       } else {
         state.histIndex = new Map();
+        const maybeMissingIds = uniq(allIds.filter(id => !state.offAllMatches.has(id)));
+        if(maybeMissingIds.length){
+          setStatus("A verificar IDs em falta no histórico...", "");
+          await loadHistoryForIds(maybeMissingIds);
+        }
       }
 
       // 4) produce results
@@ -899,10 +1000,14 @@
             filtered.sort((a,b)=> (a.dateClean||"").localeCompare(b.dateClean||"") || (a.status==="PACKED"?1:0) - (b.status==="PACKED"?1:0));
             match = filtered[filtered.length-1];
           } else {
-            match = null;
+            match = buildMatchFromHistory(id, allowed);
           }
         } else {
-          match = state.offIndex.get(id) || null;
+          match = state.offIndex.get(id) || buildMatchFromHistory(id, null) || null;
+        }
+
+        if(!match && packed){
+          match = buildMatchFromPacked(id, packed, inputCarrier);
         }
 
         let resultKind = "MISSING";
@@ -922,19 +1027,37 @@
           batchKey = match.batchKey;
           dc = match.dateClean;
 
-          if(allowed){
+          if(match.source === "registos"){
+            resultKind = "MATCH";
+            note = "Encontrado via registos PACKING do intervalo (fallback).";
+          } else if(match.source === "deleted_batches"){
+            note = "Encontrado em lote arquivado (deleted_batches) no intervalo.";
+            if(allowed){
+              resultKind = allowed.has(safeKey(offCarrier)) ? "MATCH" : "OTHER_CARRIER";
+            } else if(!offCarrier || offCarrier === "N/A") {
+              resultKind = "MATCH";
+            } else if(safeKey(offCarrier) === safeKey(inputCarrier)) {
+              resultKind = "MATCH";
+            } else {
+              resultKind = "OTHER_CARRIER";
+            }
+          } else if(allowed){
             // MATCH se encontrar em qualquer carrier do grupo
             resultKind = allowed.has(safeKey(offCarrier)) ? "MATCH" : "OTHER_CARRIER";
           } else {
-            if(safeKey(offCarrier) === safeKey(inputCarrier)) resultKind = "MATCH";
+            if(!offCarrier || offCarrier === "N/A") resultKind = "MATCH";
+            else if(safeKey(offCarrier) === safeKey(inputCarrier)) resultKind = "MATCH";
             else resultKind = "OTHER_CARRIER";
           }
 
           if(packed && packed.tracking) tracking = packed.tracking;
           packedFlag = (st === "PACKED") ? "SIM" : "NÃO";
 
+          if(match.source === "id_history"){
+            note = note || "Encontrado via id_history (fallback histórico).";
+          }
           if(st !== "PACKED" && packed){
-            note = "Existe registo PACKING no intervalo (ver detalhes).";
+            note = (note ? note + " | " : "") + "Existe registo PACKING no intervalo (ver detalhes).";
           }
         } else {
           note = allowed
@@ -969,7 +1092,11 @@
       updateKPIs();
       updateOffKPIs();
       renderTable();
-      setStatus("Feito ✅", "ok");
+      if(state.archiveRead === false){
+        setStatus("Feito com aviso: sem acesso a lotes arquivados (deleted_batches).", "bad");
+      } else {
+        setStatus("Feito ✅", "ok");
+      }
     }catch(e){
       console.error(e);
       setStatus("Erro a ler OFF (permissões / rede).", "bad");
@@ -1002,18 +1129,24 @@
     const offSet = new Set();
     carrierKeys.forEach(k=>{
       const set = state.offCarrierIds && state.offCarrierIds.get(k);
-      if(set) Array.from(set).forEach(id=> offSet.add(id));
+      if(set) Array.from(set).forEach(id=> offSet.add(String(id).trim()));
     });
 
-    // pasted union used in this run (joint or per carrier)
-    const pastedUnion = new Set();
-    Object.values(state.carrierLists || {}).forEach(set=>{
-      if(set) Array.from(set).forEach(id=> pastedUnion.add(String(id).trim()));
-    });
-    // if joint box used, also include it
+    // Compare only against the list(s) actually in use for this selection/run.
+    // The previous version used ALL saved carrier lists, which hid missing IDs
+    // whenever the same ID existed under some other carrier.
     const jointEl = document.getElementById("jointIds");
-    if(jointEl){
-      parseIds(jointEl.value).forEach(id=> pastedUnion.add(String(id).trim()));
+    const jointIds = jointEl ? parseIds(jointEl.value) : [];
+    const useJoint = jointIds.length && carriersToUse.length >= 2;
+
+    const pastedUnion = new Set();
+    if(useJoint){
+      jointIds.forEach(id=> pastedUnion.add(String(id).trim()));
+    } else {
+      carriersToUse.forEach(carrier=>{
+        const set = state.carrierLists && state.carrierLists[carrier] ? state.carrierLists[carrier] : null;
+        if(set) Array.from(set).forEach(id=> pastedUnion.add(String(id).trim()));
+      });
     }
 
     const offInList = new Set();
@@ -1023,7 +1156,7 @@
       else offMissing.add(id);
     });
 
-    return { carriersToUse, offSet, offMissing, offInList };
+    return { carriersToUse, offSet, offMissing, offInList, useJoint, pastedUnion };
   }
 
   function updateOffKPIs(){
@@ -1064,13 +1197,13 @@
 
   function openOffMissing(){
     const x = computeOffSetForSelection();
-    openOffList("IDs do OFF que NÃO estão na lista (seleção)", x.offMissing);
+    openOffList("IDs do OFF (active + arquivados) que NÃO estão na lista (seleção)", x.offMissing);
   }
   window.openOffMissing = openOffMissing;
 
   function openOffAll(){
     const x = computeOffSetForSelection();
-    openOffList("TODOS os IDs do OFF (seleção)", x.offSet);
+    openOffList("TODOS os IDs do OFF (active + arquivados, seleção)", x.offSet);
   }
   window.openOffAll = openOffAll;
 
