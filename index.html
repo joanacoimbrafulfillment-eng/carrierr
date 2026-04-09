@@ -838,123 +838,107 @@
     state.offBatchesByCarrier = byCarrierBatches;
   }
 
-  // ===== Get tracking / packed record from registos in date range =====
-  async function loadPackedIndex(start, end){
-    state.packedIndex = new Map();
 
-    // filter by dateClean in range (inclusive)
-    let ref = db.ref("registos").orderByChild("dateClean").startAt(start).endAt(end);
-    const snap = await ref.once("value");
-    const reg = snap.val() || {};
-    Object.values(reg).forEach(r=>{
-      if(!r || !r.id) return;
-      const mode = String(r.mode || "").toUpperCase();
-      if(mode !== "PACKING") return;
-      const id = String(r.id).trim();
-      const packedAt = dt(r.dateClean, normTime(r.endTime || r.time || r.startTime));
-      const rec = {
-        id,
-        tracking: fmt(r.track || r.tracking || ""),
-        packedAt,
-        user: fmt(r.user || ""),
-        batchKey: fmt(r.batch || "")
-      };
-      // keep latest packedAt
-      const prev = state.packedIndex.get(id);
-      if(!prev || (rec.packedAt > prev.packedAt)) state.packedIndex.set(id, rec);
-    });
+  // ===== Get tracking / packed record only for pasted IDs =====
+  async function loadPackedIndexForIds(ids, start, end){
+    state.packedIndex = new Map();
+    const uniqueIds = uniq((ids || []).map(id => String(id || "").trim()).filter(Boolean));
+    if(!uniqueIds.length) return;
+
+    const chunk = 20;
+    for(let i=0; i<uniqueIds.length; i+=chunk){
+      const slice = uniqueIds.slice(i, i + chunk);
+      await Promise.all(slice.map(async (id)=>{
+        try{
+          const snap = await db.ref("registos").orderByChild("id").equalTo(id).once("value");
+          const reg = snap.val() || {};
+          Object.values(reg).forEach(r=>{
+            if(!r || !r.id) return;
+            if(String(r.id).trim() !== id) return;
+            const mode = String(r.mode || "").toUpperCase();
+            if(mode !== "PACKING") return;
+            const dc = fmt(r.dateClean || "");
+            if(!dc || dc < start || dc > end) return;
+            const packedAt = dt(dc, normTime(r.endTime || r.time || r.startTime));
+            const rec = {
+              id,
+              tracking: fmt(r.track || r.tracking || ""),
+              packedAt,
+              user: fmt(r.user || ""),
+              batchKey: fmt(r.batch || "")
+            };
+            const prev = state.packedIndex.get(id);
+            if(!prev || (rec.packedAt > prev.packedAt)) state.packedIndex.set(id, rec);
+          });
+        }catch(e){
+          // ignore per id
+        }
+      }));
+    }
   }
 
   // ===== Optional deep index from id_history (can be heavy) =====
   async function loadHistoryForIds(ids){
     state.histIndex = new Map();
-    const jobs = ids.map(async (id)=>{
-      try{
-        const snap = await db.ref("id_history/" + id).once("value");
-        const hist = snap.val() || {};
-        const events = Object.values(hist).map(e=>({
-          Type: fmt(e.Type),
-          DateTime: fmt(e.DateTime) || dt(e.dateClean, e.time),
-          Batch: fmt(e.Batch || e.batchName || e.BatchKey || ""),
-          Carrier: fmt(e.Carrier || ""),
-          User: fmt(e.User || ""),
-          Tracking: fmt(e.Tracking || ""),
-          Items_or_Content: fmt(e.Items_or_Content || ""),
-          Details: fmt(e.Details || ""),
-          ts: Number(e.ts || 0)
-        }));
-        events.sort((a,b)=> (a.ts||0) - (b.ts||0) || a.DateTime.localeCompare(b.DateTime));
-        state.histIndex.set(id, {events});
-      }catch(e){
-        // ignore per id
-      }
-    });
-    // throttle a bit: run in chunks
-    const chunk = 25;
-    for(let i=0;i<jobs.length;i+=chunk){
-      await Promise.all(jobs.slice(i,i+chunk));
+    const uniqueIds = uniq((ids || []).map(id => String(id || "").trim()).filter(Boolean));
+    const chunk = 15;
+    for(let i=0; i<uniqueIds.length; i+=chunk){
+      const slice = uniqueIds.slice(i, i + chunk);
+      await Promise.all(slice.map(async (id)=>{
+        try{
+          const snap = await db.ref("id_history/" + id).once("value");
+          const hist = snap.val() || {};
+          const events = Object.values(hist).map(e=>({
+            Type: fmt(e.Type),
+            DateTime: fmt(e.DateTime) || dt(e.dateClean, e.time),
+            Batch: fmt(e.Batch || e.batchName || e.BatchKey || ""),
+            Carrier: fmt(e.Carrier || ""),
+            User: fmt(e.User || ""),
+            Tracking: fmt(e.Tracking || ""),
+            Items_or_Content: fmt(e.Items_or_Content || ""),
+            Details: fmt(e.Details || ""),
+            ts: Number(e.ts || 0)
+          }));
+          events.sort((a,b)=> (a.ts||0) - (b.ts||0) || a.DateTime.localeCompare(b.DateTime));
+          state.histIndex.set(id, {events});
+        }catch(e){
+          // ignore per id
+        }
+      }));
     }
   }
 
   // ===== RUN =====
+
   async function run(){
-    // must be authenticated, otherwise DB rules may block
     if(!auth.currentUser){
       setStatus("Faz login primeiro.", "bad");
       openLogin();
       return;
     }
 
-    // ensure last paste saved from current carrier box (so user doesn't forget)
     try{ saveCarrierPaste(); }catch(e){}
 
     const start = $("startDate").value;
     const end = $("endDate").value;
     const lookback = parseInt($("lookback").value, 10) || 0;
     const mode = $("searchMode").value;
-
-    // effective window = start-lookback .. end
     const effStart = dateAddDays(start, -lookback);
 
     setStatus("A carregar dados do OFF...", "");
     $("btnRun").disabled = true;
 
     try{
-      // 1) load active_batches + deleted_batches in eff range
-      const activeRef = db.ref("active_batches").orderByChild("dateClean").startAt(effStart).endAt(end);
-      const activeSnap = await activeRef.once("value");
-      const activeBatches = activeSnap.val() || {};
-
-      let archivedBatches = {};
-      state.archiveRead = true;
-      try{
-        const deletedRef = db.ref("deleted_batches").orderByChild("dateClean").startAt(effStart).endAt(end);
-        const deletedSnap = await deletedRef.once("value");
-        archivedBatches = deletedSnap.val() || {};
-      }catch(err){
-        console.warn("deleted_batches not available for this user", err);
-        state.archiveRead = false;
-      }
-
-      const mergedBatches = mergeBatchMaps(activeBatches, archivedBatches);
-      collectMatchesFromBatches(mergedBatches, effStart, end);
-
-      // 2) packed tracking from registos in eff range
-      await loadPackedIndex(effStart, end);
-
-      // 3) build list of all pasted IDs
-      const pasted = [];
-      // carriers selecionadas (se nenhuma, usar todas com lista guardada)
       const selected = getSelectedCarriers();
       const carriersToUse = (selected && selected.length)
         ? selected
         : Object.keys(state.carrierLists || {}).filter(c => state.carrierLists[c] && state.carrierLists[c].size);
 
-      // lista conjunta (opcional): se tiver IDs e houver 2+ carriers selecionadas, usar como grupo
       const jointEl = document.getElementById("jointIds");
       const jointIds = jointEl ? parseIds(jointEl.value) : [];
       const useJoint = jointIds.length && carriersToUse.length >= 2;
 
+      const pasted = [];
       if(useJoint){
         const groupLabel = carriersToUse.join(" + ");
         jointIds.forEach(id => pasted.push({carrier: groupLabel, id: String(id).trim(), groupCarriers: carriersToUse.slice()}));
@@ -966,20 +950,46 @@
         });
       }
 
-      const allIds = pasted.map(x=>x.id);
+      const allIds = uniq(pasted.map(x=>x.id).filter(Boolean));
+
+      const activeRef = db.ref("active_batches").orderByChild("dateClean").startAt(effStart).endAt(end);
+      const activeSnap = await activeRef.once("value");
+      const activeBatches = activeSnap.val() || {};
+
+      let archivedBatches = {};
+      state.archiveRead = true;
+      if(auth.currentUser && /@admin\.com$/i.test(String(auth.currentUser.email || ""))){
+        try{
+          const deletedRef = db.ref("deleted_batches").orderByChild("dateClean").startAt(effStart).endAt(end);
+          const deletedSnap = await deletedRef.once("value");
+          archivedBatches = deletedSnap.val() || {};
+        }catch(err){
+          console.warn("deleted_batches not available for this user", err);
+          state.archiveRead = false;
+        }
+      } else {
+        state.archiveRead = false;
+      }
+
+      const mergedBatches = mergeBatchMaps(activeBatches, archivedBatches);
+      collectMatchesFromBatches(mergedBatches, effStart, end);
+
+      setStatus("A validar packing/tracking dos IDs colados...", "");
+      await loadPackedIndexForIds(allIds, effStart, end);
+
+      state.histIndex = new Map();
+
       if(mode === "DEEP"){
         setStatus("Modo Profundo: a ler id_history...", "");
-        await loadHistoryForIds(uniq(allIds));
+        await loadHistoryForIds(allIds);
       } else {
-        state.histIndex = new Map();
-        const maybeMissingIds = uniq(allIds.filter(id => !state.offAllMatches.has(id)));
-        if(maybeMissingIds.length){
+        const unresolved = uniq(allIds.filter(id => !state.offAllMatches.has(id) && !state.packedIndex.has(id)));
+        if(unresolved.length){
           setStatus("A verificar IDs em falta no histórico...", "");
-          await loadHistoryForIds(maybeMissingIds);
+          await loadHistoryForIds(unresolved);
         }
       }
 
-      // 4) produce results
       const rows = [];
       pasted.forEach(({carrier: inputCarrier, id})=>{
         const allMatchesAll = state.offAllMatches.get(id) || [];
@@ -988,7 +998,6 @@
         const groupCarriers = pasted.find(p=>p.id===id && p.carrier===inputCarrier)?.groupCarriers || null;
         const allowed = groupCarriers ? new Set(groupCarriers.map(c=>safeKey(c))) : null;
 
-        // escolher match "dentro do grupo" se for lista conjunta
         let match = null;
         let allMatches = allMatchesAll;
 
@@ -996,7 +1005,6 @@
           const filtered = allMatchesAll.filter(m => allowed.has(safeKey(m.carrier)));
           allMatches = filtered.length ? filtered : allMatchesAll;
           if(filtered.length){
-            // escolher o melhor: mais recente e PACKED preferido
             filtered.sort((a,b)=> (a.dateClean||"").localeCompare(b.dateClean||"") || (a.status==="PACKED"?1:0) - (b.status==="PACKED"?1:0));
             match = filtered[filtered.length-1];
           } else {
@@ -1042,7 +1050,6 @@
               resultKind = "OTHER_CARRIER";
             }
           } else if(allowed){
-            // MATCH se encontrar em qualquer carrier do grupo
             resultKind = allowed.has(safeKey(offCarrier)) ? "MATCH" : "OTHER_CARRIER";
           } else {
             if(!offCarrier || offCarrier === "N/A") resultKind = "MATCH";
@@ -1078,7 +1085,6 @@
         });
       });
 
-      // dedupe duplicates pasted within same carrier (keep row but flag)
       const seen = new Set();
       rows.forEach(r=>{
         const k = safeKey(r.inputCarrier) + "|" + r.id;
@@ -1092,8 +1098,10 @@
       updateKPIs();
       updateOffKPIs();
       renderTable();
-      if(state.archiveRead === false){
+      if(state.archiveRead === false && auth.currentUser && /@admin\.com$/i.test(String(auth.currentUser.email || ""))){
         setStatus("Feito com aviso: sem acesso a lotes arquivados (deleted_batches).", "bad");
+      } else if(state.archiveRead === false) {
+        setStatus("Feito ✅ (sem arquivo: conta sem acesso a deleted_batches)", "ok");
       } else {
         setStatus("Feito ✅", "ok");
       }
