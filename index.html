@@ -254,6 +254,7 @@
         </div>
         <div class="row" style="margin-top:10px;">
           <button class="btn" onclick="openOffMissing()">Ver IDs OFF que não vieram na lista</button>
+          <button class="btn" onclick="openListMissingInOff()">Ver IDs da lista que não foram encontrados no OFF</button>
           <button class="btn" onclick="openOffAll()">Ver TODOS os IDs do OFF (seleção)</button>
         </div>
 
@@ -633,7 +634,7 @@
   }
   $("carrierSel").addEventListener("change", loadCarrierPasteToBox);
   const ms = document.getElementById("carrierMulti");
-  if(ms){ ms.addEventListener("change", ()=>{ try{ updateOffKPIs(); }catch(e){} }); }
+  if(ms){ ms.addEventListener("change", ()=>{ try{ updateKPIs(); updateOffKPIs(); }catch(e){} }); }
 
 
   function addCarrierLocal(){
@@ -879,7 +880,8 @@
 
   // ===== Optional deep index from id_history (can be heavy) =====
   async function loadHistoryForIds(ids){
-    state.histIndex = new Map();
+    // NOTE: histIndex is NOT reset here — caller (run) is responsible for resetting before calling.
+    // This avoids erasing results when run() calls this function a second time in FAST mode.
     const uniqueIds = uniq((ids || []).map(id => String(id || "").trim()).filter(Boolean));
     const chunk = 15;
     for(let i=0; i<uniqueIds.length; i+=chunk){
@@ -910,7 +912,9 @@
 
   // ===== RUN =====
 
+  let _running = false;
   async function run(){
+    if(_running){ setStatus("Cruzamento já em curso...", ""); return; }
     if(!auth.currentUser){
       setStatus("Faz login primeiro.", "bad");
       openLogin();
@@ -921,6 +925,12 @@
 
     const start = $("startDate").value;
     const end = $("endDate").value;
+
+    // Fix #5: validate dates before hitting Firebase
+    if(!start || !end){ setStatus("Preenche as datas.", "bad"); return; }
+    if(start > end){ setStatus("Data inicial não pode ser posterior à data final.", "bad"); return; }
+
+    _running = true;
     const lookback = parseInt($("lookback").value, 10) || 0;
     const mode = $("searchMode").value;
     const effStart = dateAddDays(start, -lookback);
@@ -1109,6 +1119,7 @@
       console.error(e);
       setStatus("Erro a ler OFF (permissões / rede).", "bad");
     } finally {
+      _running = false;
       $("btnRun").disabled = false;
     }
   }
@@ -1175,27 +1186,86 @@
     $("kpiOffCarriers").textContent = x.carriersToUse.length ? x.carriersToUse.join(" + ") : "—";
   }
 
+  function buildOffListRows(ids){
+    const arr = Array.from(ids || []).map(id => String(id || "").trim()).filter(Boolean).sort();
+    return arr.map(id => {
+      const allMatches = (state.offAllMatches && state.offAllMatches.get(id)) ? state.offAllMatches.get(id) : [];
+      const best = (state.offIndex && state.offIndex.get(id))
+        ? state.offIndex.get(id)
+        : (allMatches.length ? allMatches[allMatches.length - 1] : null);
+      const packed = (state.packedIndex && state.packedIndex.get(id)) ? state.packedIndex.get(id) : null;
+      const offCarrier = best ? fmt(best.carrier || "") : "";
+      const status = best ? fmt(best.status || "") : (packed ? "PACKED" : "");
+      const batchName = best ? fmt(best.batchName || best.batchKey || "") : fmt((packed && packed.batchKey) || "");
+      const dateClean = best ? fmt(best.dateClean || "") : extractDateFromDateTime(packed && packed.packedAt);
+      const tracking = packed ? fmt(packed.tracking || "") : "";
+      const packedFlag = packed ? "SIM" : (status === "PACKED" ? "SIM" : (status ? "NÃO" : "-"));
+      const source = best ? fmt(best.source || "active_batches") : (packed ? "registos" : "");
+      return { id, offCarrier, status, batchName, dateClean, tracking, packedFlag, source, allMatches, packed };
+    });
+  }
+
   function openOffList(title, ids){
     $("offListTitle").textContent = title;
-    const arr = Array.from(ids || []).sort();
-    const txt = arr.join("\n");
+    const rows = buildOffListRows(ids);
+    const txt = rows.map(r => r.id).join("\n");
     const html = `
-      <div class="mini" style="margin-bottom:10px;">Total: <b>${arr.length}</b> (podes copiar e colar)</div>
-      <div class="row" style="margin-bottom:10px;">
-        <button class="btn" onclick="copyTextToClipboard('offListText')">Copiar</button>
+      <div class="mini" style="margin-bottom:10px;">Total: <b>${rows.length}</b> (podes copiar os IDs e abrir detalhe por linha)</div>
+      <div class="row" style="margin-bottom:10px; justify-content:space-between;">
+        <div class="mini">Mostra dados do OFF para cada ID desta lista.</div>
+        <button class="btn" onclick="copyTextToClipboard('offListText')">Copiar IDs</button>
       </div>
-      <textarea id="offListText" class="mono" style="width:100%; min-height:380px;">${escapeHtml(txt)}</textarea>
+      ${rows.length ? `
+        <div class="tableWrap" style="margin-bottom:12px;">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Carrier no OFF</th>
+                <th>Status no OFF</th>
+                <th>Lote</th>
+                <th>Data do Lote</th>
+                <th>Packed?</th>
+                <th>Tracking</th>
+                <th>Origem</th>
+                <th>Detalhes</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(r=>`
+                <tr>
+                  <td class="mono"><b>${escapeHtml(r.id)}</b></td>
+                  <td>${r.offCarrier ? `<b>${escapeHtml(r.offCarrier)}</b>` : `<span class="muted">-</span>`}</td>
+                  <td>${r.status ? `<span class="status ${escapeHtml(r.status)}">${escapeHtml(r.status)}</span>` : `<span class="muted">-</span>`}</td>
+                  <td>${r.batchName ? escapeHtml(r.batchName) : `<span class="muted">-</span>`}</td>
+                  <td>${r.dateClean ? `<span class="mono">${escapeHtml(r.dateClean)}</span>` : `<span class="muted">-</span>`}</td>
+                  <td><b>${escapeHtml(r.packedFlag)}</b></td>
+                  <td>${r.tracking ? `<span class="mono">${escapeHtml(r.tracking)}</span>` : `<span class="muted">-</span>`}</td>
+                  <td>${r.source ? `<span class="tag">${escapeHtml(r.source)}</span>` : `<span class="muted">-</span>`}</td>
+                  <td><span class="link" onclick="openOffIdDetail('${escapeJs(r.id)}')">Ver</span></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      ` : `<div class="muted" style="padding:12px 0;">Sem IDs para mostrar.</div>`}
+      <textarea id="offListText" class="mono" style="width:100%; min-height:180px;">${escapeHtml(txt)}</textarea>
     `;
     $("offListBody").innerHTML = html;
     $("offListModal").style.display = "flex";
   }
 
-  function copyTextToClipboard(id){
+  async function copyTextToClipboard(id){
     try{
       const el = document.getElementById(id);
       if(!el) return;
-      el.select();
-      document.execCommand("copy");
+      // Use modern Clipboard API with fallback to execCommand
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(el.value);
+      } else {
+        el.select();
+        document.execCommand("copy");
+      }
       setStatus("Copiado ✅", "ok");
     }catch(e){
       setStatus("Não consegui copiar.", "bad");
@@ -1208,6 +1278,78 @@
     openOffList("IDs do OFF (active + arquivados) que NÃO estão na lista (seleção)", x.offMissing);
   }
   window.openOffMissing = openOffMissing;
+
+  function buildMissingResultsRows(){
+    const rows = (state.results || []).filter(r => r && r.resultKind === "MISSING");
+    return rows.slice().sort((a,b)=>{
+      const ca = String(a.inputCarrier || "");
+      const cb = String(b.inputCarrier || "");
+      if(ca !== cb) return ca.localeCompare(cb);
+      return String(a.id || "").localeCompare(String(b.id || ""));
+    });
+  }
+
+  function openListMissingInOff(){
+    $("offListTitle").textContent = "IDs da lista que NÃO foram encontrados no OFF";
+    const rows = buildMissingResultsRows();
+    const txt = rows.map(r => r.id).join("\n");
+    const html = `
+      <div class="mini" style="margin-bottom:10px;">Total: <b>${rows.length}</b> (IDs que vieram na tua lista mas não tiveram match no OFF neste cruzamento)</div>
+      <div class="row" style="margin-bottom:10px; justify-content:space-between;">
+        <div class="mini">Podes abrir detalhe por linha para ver histórico, packing e notas do fallback.</div>
+        <button class="btn" onclick="copyTextToClipboard('offListText')">Copiar IDs</button>
+      </div>
+      ${rows.length ? `
+        <div class="tableWrap" style="margin-bottom:12px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Carrier (input)</th>
+                <th>ID</th>
+                <th>Resultado</th>
+                <th>Carrier no OFF</th>
+                <th>Status no OFF</th>
+                <th>Lote</th>
+                <th>Data do Lote</th>
+                <th>Packed?</th>
+                <th>Tracking</th>
+                <th>Nota</th>
+                <th>Detalhes</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(r=>{
+                const st = r.status ? `<span class="status ${escapeHtml(r.status)}">${escapeHtml(r.status)}</span>` : `<span class="muted">-</span>`;
+                const lote = r.batchName ? escapeHtml(r.batchName) : `<span class="muted">-</span>`;
+                const dc = r.dateClean ? `<span class="mono">${escapeHtml(r.dateClean)}</span>` : `<span class="muted">-</span>`;
+                const offC = r.offCarrier ? `<b>${escapeHtml(r.offCarrier)}</b>` : `<span class="muted">-</span>`;
+                const packed = r.packedFlag ? escapeHtml(r.packedFlag) : (r.packed ? "SIM" : "-");
+                const trk = r.tracking ? `<span class="mono">${escapeHtml(r.tracking)}</span>` : `<span class="muted">-</span>`;
+                return `
+                  <tr>
+                    <td><b>${escapeHtml(r.inputCarrier || "")}</b></td>
+                    <td class="mono"><b>${escapeHtml(r.id || "")}</b></td>
+                    <td>${badge(r.resultKind || "MISSING")}</td>
+                    <td>${offC}</td>
+                    <td>${st}</td>
+                    <td>${lote}</td>
+                    <td>${dc}</td>
+                    <td><b>${packed}</b></td>
+                    <td>${trk}</td>
+                    <td>${r.note ? `<div class="mini">${escapeHtml(r.note)}</div>` : `<span class="muted">-</span>`}</td>
+                    <td><span class="link" onclick="openDetail('${escapeJs(r.inputCarrier || "")}','${escapeJs(r.id || "")}')">Ver</span></td>
+                  </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      ` : `<div class="muted" style="padding:12px 0;">Não há IDs da lista em falta no OFF neste cruzamento.</div>`}
+      <textarea id="offListText" class="mono" style="width:100%; min-height:180px;">${escapeHtml(txt)}</textarea>
+    `;
+    $("offListBody").innerHTML = html;
+    $("offListModal").style.display = "flex";
+  }
+  window.openListMissingInOff = openListMissingInOff;
 
   function openOffAll(){
     const x = computeOffSetForSelection();
@@ -1264,11 +1406,13 @@
 
   function exportLists(){
     try{
+      const jointEl = document.getElementById("jointIds");
       const obj = {
         version: 1,
         exportedAt: new Date().toISOString(),
         carriers: state.carriers || [],
-        lists: Object.fromEntries(Object.entries(state.carrierLists || {}).map(([c,set])=>[c, Array.from(set||[])]))
+        lists: Object.fromEntries(Object.entries(state.carrierLists || {}).map(([c,set])=>[c, Array.from(set||[])])),
+        joint: jointEl ? (jointEl.value || "") : ""
       };
       const blob = new Blob([JSON.stringify(obj, null, 2)], {type:"application/json"});
       const a = document.createElement("a");
@@ -1299,6 +1443,11 @@
           const ids = Array.isArray(arr) ? arr.map(x=>String(x||"").trim()).filter(Boolean) : [];
           state.carrierLists[key] = new Set(ids);
         });
+        // Restore joint list if present in export
+        if(obj.joint !== undefined){
+          const jointEl = document.getElementById("jointIds");
+          if(jointEl) jointEl.value = String(obj.joint || "");
+        }
 
         renderCarrierSelect();
         saveToLocalStorage();
@@ -1393,8 +1542,185 @@
       .replace(/'/g,"&#39;");
   }
   function escapeJs(s){
-    return String(s||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/"/g,"\\\"");
+    return String(s||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/"/g,"\\\"").replace(/`/g,"\\`");
   }
+
+  async function fetchPackedRecordForId(id, start, end){
+    try{
+      const snap = await db.ref("registos").orderByChild("id").equalTo(id).once("value");
+      const reg = snap.val() || {};
+      let best = null;
+      Object.values(reg).forEach(r=>{
+        if(!r || !r.id) return;
+        if(String(r.id).trim() !== id) return;
+        const mode = String(r.mode || "").toUpperCase();
+        if(mode !== "PACKING") return;
+        const dc = fmt(r.dateClean || "");
+        if(start && dc && dc < start) return;
+        if(end && dc && dc > end) return;
+        const packedAt = dt(dc, normTime(r.endTime || r.time || r.startTime));
+        const rec = {
+          id,
+          tracking: fmt(r.track || r.tracking || ""),
+          packedAt,
+          user: fmt(r.user || ""),
+          batchKey: fmt(r.batch || "")
+        };
+        if(!best || packedAt > (best.packedAt || "")) best = rec;
+      });
+      return best;
+    }catch(e){
+      return null;
+    }
+  }
+
+  async function fetchHistoryForId(id){
+    // Reuse loadHistoryForIds to avoid duplicating Firebase read logic.
+    // loadHistoryForIds merges into state.histIndex without resetting it.
+    if(!state.histIndex.has(id)){
+      await loadHistoryForIds([id]);
+    }
+    return state.histIndex.get(id) || { events: [] };
+  }
+
+  function renderPackedBlock(packed, emptyText){
+    return packed ? `
+      <div class="card" style="padding:12px; margin-top:10px;">
+        <h2 style="margin:0 0 8px 0;">Packing (registos)</h2>
+        <div class="mini">
+          <b>Packed at:</b> <span class="mono">${escapeHtml(packed.packedAt || "")}</span><br/>
+          <b>User:</b> ${escapeHtml(packed.user || "")}<br/>
+          <b>Tracking:</b> <span class="mono">${escapeHtml(packed.tracking || "")}</span><br/>
+          <b>BatchKey:</b> <span class="mono">${escapeHtml(packed.batchKey || "")}</span>
+        </div>
+      </div>` : `
+      <div class="card" style="padding:12px; margin-top:10px;">
+        <h2 style="margin:0 0 8px 0;">Packing (registos)</h2>
+        <div class="mini muted">${escapeHtml(emptyText || "Sem registo PACKING no intervalo pesquisado (ou não foi possível ler).")}</div>
+      </div>`;
+  }
+
+  function renderMatchesTable(matches, titleText){
+    return matches.length ? `
+      <div class="card" style="padding:12px; margin-top:10px;">
+        <h2 style="margin:0 0 8px 0;">${escapeHtml(titleText || "Ocorrências em lotes (OFF)")}</h2>
+        <div class="tableWrap">
+          <table style="min-width:760px;">
+            <thead>
+              <tr>
+                <th>Data</th><th>Carrier</th><th>Status</th><th>Lote</th><th>BatchKey</th><th>Cliente</th><th>Conteúdo</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${matches.map(m=>`
+                <tr>
+                  <td class="mono">${escapeHtml(m.dateClean||"")}</td>
+                  <td><b>${escapeHtml(m.carrier||"")}</b></td>
+                  <td><span class="status ${escapeHtml(m.status||"")}">${escapeHtml(m.status||"")}</span></td>
+                  <td>${escapeHtml(m.batchName||"")}</td>
+                  <td class="mono">${escapeHtml(m.batchKey||"")}</td>
+                  <td>${escapeHtml(m.customer||"")}</td>
+                  <td>${escapeHtml(m.expectedContent||"")}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>` : `
+      <div class="card" style="padding:12px; margin-top:10px;">
+        <h2 style="margin:0 0 8px 0;">${escapeHtml(titleText || "Ocorrências em lotes (OFF)")}</h2>
+        <div class="mini muted">Nenhuma ocorrência encontrada no OFF para este ID.</div>
+      </div>`;
+  }
+
+  function renderHistoryBlock(hist, titleText, emptyText){
+    const events = hist && Array.isArray(hist.events) ? hist.events : [];
+    return events.length ? `
+      <div class="card" style="padding:12px; margin-top:10px;">
+        <h2 style="margin:0 0 8px 0;">${escapeHtml(titleText || "Histórico (id_history)")}</h2>
+        <div class="tableWrap">
+          <table style="min-width:860px;">
+            <thead>
+              <tr><th>DateTime</th><th>Type</th><th>Batch</th><th>Carrier</th><th>User</th><th>Tracking</th><th>Items/Content</th><th>Details</th></tr>
+            </thead>
+            <tbody>
+              ${events.slice(-200).map(ev=>`
+                <tr>
+                  <td class="mono">${escapeHtml(ev.DateTime||"")}</td>
+                  <td><b>${escapeHtml(ev.Type||"")}</b></td>
+                  <td>${escapeHtml(ev.Batch||"")}</td>
+                  <td>${escapeHtml(ev.Carrier||"")}</td>
+                  <td>${escapeHtml(ev.User||"")}</td>
+                  <td class="mono">${escapeHtml(ev.Tracking||"")}</td>
+                  <td><small>${escapeHtml(ev.Items_or_Content||"")}</small></td>
+                  <td><small>${escapeHtml(ev.Details||"")}</small></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+        <div class="mini muted" style="margin-top:8px;">Mostro só os últimos 200 eventos para não pesar.</div>
+      </div>` : `
+      <div class="card" style="padding:12px; margin-top:10px;">
+        <h2 style="margin:0 0 8px 0;">${escapeHtml(titleText || "Histórico (id_history)")}</h2>
+        <div class="mini muted">${escapeHtml(emptyText || "Sem histórico para este ID.")}</div>
+      </div>`;
+  }
+
+  async function openOffIdDetail(id){
+    $("detailTitle").textContent = `ID ${id} — OFF`;
+    $("detailBody").innerHTML = `<div class="muted">A carregar detalhe do ID...</div>`;
+    $("detailModal").style.display = "flex";
+
+    try{
+      const matches = (state.offAllMatches && state.offAllMatches.get(id)) ? state.offAllMatches.get(id) : [];
+      const best = (state.offIndex && state.offIndex.get(id)) ? state.offIndex.get(id) : (matches.length ? matches[matches.length - 1] : null);
+      const start = fmt(state.lastRunMeta && state.lastRunMeta.effStart || "");
+      const end = fmt(state.lastRunMeta && state.lastRunMeta.end || "");
+
+      let packed = (state.packedIndex && state.packedIndex.get(id)) ? state.packedIndex.get(id) : null;
+      if(!packed){
+        packed = await fetchPackedRecordForId(id, start, end);
+        if(packed) state.packedIndex.set(id, packed);
+      }
+
+      let hist = (state.histIndex && state.histIndex.get(id)) ? state.histIndex.get(id) : null;
+      if(!hist || !Array.isArray(hist.events) || !hist.events.length){
+        hist = await fetchHistoryForId(id);
+        if(hist && Array.isArray(hist.events) && hist.events.length) state.histIndex.set(id, hist);
+      }
+
+      const meta = [];
+      meta.push(`<div class="tag"><b>ID:</b> <span class="mono">${escapeHtml(id)}</span></div>`);
+      if(best && best.carrier) meta.push(`<div class="tag"><b>Carrier OFF:</b> ${escapeHtml(best.carrier)}</div>`);
+      if(best && best.status) meta.push(`<div class="tag"><b>Status OFF:</b> ${escapeHtml(best.status)}</div>`);
+      if(best && best.batchName) meta.push(`<div class="tag"><b>Lote:</b> ${escapeHtml(best.batchName)}</div>`);
+      if(best && best.dateClean) meta.push(`<div class="tag"><b>Data lote:</b> <span class="mono">${escapeHtml(best.dateClean)}</span></div>`);
+      if(best && best.source) meta.push(`<div class="tag"><b>Origem:</b> ${escapeHtml(best.source)}</div>`);
+
+      $("detailBody").innerHTML = `
+        <div>${meta.join("")}</div>
+        <div class="mini" style="margin-top:10px;">Detalhe aberto a partir da lista de IDs do OFF.</div>
+        ${renderPackedBlock(packed, "Sem registo PACKING encontrado para este ID no intervalo atual.")}
+        ${renderMatchesTable(matches, "Ocorrências em lotes (OFF)")}
+        ${renderHistoryBlock(hist, "Histórico (id_history)", "Sem histórico para este ID.")}
+        <div class="card" style="padding:12px; margin-top:10px;">
+          <h2 style="margin:0 0 8px 0;">Janela do último cruzamento</h2>
+          <div class="mini">
+            <b>Start:</b> <span class="mono">${escapeHtml(state.lastRunMeta.start||"")}</span> |
+            <b>End:</b> <span class="mono">${escapeHtml(state.lastRunMeta.end||"")}</span> |
+            <b>Efetivo:</b> <span class="mono">${escapeHtml(state.lastRunMeta.effStart||"")}</span> → <span class="mono">${escapeHtml(state.lastRunMeta.end||"")}</span> |
+            <b>Lookback:</b> ${escapeHtml(String(state.lastRunMeta.lookback||0))} |
+            <b>Modo:</b> ${escapeHtml(state.lastRunMeta.mode||"")}
+          </div>
+        </div>
+      `;
+    }catch(e){
+      console.error("openOffIdDetail error:", e);
+      $("detailBody").innerHTML = `<div class="bad" style="padding:12px;">Erro ao carregar detalhe do ID <b>${escapeHtml(id)}</b>. Verifica a ligação e permissões Firebase.<br/><small>${escapeHtml(String(e && e.message || e))}</small></div>`;
+    }
+  }
+  window.openOffIdDetail = openOffIdDetail;
 
   function openDetail(inputCarrier, id){
     const row = (state.results || []).find(r=> r.id===id && r.inputCarrier===inputCarrier) || null;
