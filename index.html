@@ -1195,7 +1195,9 @@
           <h2>Exportação / limpeza</h2>
           <div class="row">
             <button class="btn" type="button" onclick="exportCasesCsv()">Exportar CSV</button>
-            <button class="btn" type="button" onclick="exportCaseHistoryCsv()">Exportar histórico</button>
+            <button class="btn" type="button" onclick="exportCaseHistoryCsv()">Exportar histórico visível</button>
+            <button class="btn" type="button" onclick="openCasesMovementLog()">Todos os movimentos</button>
+            <button class="btn" type="button" onclick="exportCasesMovementsCsv()">Exportar movimentos</button>
             <button class="btn" type="button" onclick="refreshCaseCrosschecks()">Atualizar cruzamento</button>
             <button class="btn" type="button" onclick="copyVisibleCaseIds()">Copiar IDs visíveis</button>
             <button class="btn danger" type="button" onclick="deleteAllCaseRecords()">Eliminar todos os registos</button>
@@ -1207,7 +1209,7 @@
         <div class="row" style="justify-content:space-between; align-items:flex-start;">
           <div>
             <h2 style="margin-bottom:4px;">📋 Registos Broken / Swipe / Lost</h2>
-            <div class="mini">Podes filtrar por texto, tipo e transportadora, ou usar os filtros diretamente na barra de cada coluna da tabela. O filtro Status já não mistura opções de AMSPED Status.</div>
+            <div class="mini">Podes filtrar por texto, tipo e transportadora, ou usar os filtros diretamente na barra de cada coluna da tabela. O histórico do registo atual não herda movimentos de registos antigos eliminados com o mesmo ID; todos os movimentos ficam disponíveis no botão “Todos os movimentos”.</div>
           </div>
           <span id="casesRowsShown" class="pill">0 linhas</span>
         </div>
@@ -8006,10 +8008,12 @@ Esta ação remove estes registos guardados na Firebase.`);
     const CASES_ITEMS_PATH = CASES_ROOT + "/items";
     const CASES_OPTIONS_PATH = CASES_ROOT + "/options";
     const CASES_HISTORY_PATH = CASES_ROOT + "/history";
+    const CASES_MOVEMENTS_PATH = CASES_ROOT + "/movements";
     const CASES_DELETED_OPTIONS_PATH = CASES_ROOT + "/deleted_options";
     const CASES_LS_ITEMS = "cases_broken_swipe_lost_items_v1";
     const CASES_LS_OPTIONS = "cases_broken_swipe_lost_options_v1";
     const CASES_LS_HISTORY = "cases_broken_swipe_lost_history_v1";
+    const CASES_LS_MOVEMENTS = "cases_broken_swipe_lost_movements_v1";
     const CASES_LS_DELETED_OPTIONS = "cases_broken_swipe_lost_deleted_options_v1";
 
     function byId(id){ return document.getElementById(id); }
@@ -8103,6 +8107,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       options: JSON.parse(JSON.stringify(DEFAULT_OPTIONS)),
       deletedOptions: {},
       history: {},
+      movements: [],
       editingKey: "",
       loaded: false,
       currentAutoData: null,
@@ -8237,6 +8242,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       try{ localStorage.setItem(CASES_LS_OPTIONS, JSON.stringify(state.options || {})); }catch(e){}
       try{ localStorage.setItem(CASES_LS_DELETED_OPTIONS, JSON.stringify(state.deletedOptions || {})); }catch(e){}
       try{ localStorage.setItem(CASES_LS_HISTORY, JSON.stringify(state.history || {})); }catch(e){}
+      try{ localStorage.setItem(CASES_LS_MOVEMENTS, JSON.stringify(state.movements || [])); }catch(e){}
     }
     function loadLocal(){
       try{
@@ -8255,6 +8261,10 @@ Esta ação remove estes registos guardados na Firebase.`);
         const h = JSON.parse(localStorage.getItem(CASES_LS_HISTORY) || "{}");
         state.history = h && typeof h === "object" ? h : {};
       }catch(e){ state.history = {}; }
+      try{
+        const m = JSON.parse(localStorage.getItem(CASES_LS_MOVEMENTS) || "[]");
+        state.movements = Array.isArray(m) ? m : [];
+      }catch(e){ state.movements = []; }
     }
 
     function datalistIdForOption(key){ return "casesDatalist_" + key; }
@@ -8335,7 +8345,14 @@ Esta ação remove estes registos guardados na Firebase.`);
       return {type, id, carrier, fields};
     }
 
-    function makeRecordKey(type, id){ return safe(type) + "_" + safe(id); }
+    function makeRecordBaseKey(type, id){ return safe(type) + "_" + safe(id); }
+    function makeRecordKey(type, id){ return makeRecordBaseKey(type, id); }
+    function createFreshRecordKey(type, id){ return makeRecordBaseKey(type, id) + "_" + nowIso().replace(/[:.]/g,"-") + "_" + Math.random().toString(36).slice(2,7); }
+    function activeRecordForTypeId(type, id){
+      const t = String(type || "").toUpperCase();
+      const n = normalId(id);
+      return (state.records || []).find(r=>String(r.type || "").toUpperCase() === t && normalId(r.id) === n) || null;
+    }
     function recordSearchText(r){
       const fd = r.firebaseData || {};
       const cd = r.crosscheckData || {};
@@ -8663,6 +8680,31 @@ Esta ação remove estes registos guardados na Firebase.`);
       return changes;
     }
 
+    function movementSummaryFromChanges(changes){
+      return (changes || []).map(ch=>`${ch.fieldLabel || ch.fieldKey || "CAMPO"}: ${ch.oldValue || "—"} → ${ch.newValue || "—"}`).join(" | ");
+    }
+
+    function normalizeMovement(entry){
+      if(!entry) return null;
+      return Object.assign({movementKey: entry.movementKey || entry.historyKey || histKey()}, entry);
+    }
+
+    async function pushCaseMovement(entry){
+      const movement = normalizeMovement(entry);
+      if(!movement) return;
+      const key = movement.movementKey || histKey();
+      movement.movementKey = key;
+      const byKey = {};
+      (state.movements || []).forEach(m=>{ if(m) byKey[m.movementKey || m.historyKey || JSON.stringify(m)] = m; });
+      byKey[key] = movement;
+      state.movements = Object.values(byKey).sort((a,b)=>(b.changedAt || b.at || "").localeCompare(a.changedAt || a.at || ""));
+      saveLocal();
+      if(hasFirebase()){
+        try{ await db.ref(CASES_MOVEMENTS_PATH + "/" + key).set(movement); }
+        catch(e){ console.warn("case movement save", e); }
+      }
+    }
+
     async function pushCaseHistory(recordKey, rec, changes, action){
       if(!recordKey || !changes || !changes.length) return;
       const entry = {
@@ -8685,6 +8727,11 @@ Esta ação remove estes registos guardados na Firebase.`);
         try{ await db.ref(CASES_HISTORY_PATH + "/" + recordKey + "/" + entry.historyKey).set(entry); }
         catch(e){ console.warn("case history save", e); }
       }
+      await pushCaseMovement(Object.assign({}, entry, {
+        movementKey: entry.historyKey,
+        category: "REGISTO",
+        summary: movementSummaryFromChanges(changes)
+      }));
     }
 
 
@@ -8744,7 +8791,17 @@ Esta ação remove estes registos guardados na Firebase.`);
     window.removeCaseOption = removeOption;
 
     async function addCaseOptionFromManager(){
-      await addOption(val("casesOptionGroup"), val("casesOptionValue"), true, true);
+      const group = val("casesOptionGroup");
+      const value = val("casesOptionValue");
+      await addOption(group, value, true, true);
+      if(value){
+        await pushCaseMovement({
+          movementKey: histKey(), category:"OPÇÃO", action:"OPTION_ADD", changeDate:today(), changedAt:nowIso(), user:currentUserEmail(),
+          type:"", id:"", carrier:"", recordKey:"", optionGroup:group, optionValue:value,
+          summary:`Opção adicionada em ${OPTION_LABELS[group] || group}: ${value}`,
+          changes:[{fieldKey:"option", fieldLabel:OPTION_LABELS[group] || group, oldValue:"", newValue:value}]
+        });
+      }
       setVal("casesOptionValue", "");
       setStatus("Valor adicionado à lista ✅", "ok");
     }
@@ -8756,6 +8813,12 @@ Esta ação remove estes registos guardados na Firebase.`);
       if(!value){ setStatus("Escreve o valor a eliminar.", "bad"); return; }
       if(!confirm("Eliminar este valor da lista? Os registos já guardados não são apagados.")) return;
       await removeOption(group, value);
+      await pushCaseMovement({
+        movementKey: histKey(), category:"OPÇÃO", action:"OPTION_DELETE", changeDate:today(), changedAt:nowIso(), user:currentUserEmail(),
+        type:"", id:"", carrier:"", recordKey:"", optionGroup:group, optionValue:value,
+        summary:`Opção eliminada em ${OPTION_LABELS[group] || group}: ${value}`,
+        changes:[{fieldKey:"option", fieldLabel:OPTION_LABELS[group] || group, oldValue:value, newValue:"Eliminado"}]
+      });
       setVal("casesOptionValue", "");
       setStatus("Valor removido da lista e bloqueado para não reaparecer automaticamente ✅", "ok");
     }
@@ -8782,8 +8845,9 @@ Esta ação remove estes registos guardados na Firebase.`);
         await fetchCaseCrosscheckData(data.id, {silent:true});
         data = collectFormData();
       }
-      const key = state.editingKey || makeRecordKey(data.type, data.id);
-      const existing = state.records.find(r=>r.key === key) || {};
+      const active = state.editingKey ? null : activeRecordForTypeId(data.type, data.id);
+      const key = state.editingKey || (active ? active.key : createFreshRecordKey(data.type, data.id));
+      const existing = state.records.find(r=>r.key === key) || active || {};
       const firebaseData = state.currentAutoData && state.currentAutoData.id === data.id ? state.currentAutoData : (existing.firebaseData || null);
       const crosscheckData = state.currentCrosscheckData && state.currentCrosscheckData.id === data.id ? state.currentCrosscheckData : (existing.crosscheckData || null);
       const rec = {
@@ -9194,9 +9258,10 @@ Esta ação remove estes registos guardados na Firebase.`);
       }
       const localRecords = (state.records || []).filter(r=>normalId(r.id) === id);
       const localHist = [];
-      Object.entries(state.history || {}).forEach(([k, arr])=>{
-        (arr || []).forEach(e=>{ if(normalId(e.id) === id || (recordKey && k === recordKey)) localHist.push(e); });
-      });
+      const currentRecordKey = recordKey || state.editingKey || "";
+      if(currentRecordKey && state.history && state.history[currentRecordKey]){
+        (state.history[currentRecordKey] || []).forEach(e=>localHist.push(e));
+      }
       localHist.sort((a,b)=>(b.changedAt || "").localeCompare(a.changedAt || ""));
       const regHtml = registos.length ? `<div class="tableWrap"><table><thead><tr><th>Modo</th><th>Data</th><th>Tracking</th><th>Carrier</th><th>Batch</th><th>User</th><th>Items</th></tr></thead><tbody>${registos.map(r=>`<tr><td><b>${esc(regMode(r))}</b></td><td class="mono">${esc(fmtDateTimeFromReg(r))}</td><td class="mono">${esc(regTracking(r))}</td><td>${esc(regCarrier(r))}</td><td>${esc(regBatch(r))}</td><td>${esc(regUser(r))}</td><td><div class="envio-items-cell">${esc(regItems(r))}</div></td></tr>`).join("")}</tbody></table></div>` : `<div class="muted">Sem registos PACKING/RETURN/REFUND encontrados em registos para este ID.</div>`;
       const idHistHtml = histEvents.length ? `<div class="tableWrap"><table><thead><tr><th>Tipo</th><th>Data</th><th>Batch</th><th>Carrier</th><th>User</th><th>Tracking</th><th>Conteúdo</th></tr></thead><tbody>${histEvents.map(e=>`<tr><td><b>${esc(e.Type || e.type || "")}</b></td><td class="mono">${esc(e.DateTime || e.dateTime || "")}</td><td>${esc(e.Batch || e.batch || "")}</td><td>${esc(e.Carrier || e.carrier || "")}</td><td>${esc(e.User || e.user || "")}</td><td>${esc(e.Tracking || e.tracking || "")}</td><td><div class="envio-items-cell">${esc(e.Items_or_Content || e.items || e.content || e.Details || "")}</div></td></tr>`).join("")}</tbody></table></div>` : `<div class="muted">Sem id_history encontrado ou sem permissão de leitura.</div>`;
@@ -9209,7 +9274,7 @@ Esta ação remove estes registos guardados na Firebase.`);
         <div class="hr"></div>
         <h2 style="font-size:16px;">id_history Firebase</h2>${idHistHtml}
         <div class="hr"></div>
-        <h2 style="font-size:16px;">Histórico de alterações deste separador</h2><div class="casesHistoryList">${localHtml}</div>`;
+        <h2 style="font-size:16px;">Histórico de alterações do registo atual</h2><div class="mini" style="margin-bottom:8px;">Não mostra movimentos de registos antigos eliminados com o mesmo ID. Para ver tudo, usa o botão <b>Todos os movimentos</b>.</div><div class="casesHistoryList">${localHtml}</div>`;
     }
     window.openCaseIdHistory = openCaseIdHistory;
     function openCaseIdHistoryFromForm(){ openCaseIdHistory(val("casesId"), state.editingKey); }
@@ -9260,6 +9325,88 @@ Esta ação remove estes registos guardados na Firebase.`);
       setStatus(entries.length + " linha(s) de histórico exportadas ✅", "ok");
     }
     window.exportCaseHistoryCsv = exportCaseHistoryCsv;
+
+    async function loadCaseMovements(){
+      loadLocal();
+      if(hasFirebase()){
+        try{
+          const snap = await db.ref(CASES_MOVEMENTS_PATH).once("value");
+          applyCaseMovementsSnapshot(snap.val() || {}, true);
+        }catch(e){ console.warn("load case movements", e); }
+      }
+    }
+    window.loadCaseMovements = loadCaseMovements;
+
+    function applyCaseMovementsSnapshot(raw, silent){
+      try{
+        const byKey = {};
+        (state.movements || []).forEach(m=>{ if(m) byKey[m.movementKey || m.historyKey || JSON.stringify(m)] = m; });
+        Object.entries(raw || {}).forEach(([key, m])=>{ if(m){ byKey[m.movementKey || key] = Object.assign({movementKey:key}, m); } });
+        state.movements = Object.values(byKey).sort((a,b)=>(b.changedAt || b.at || "").localeCompare(a.changedAt || a.at || ""));
+        saveLocal();
+        if(!silent) setCasesRealtimeIndicator("Realtime: movimentos atualizados " + casesRealtimeTime(), "ok");
+      }catch(e){ console.warn("cases realtime movements", e); }
+    }
+
+    function allCaseMovements(){
+      const moves = (state.movements || []).slice();
+      const byKey = {};
+      moves.forEach(m=>{ if(m) byKey[m.movementKey || m.historyKey || JSON.stringify(m)] = m; });
+      Object.entries(state.history || {}).forEach(([recordKey, arr])=>{
+        (arr || []).forEach(e=>{
+          if(!e) return;
+          const k = e.historyKey || e.movementKey || (recordKey + "_" + (e.changedAt || JSON.stringify(e)));
+          if(!byKey[k]) byKey[k] = Object.assign({}, e, {movementKey:k, category:"REGISTO", summary: movementSummaryFromChanges(e.changes || [])});
+        });
+      });
+      return Object.values(byKey).sort((a,b)=>(b.changedAt || b.at || "").localeCompare(a.changedAt || a.at || ""));
+    }
+
+    function movementChangesHtml(m){
+      const changes = Array.isArray(m.changes) ? m.changes : [];
+      if(changes.length){
+        return changes.map(ch=>`<div class="casesHistoryChange"><b>${esc(ch.fieldLabel || ch.fieldKey || "Campo")}</b>: <span class="casesHistoryOld">${esc(ch.oldValue || "") || "—"}</span> → <span class="casesHistoryNew">${esc(ch.newValue || "") || "—"}</span></div>`).join("");
+      }
+      return `<div class="mini">${esc(m.summary || "Sem detalhe.")}</div>`;
+    }
+
+    function openCasesMovementLog(){
+      const title = byId("detailTitle");
+      const body = byId("detailBody");
+      const modal = byId("detailModal");
+      if(!body || !modal) return;
+      const moves = allCaseMovements();
+      if(title) title.textContent = "Todos os movimentos — Broken / Swipe / Lost";
+      const html = moves.length ? moves.map(m=>`<div class="casesHistoryItem">
+        <div class="casesHistoryMeta"><b>${esc(m.changeDate || (m.changedAt || "").slice(0,10))}</b> · ${esc((m.changedAt || "").slice(11,19))} · <b>${esc(m.action || "MOVIMENTO")}</b> · ${esc(m.user || "sem user")}</div>
+        <div class="mini"><b>${esc(m.category || "REGISTO")}</b>${m.type ? ` · ${esc(m.type)}` : ""}${m.id ? ` · ID ${esc(m.id)}` : ""}${m.carrier ? ` · ${esc(m.carrier)}` : ""}${m.optionGroup ? ` · ${esc(OPTION_LABELS[m.optionGroup] || m.optionGroup)}` : ""}</div>
+        ${movementChangesHtml(m)}
+      </div>`).join("") : `<div class="muted" style="padding:12px 0;">Ainda não há movimentos registados.</div>`;
+      body.innerHTML = `<div class="notice"><b>Total de movimentos:</b> ${moves.length}<br>Inclui criações, edições, eliminações e alterações nas opções selecionáveis feitas por todos os utilizadores.</div><div class="hr"></div><div class="casesHistoryList">${html}</div>`;
+      modal.style.display = "flex";
+    }
+    window.openCasesMovementLog = openCasesMovementLog;
+
+    function exportCasesMovementsCsv(){
+      const moves = allCaseMovements();
+      if(!moves.length){ setStatus("Não há movimentos para exportar.", "bad"); return; }
+      const header = ["MOVEMENT_KEY","CHANGE_DATE","CHANGED_AT","CATEGORY","ACTION","USER","RECORD_KEY","TYPE","ID","TRANSPORTADORA","OPTION_GROUP","OPTION_VALUE","FIELD","OLD_VALUE","NEW_VALUE","SUMMARY"];
+      const lines = [header.map(csvCell).join(";")];
+      moves.forEach(m=>{
+        const changes = Array.isArray(m.changes) && m.changes.length ? m.changes : [{fieldLabel:"", oldValue:"", newValue:""}];
+        changes.forEach(ch=>{
+          lines.push([m.movementKey || m.historyKey || "", m.changeDate || "", m.changedAt || "", m.category || "REGISTO", m.action || "", m.user || "", m.recordKey || "", m.type || "", m.id || "", m.carrier || "", m.optionGroup || "", m.optionValue || "", ch.fieldLabel || ch.fieldKey || "", ch.oldValue || "", ch.newValue || "", m.summary || ""].map(csvCell).join(";"));
+        });
+      });
+      const blob = new Blob(["\ufeffsep=;\r\n" + lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "movimentos_broken_swipe_lost_" + today() + ".csv";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      setStatus(moves.length + " movimento(s) exportado(s) ✅", "ok");
+    }
+    window.exportCasesMovementsCsv = exportCasesMovementsCsv;
 
     function parseCaseMoney(value){
       let s = String(value == null ? "" : value).trim();
@@ -9493,6 +9640,7 @@ Esta ação remove estes registos guardados na Firebase.`);
         }catch(e){ console.warn("load case records", e); setStatus("Não consegui ler Firebase; usei backup local.", "warn"); }
       }
       await loadCaseHistory();
+      await loadCaseMovements();
       state.loaded = true;
       saveLocal();
       renderCasesTable();
@@ -9625,7 +9773,8 @@ Esta ação remove estes registos guardados na Firebase.`);
         {path:CASES_ITEMS_PATH, cb:snap=>applyCaseRecordsSnapshot(snap.val() || {})},
         {path:CASES_OPTIONS_PATH, cb:snap=>applyCaseOptionsSnapshot(snap.val() || {})},
         {path:CASES_DELETED_OPTIONS_PATH, cb:snap=>applyCaseDeletedOptionsSnapshot(snap.val() || {})},
-        {path:CASES_HISTORY_PATH, cb:snap=>applyCaseHistorySnapshot(snap.val() || {})}
+        {path:CASES_HISTORY_PATH, cb:snap=>applyCaseHistorySnapshot(snap.val() || {})},
+        {path:CASES_MOVEMENTS_PATH, cb:snap=>applyCaseMovementsSnapshot(snap.val() || {})}
       ];
       listeners.forEach(item=>{
         try{
