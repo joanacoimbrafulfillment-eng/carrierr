@@ -581,7 +581,78 @@
     @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important; animation-iteration-count:1!important; scroll-behavior:auto!important; transition-duration:.01ms!important;}}
     @media print{.topbar,.tabs,.btn,.enviosActions,.enviosListTabs,.semPicListTabs,#uxSafetyBar,.resultsHint{display:none!important;} body{background:#fff;} .wrap{max-width:none; padding:0;} .card{box-shadow:none; border:1px solid #ddd; break-inside:avoid;} .tableWrap{overflow:visible;} table{min-width:0!important; font-size:11px;}}
 
-  </style>
+
+
+    /* ===== Separador BROKEN / SWIPE / LOST ===== */
+    .casesGrid{display:grid; grid-template-columns:minmax(360px,.82fr) minmax(560px,1.18fr); gap:25px; align-items:start;}
+    @media(max-width:980px){.casesGrid{grid-template-columns:1fr;}}
+    #tabCases > .casesGrid > .card:first-child{border-top:6px solid #7c3aed;}
+    #tabCases > .casesGrid > .card:nth-child(2){border-top:6px solid #0ea5e9;}
+    #casesDynamicFields{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;}
+    @media(max-width:760px){#casesDynamicFields{grid-template-columns:1fr;}}
+    .casesFieldFull{grid-column:1 / -1;}
+    .casesOptionBox{border:1px solid #e5e7eb; background:#f8fafc; border-radius:14px; padding:12px; margin-top:12px;}
+    .casesOptionList{display:flex; flex-wrap:wrap; gap:7px; margin-top:10px;}
+    .casesOptionChip{display:inline-flex; align-items:center; gap:7px; border:1px solid #cbd5e1; background:#fff; color:#334155; border-radius:999px; padding:7px 9px; font-size:12px; font-weight:900;}
+    .casesOptionChip button{border:0; background:#ef4444; color:#fff; border-radius:999px; width:20px; height:20px; line-height:20px; font-size:12px; cursor:pointer; font-weight:900; padding:0;}
+    .casesTypeBadge{display:inline-flex; border-radius:999px; padding:5px 9px; font-size:11px; font-weight:900; text-transform:uppercase; color:#fff; white-space:nowrap;}
+    .casesTypeBadge.BROKEN{background:#dc2626;}
+    .casesTypeBadge.SWIPE{background:#7c3aed;}
+    .casesTypeBadge.LOST{background:#f59e0b; color:#111827;}
+    .casesTable{min-width:1280px; table-layout:fixed;}
+    .casesTable th,.casesTable td{white-space:normal; overflow-wrap:anywhere; word-break:break-word; vertical-align:top;}
+    .casesTable th:nth-child(1),.casesTable td:nth-child(1){width:92px;}
+    .casesTable th:nth-child(2),.casesTable td:nth-child(2){width:115px;}
+    .casesTable th:nth-child(3),.casesTable td:nth-child(3){width:150px;}
+    .casesTable th:last-child,.casesTable td:last-child{position:sticky; right:0; background:#fff; z-index:4; box-shadow:-8px 0 12px rgba(15,23,42,.06); width:175px;}
+    .casesTable th:last-child{z-index:12; background:#f1f3f5;}
+    .casesMiniGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px;}
+    .casesActions{display:flex; flex-wrap:wrap; gap:7px; align-items:center;}
+    .casesDataHint{margin-top:8px; padding:10px 12px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:12px; color:#64748b; font-size:12px; font-weight:700; line-height:1.4;}
+    .casesInlineEditRow td{background:#f8fafc!important; position:static!important; box-shadow:none!important;}
+    .casesInlineEditor{border:2px solid #bfdbfe; background:#eff6ff; border-radius:16px; padding:14px; color:#1e3a8a;}
+    .casesInlineEditor h3{margin:0 0 8px; font-size:15px; color:#1e3a8a; font-weight:900;}
+    .casesInlineEditorGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px; margin-top:10px;}
+    .casesInlineEditorGrid label{margin:0 0 4px; color:#334155;}
+    .casesInlineEditorGrid input{padding:10px 12px; font-size:14px; border-width:1px;}
+    .casesInlineEditActions{display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-top:12px;}
+    .casesInlineEditHint{font-size:12px; color:#475569; line-height:1.4; font-weight:700;}
+    .casesInlineEditingMain td{background:#f0f9ff!important;}
+
+    .casesAutoPanel{margin-top:14px; padding:14px; border:2px solid #bfdbfe; background:#eff6ff; border-radius:14px; color:#1e3a8a;}
+    .casesAutoPanel h2{font-size:15px; margin:0 0 8px; color:#1e3a8a;}
+    .casesAutoGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; margin-top:8px;}
+    .casesAutoItem{background:#fff; border:1px solid #dbeafe; border-radius:10px; padding:9px; font-size:12px; line-height:1.35;}
+    .casesAutoItem b{display:block; color:#334155; font-size:11px; text-transform:uppercase; margin-bottom:3px;}
+    .casesAutoItems{max-height:90px; overflow:auto; background:#fff; border:1px solid #dbeafe; border-radius:10px; padding:9px; font-size:12px; white-space:pre-wrap; color:#334155;}
+    .casesDbBadge{display:inline-flex; border-radius:999px; padding:4px 8px; background:#dbeafe; color:#1d4ed8; border:1px solid #93c5fd; font-size:11px; font-weight:900; margin-top:5px;}
+
+
+    /* ===== Cruzamento Broken/Swipe/Lost com Envios e Sem Picagem ===== */
+    .casesCrossPanel{margin-top:14px; padding:14px; border:2px solid #fed7aa; background:#fff7ed; border-radius:14px; color:#9a3412;}
+    .casesCrossPanel h2{font-size:15px; margin:0 0 8px; color:#9a3412;}
+    .casesCrossGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:8px; margin-top:8px;}
+    .casesCrossItem{background:#fff; border:1px solid #fed7aa; border-radius:10px; padding:9px; font-size:12px; line-height:1.35;}
+    .casesCrossItem b{display:block; color:#334155; font-size:11px; text-transform:uppercase; margin-bottom:3px;}
+    .casesCrossBadge{display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:5px 9px; font-size:11px; font-weight:900; text-transform:uppercase; border:1px solid #e5e7eb; white-space:nowrap; margin:3px 4px 3px 0;}
+    .casesCrossBadge.none{background:#f8fafc; color:#64748b; border-color:#cbd5e1;}
+    .casesCrossBadge.warn{background:#ffedd5; color:#c2410c; border-color:#fdba74;}
+    .casesCrossBadge.bad{background:#fee2e2; color:#991b1b; border-color:#fecaca;}
+    .casesCrossBadge.ok{background:#dcfce7; color:#166534; border-color:#86efac;}
+    .casesCrossBox{margin-top:6px; padding:8px 10px; border-radius:10px; background:#fff7ed; border:1px solid #fdba74; color:#9a3412; font-size:12px; line-height:1.35; font-weight:700;}
+    .casesCrossBox.none{background:#f8fafc; border-color:#cbd5e1; color:#64748b;}
+    .casesCrossList{display:flex; flex-wrap:wrap; gap:5px; align-items:center;}
+
+  
+
+    /* ===== Filtros por coluna - Broken / Swipe / Lost ===== */
+    .casesTable thead th{vertical-align:top;}
+    .casesThLabel{display:block; margin-bottom:6px; font-weight:900;}
+    .casesColFilter{width:100%; min-width:90px; padding:6px 7px; border-radius:7px; border:1px solid #cbd5e1; background:#fff; color:#111827; font-size:11px; font-weight:650; text-transform:none;}
+    .casesColFilter:focus{border-color:var(--accent); box-shadow:0 0 0 2px rgba(52,152,219,.14); outline:none;}
+    .casesColClearBtn{border:0; border-radius:7px; padding:6px 8px; font-size:10px; font-weight:900; cursor:pointer; text-transform:uppercase; background:#64748b; color:#fff; white-space:nowrap;}
+    .casesColFilterHint{display:block; margin-top:4px; color:#64748b; font-size:10px; font-weight:700; text-transform:none; line-height:1.2;}
+</style>
 </head>
 <body>
   <div class="wrap">
@@ -607,6 +678,7 @@
     <div class="tabs" role="tablist" aria-label="Separadores da ferramenta">
       <button id="tabBtnCrosscheck" class="tabBtn" type="button" onclick="switchTab('crosscheck')">Crosscheck Expedições</button>
       <button id="tabBtnCrossReturns" class="tabBtn" type="button" onclick="switchTab('crossreturns')">Crosscheck Returns</button>
+      <button id="tabBtnCases" class="tabBtn" type="button" onclick="switchTab('cases')">Broken / Swipe / Lost</button>
       <button id="tabBtnEnvios" class="tabBtn active" type="button" onclick="switchTab('envios')">Envios em Analise</button>
       <button id="tabBtnSemPic" class="tabBtn" type="button" onclick="switchTab('sempic')">IDs sem picagens da transportadora</button>
     </div>
@@ -890,29 +962,21 @@
             <div class="kpi retCross-kpi-card" data-retcross-filter="ALL" onclick="setReturnCrosscheckDashboardFilter('ALL')" title="Limpar filtro e ver todos"><p class="n" style="font-size:14px; line-height:1.2;" id="retCrossLastRun">—</p><p class="t">Último cruzamento</p><button class="retCrossCopyBtn" type="button" onclick="event.stopPropagation(); copyReturnCrosscheckIds('ALL')">Copiar todos</button></div>
           </div>
 
-          <div class="hr"></div>
-          <div class="split">
-            <div>
-              <label>Filtrar tabela</label>
-              <input id="retCrossFilterText" placeholder="ex: order_id, tracking, user, SKU..." oninput="renderReturnCrosscheckTable()">
-            </div>
-            <div>
-              <label>Mostrar</label>
-              <select id="retCrossFilterKind" onchange="renderReturnCrosscheckTable()">
-                <option value="ALL">Tudo</option>
-                <option value="FOUND">Só encontrados</option>
-                <option value="RETURN">Só returns</option>
-                <option value="REFUND">Só refunds</option>
-                <option value="MISSING">Só não encontrados</option>
-                <option value="WITH_TRACKING">Só com tracking</option>
-                <option value="DUPLICATE">Só duplicados input</option>
-                <option value="DIFF_PRODUCTS">Só diferenças produtos</option>
-              </select>
-            </div>
-          </div>
-          <div class="row" style="justify-content:space-between; margin-top:10px;">
-            <button class="btn" type="button" onclick="clearReturnCrosscheckFilters()">Limpar filtros</button>
-            <span id="retCrossActiveFilters" class="pill">Sem filtros</span>
+          <!-- Filtros técnicos ocultos: mantêm a lógica dos KPIs, exportação e cópia sem mostrar filtros duplicados no dashboard. -->
+          <div id="retCrossHiddenFilters" style="display:none;">
+            <input id="retCrossFilterText" value="">
+            <select id="retCrossFilterKind">
+              <option value="ALL" selected>Tudo</option>
+              <option value="FOUND">Só encontrados</option>
+              <option value="RETURN">Só returns</option>
+              <option value="REFUND">Só refunds</option>
+              <option value="MISSING">Só não encontrados</option>
+              <option value="WITH_TRACKING">Só com tracking</option>
+              <option value="DUPLICATE">Só duplicados input</option>
+              <option value="DIFF_PRODUCTS">Só diferenças produtos</option>
+            </select>
+            <select id="retCrossCarrierFilter"><option value="ALL" selected>Todas as transportadoras</option></select>
+            <span id="retCrossActiveFilters">Sem filtros</span>
           </div>
         </div>
       </div>
@@ -947,6 +1011,163 @@
         </div>
       </div>
     </div>
+
+
+
+    <div id="tabCases" class="tabPanel">
+      <div class="casesGrid">
+        <div class="card">
+          <h2>🧾 Introduzir IDs — Broken / Swipe / Lost</h2>
+          <div class="notice">
+            Regista aqui encomendas com problemas de transportadora/armazém. Escolhe o tipo, escreve o <b>ID</b> e a <b>transportadora</b>. Os campos marcados como selecionáveis usam listas editáveis: podes escrever valores novos, guardar na lista ou apagar opções antigas.
+          </div>
+
+          <div class="split" style="margin-top:12px;">
+            <div>
+              <label>Tipo</label>
+              <select id="casesType" onchange="renderCasesFormFields()">
+                <option value="BROKEN">BROKEN</option>
+                <option value="SWIPE">SWIPE</option>
+                <option value="LOST">LOST</option>
+              </select>
+            </div>
+            <div>
+              <label>ID</label>
+              <input id="casesId" placeholder="Order ID" autocomplete="off">
+            </div>
+          </div>
+
+          <label>Transportadora</label>
+          <input id="casesCarrier" list="casesCarrierList" placeholder="Ex: CTT, NACEX, CORREOS ES..." autocomplete="off">
+          <datalist id="casesCarrierList"></datalist>
+          <div class="casesDataHint">A transportadora é editável e selecionável. Ao guardar um registo, uma transportadora nova fica disponível na lista.</div>
+
+          <div id="casesDynamicFields"></div>
+
+          <div class="casesAutoPanel" id="casesAutoPanel">
+            <h2>🔎 Dados automáticos da Firebase</h2>
+            <div class="mini">Ao inserir o ID, o sistema tenta buscar automaticamente a <b>DATE WAREHOUSE</b> em RETURN/REFUND e também a data/produtos de PACKING. Se não existir RETURN/REFUND, a data fica manual.</div>
+            <div id="casesAutoData" class="casesAutoGrid">
+              <div class="casesAutoItem"><b>Estado</b>Ainda sem pesquisa.</div>
+            </div>
+            <div class="row" style="margin-top:10px;">
+              <button class="btn" type="button" onclick="fetchCaseAutoDataFromForm()">Buscar dados Firebase</button>
+              <button class="btn" type="button" onclick="openCaseIdHistoryFromForm()">Histórico do ID</button>
+            </div>
+          </div>
+
+          <div class="casesCrossPanel" id="casesCrossPanel">
+            <h2>⚠️ Cruzamento com Envios / Sem Picagem</h2>
+            <div class="mini">Ao inserir ou guardar o ID, o sistema cruza automaticamente com <b>Envios em Análise</b> e <b>IDs sem picagem da transportadora</b>. Se existir coincidência, aparece aqui e também na tabela.</div>
+            <div id="casesCrossData" class="casesCrossGrid">
+              <div class="casesCrossItem"><b>Estado</b>Ainda sem cruzamento.</div>
+            </div>
+            <div class="row" style="margin-top:10px;">
+              <button class="btn" type="button" onclick="fetchCaseCrosscheckFromForm()">Verificar coincidências</button>
+              <button class="btn" type="button" onclick="openCaseCrosscheckFromForm()">Ver detalhe</button>
+            </div>
+          </div>
+
+          <div class="enviosActions">
+            <div class="row">
+              <button id="btnCasesSave" class="btn primary" type="button" onclick="saveCaseRecord()">Guardar / Atualizar</button>
+              <button class="btn" type="button" onclick="clearCaseForm()">Limpar formulário</button>
+              <button class="btn" type="button" onclick="loadCaseRecords()">Recarregar</button>
+            </div>
+            <span id="casesStatus" class="pill">Pronto</span>
+          </div>
+          <div id="casesEditingHint" class="mini" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="card">
+          <h2>⚙️ Listas editáveis</h2>
+          <div class="notice">
+            Usa esta área para gerir os campos que são <b>editáveis e selecionáveis</b>: Transportadora, Damage Description, Status e AMSPED Status. Apagar uma opção remove-a da lista, mas não apaga registos já guardados com esse texto.
+          </div>
+          <div class="split" style="margin-top:12px;">
+            <div>
+              <label>Lista a editar</label>
+              <select id="casesOptionGroup" onchange="renderCasesOptionManager()"></select>
+            </div>
+            <div>
+              <label>Valor</label>
+              <input id="casesOptionValue" placeholder="Escreve ou escolhe um valor" autocomplete="off">
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn primary" type="button" onclick="addCaseOptionFromManager()">Adicionar valor</button>
+            <button class="btn danger" type="button" onclick="removeCaseOptionFromManager()">Eliminar valor</button>
+          </div>
+          <div id="casesOptionList" class="casesOptionList"></div>
+
+          <div class="hr"></div>
+          <h2>📊 Resumo</h2>
+          <div class="casesMiniGrid">
+            <div class="kpi"><p class="n" id="casesKpiTotal">0</p><p class="t">Total</p></div>
+            <div class="kpi"><p class="n bad" id="casesKpiBroken">0</p><p class="t">Broken</p></div>
+            <div class="kpi"><p class="n" id="casesKpiSwipe">0</p><p class="t">Swipe</p></div>
+            <div class="kpi"><p class="n warn" id="casesKpiLost">0</p><p class="t">Lost</p></div>
+          </div>
+
+          <div class="hr"></div>
+          <h2>Exportação / limpeza</h2>
+          <div class="row">
+            <button class="btn" type="button" onclick="exportCasesCsv()">Exportar CSV</button>
+            <button class="btn" type="button" onclick="exportCaseHistoryCsv()">Exportar histórico</button>
+            <button class="btn" type="button" onclick="refreshCaseCrosschecks()">Atualizar cruzamento</button>
+            <button class="btn" type="button" onclick="copyVisibleCaseIds()">Copiar IDs visíveis</button>
+            <button class="btn danger" type="button" onclick="deleteAllCaseRecords()">Eliminar todos os registos</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card resultsCard" style="margin-top:14px;">
+        <div class="row" style="justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h2 style="margin-bottom:4px;">📋 Registos Broken / Swipe / Lost</h2>
+            <div class="mini">Podes filtrar por texto, tipo e transportadora, ou usar os filtros diretamente na barra de cada coluna da tabela. O filtro Status já não mistura opções de AMSPED Status.</div>
+          </div>
+          <span id="casesRowsShown" class="pill">0 linhas</span>
+        </div>
+        <div class="hr"></div>
+        <div class="split">
+          <div>
+            <label>Filtrar tabela</label>
+            <input id="casesFilterText" placeholder="ex: ID, tracking, produto, estado..." oninput="renderCasesTable()">
+          </div>
+          <div>
+            <label>Mostrar tipo</label>
+            <select id="casesFilterType" onchange="renderCasesTable()">
+              <option value="ALL">Todos</option>
+              <option value="BROKEN">BROKEN</option>
+              <option value="SWIPE">SWIPE</option>
+              <option value="LOST">LOST</option>
+            </select>
+          </div>
+          <div>
+            <label>Status</label>
+            <input id="casesFilterStatus" list="casesStatusFilterList" placeholder="Status sem AMSPED" oninput="renderCasesTable()">
+            <datalist id="casesStatusFilterList"></datalist>
+          </div>
+          <div>
+            <label>Transportadora</label>
+            <input id="casesFilterCarrier" list="casesCarrierList" placeholder="Todas" oninput="renderCasesTable()">
+          </div>
+        </div>
+        <div class="row" style="justify-content:space-between; margin-top:10px;">
+          <button class="btn" type="button" onclick="clearCasesFilters()">Limpar filtros</button>
+          <span id="casesActiveFilters" class="pill">Sem filtros</span>
+        </div>
+        <div class="hr"></div>
+        <div class="tableWrap">
+          <table class="casesTable">
+            <thead id="casesThead"></thead>
+            <tbody id="casesTbody"><tr><td colspan="8" class="muted" style="padding:16px;">Ainda não há registos.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
 
     <div id="tabEnvios" class="tabPanel active">
       <div class="enviosGrid">
@@ -1006,7 +1227,20 @@
             <button class="btn" type="button" onclick="copyEnviosIds('VERIFIED')">Copiar verificados</button>
             <button class="btn danger" type="button" onclick="deleteAllEnviosIds()">Eliminar todos</button>
           </div>
-          <div class="mini" style="margin-top:8px;">O CSV inclui order_id, tracking, transportadora, embalado, return, refund, verificação, datas, user e items.</div>
+          <div class="notice" style="margin-top:12px; background:#fff1f2; border-left:6px solid var(--error); border-color:#fecaca; color:#7f1d1d;">
+            <b>Eliminar IDs guardados:</b> podes apagar um ID pela coluna <b>Ações → Eliminar</b>, apagar tudo no botão <b>Eliminar todos</b>, ou escrever aqui um ou vários IDs para eliminar diretamente da listagem guardada.
+          </div>
+          <div class="split" style="margin-top:10px; align-items:end;">
+            <div>
+              <label>Eliminar ID específico</label>
+              <input id="envioDeleteIds" placeholder="Ex: 16975639 ou vários IDs separados por espaços/linhas" onkeydown="if(event.key==='Enter' && (event.ctrlKey || event.metaKey)){deleteEnvioIdsFromInput();}">
+            </div>
+            <div class="row">
+              <button class="btn danger" type="button" onclick="deleteEnvioIdsFromInput()">Eliminar ID(s)</button>
+              <button class="btn" type="button" onclick="document.getElementById('envioDeleteIds').value=''">Limpar</button>
+            </div>
+          </div>
+          <div class="mini" style="margin-top:8px;">O CSV é exportado com separador ; para abrir no Excel cada valor numa célula. Inclui order_id, tracking, transportadora, embalado, return, refund, verificação, datas, user e items.</div>
         </div>
 
         <div class="card">
@@ -3596,7 +3830,7 @@
     const delimiter = ";";
     const lines = [header.map(csvCell).join(delimiter)];
     rows.forEach(r=>lines.push([r.id,r.source,r.found ? "ENCONTRADO" : "NAO_ENCONTRADO",enviosYesNo(r.hasReturn),enviosYesNo(r.hasRefund),enviosYesNo(r.hasProductDiff),r.comparison && r.comparison.summary || "",retCrossDiffListToText(r.comparison && r.comparison.missing || []),retCrossDiffListToText(r.comparison && r.comparison.extra || []),r.packingItems,r.returnItems,r.mode,r.dateTime,r.tracking,r.carrier,r.batchName || r.batchKey,r.user,r.items,(r.matchedRecords || []).length].map(csvCell).join(delimiter)));
-    const blob = new Blob(["\ufeff" + lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
+    const blob = new Blob(["\ufeffsep=;\r\n" + lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "crosscheck_returns_refunds.csv";
@@ -4577,6 +4811,66 @@
   }
   window.deleteEnvioId = deleteEnvioId;
 
+  function getAllKnownEnvioIdsForDelete(){
+    const ids = [];
+    try{ Object.values(enviosState.savedItems || {}).forEach(item => { if(item && !item.deleted) ids.push(normaliseOrderId(item.id || "")); }); }catch(e){}
+    try{ (enviosState.rows || []).forEach(r => ids.push(normaliseOrderId(r.id || ""))); }catch(e){}
+    try{ parseIds(($("enviosIds") && $("enviosIds").value) || "").forEach(id => ids.push(normaliseOrderId(id))); }catch(e){}
+    return uniq(ids.filter(Boolean));
+  }
+  window.getAllKnownEnvioIdsForDelete = getAllKnownEnvioIdsForDelete;
+
+  async function deleteEnvioIdsFromInput(){
+    const box = $("envioDeleteIds");
+    const ids = uniq(parseIds(box ? box.value : "").map(normaliseOrderId).filter(Boolean));
+    if(!ids.length){
+      enviosSetStatus("Escreve pelo menos um ID para eliminar.", "warn");
+      if(box) box.focus();
+      return;
+    }
+
+    const known = new Set(getAllKnownEnvioIdsForDelete());
+    const missing = ids.filter(id => !known.has(id));
+    const extraWarning = missing.length
+      ? `\n\nAtenção: ${missing.length} ID(s) não aparecem na listagem carregada neste momento: ${missing.slice(0,12).join(", ")}${missing.length > 12 ? "..." : ""}. Mesmo assim vou tentar remover esses caminhos na Firebase.`
+      : "";
+
+    const ok = window.confirm(`Eliminar definitivamente ${ids.length} ID(s) dos Envios em Análise?\n\n${ids.slice(0,20).join(", ")}${ids.length > 20 ? ` ... (+${ids.length - 20})` : ""}${extraWarning}\n\nEsta ação remove os IDs da Firebase. Se voltares a colar os mesmos IDs, entram como novos.`);
+    if(!ok) return;
+
+    const now = new Date().toISOString();
+    const by = enviosCurrentUser();
+    const idSet = new Set(ids);
+
+    try{
+      enviosSetStatus(`A eliminar ${ids.length} ID(s)...`, "warn");
+      if(auth.currentUser){
+        const nullUpdates = {};
+        ids.forEach(id => { nullUpdates[`${ENVIOS_DB_PATH}/${enviosItemKey(id)}`] = null; });
+        await db.ref("/").update(nullUpdates);
+        await db.ref(ENVIOS_META_PATH).update({lastHardDeleteManyAt:now, lastHardDeleteManyBy:by, lastHardDeleteManyCount:ids.length, lastHardDeleteManyIds:ids.slice(0,50)});
+      }
+
+      ids.forEach(id => { if(enviosState.savedItems && enviosState.savedItems[id]) delete enviosState.savedItems[id]; });
+      enviosState.rows = (enviosState.rows || []).filter(r => !idSet.has(normaliseOrderId(r.id)));
+
+      const input = $("enviosIds");
+      if(input && input.value){
+        const remaining = parseIds(input.value).map(normaliseOrderId).filter(id => id && !idSet.has(id));
+        input.value = uniq(remaining).join("\n");
+      }
+      if(box) box.value = "";
+
+      updateEnviosKPIs();
+      renderEnviosTable();
+      enviosSetStatus(`${ids.length} ID(s) eliminados definitivamente.`, "ok");
+    }catch(e){
+      console.error(e);
+      enviosSetStatus("Não consegui eliminar estes IDs na Firebase. Verifica permissões.", "bad");
+    }
+  }
+  window.deleteEnvioIdsFromInput = deleteEnvioIdsFromInput;
+
   async function deleteAllEnviosIds(){
     const activeIds = getEnviosIds({savedFallback:true});
     const rowIds = (enviosState.rows || []).map(r => normaliseOrderId(r.id)).filter(Boolean);
@@ -4641,7 +4935,7 @@
       ].map(csvCell).join(delimiter));
     });
     // BOM UTF-8 + separador ; para abrir corretamente em Excel PT/EU, uma informação por célula.
-    const blob = new Blob(["\ufeff" + lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
+    const blob = new Blob(["\ufeffsep=;\r\n" + lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "envios_em_analise.csv";
@@ -5459,7 +5753,7 @@ Queres continuar?`);
     const delimiter = ";";
     const lines = [header.map(csvCell).join(delimiter)];
     rows.forEach(r=>lines.push([r.id,r.insertedDate,r.expectedCarrier,enviosYesNo(r.hasPickupFinal),enviosYesNo(r.otherResolution),r.resolutionNote,r.resolutionBy,r.resolutionAt,semPicResolutionUpdatesForCsv(r.resolutionUpdates || []),r.packingCarrier,r.packingDate,r.tracking,r.user,r.batch,r.status].map(csvCell).join(delimiter)));
-    const blob = new Blob(["\ufeff" + lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
+    const blob = new Blob(["\ufeffsep=;\r\n" + lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "ids_sem_picagens_transportadora.csv";
@@ -5573,12 +5867,13 @@ Queres continuar?`);
   function retCrossNowIso(){ return new Date().toISOString(); }
 
   function retCrossSelectedCarriers(){
-    const sel = $("retCrossCarrierMulti");
     const manual = $("retCrossCarrierManual");
-    let carriers = [];
-    if(sel){ carriers = Array.from(sel.selectedOptions || []).map(o=>String(o.value || "").trim().toUpperCase()).filter(Boolean); }
-    if(manual && String(manual.value || "").trim()) carriers.push(String(manual.value || "").trim().toUpperCase());
-    return Array.from(new Set(carriers)).sort();
+    const raw = manual ? String(manual.value || "").trim().toUpperCase() : "";
+    // Agora o Crosscheck Returns usa apenas a transportadora escrita manualmente.
+    // Aceita separadores comuns para quando a mesma lista pertence a mais de uma transportadora.
+    // Ex.: "NACEX + NACEX PT" ou "CTT, CTT ILHAS".
+    if(!raw) return [];
+    return Array.from(new Set(raw.split(/\s*(?:\+|,|;|\/|\n)\s*/g).map(x=>x.trim()).filter(Boolean))).sort();
   }
 
   function retCrossCarrierLabel(carriers){
@@ -5637,18 +5932,8 @@ Queres continuar?`);
   }
 
   function renderReturnCrossCarrierSelect(){
-    const sel = $("retCrossCarrierMulti");
-    if(!sel) return;
-    const previous = new Set(Array.from(sel.selectedOptions || []).map(o=>o.value));
-    const carriers = Array.from(new Set([...(state.carriers || []), ...retCrossAllMonitorItems().map(x=>x.carrier)].filter(Boolean).map(x=>String(x).trim().toUpperCase()))).sort();
-    sel.innerHTML = "";
-    carriers.forEach(c=>{
-      const opt = document.createElement("option");
-      opt.value = c;
-      opt.textContent = c;
-      opt.selected = previous.has(c);
-      sel.appendChild(opt);
-    });
+    // O selector de transportadoras foi removido do Crosscheck Returns.
+    // Mantemos a função para compatibilidade com inicializações antigas.
     retCrossUpdateCarrierPreview();
     retCrossUpdateCarrierFilters();
   }
@@ -5659,8 +5944,8 @@ Queres continuar?`);
     if(!box) return;
     const carriers = retCrossSelectedCarriers();
     box.innerHTML = carriers.length
-      ? `IDs vão ficar ligados a: <b>${escapeHtml(carriers.join(" + "))}</b>`
-      : `<span class="bad">Seleciona pelo menos uma transportadora antes de cruzar.</span>`;
+      ? `IDs vão ficar ligados à transportadora: <b>${escapeHtml(carriers.join(" + "))}</b>`
+      : `<span class="bad">Escreve a transportadora antes de cruzar.</span>`;
   }
   window.retCrossUpdateCarrierPreview = retCrossUpdateCarrierPreview;
 
@@ -5681,32 +5966,20 @@ Queres continuar?`);
   }
 
   function injectReturnCrosscheckPersistentUI(){
-    // Bloco transportadoras antes da caixa de IDs
+    // Bloco transportadora antes da caixa de IDs
     const idsBox = $("retCrossIds");
     if(idsBox && !$("retCrossCarrierBlock")){
       const block = document.createElement("div");
       block.id = "retCrossCarrierBlock";
       block.innerHTML = `
         <div class="hr"></div>
-        <h2>Transportadora(s) desta lista</h2>
+        <h2>Transportadora desta lista</h2>
         <div class="notice" style="background:#f8fafc; border-left:6px solid var(--accent);">
-          Antes de colares os IDs, seleciona a transportadora ou transportadoras a que eles pertencem. Essa informação fica guardada nas listagens automáticas.
+          Escreve a transportadora a que pertencem os IDs antes de cruzar. Essa informação fica guardada nas listagens automáticas.
+          Se a mesma lista tiver mais do que uma transportadora, podes separar por <b>+</b>, vírgula ou ponto-e-vírgula.
         </div>
-        <label>Selecionar transportadora(s)</label>
-        <select id="retCrossCarrierMulti" multiple size="6" onchange="retCrossUpdateCarrierPreview()"></select>
-        <div class="split" style="margin-top:10px;">
-          <div>
-            <label>Transportadora manual</label>
-            <input id="retCrossCarrierManual" placeholder="Ex: DHL" oninput="retCrossUpdateCarrierPreview()">
-          </div>
-          <div>
-            <label>Ações</label>
-            <div class="row">
-              <button class="btn" type="button" onclick="retCrossSelectAllCarriers()">Selecionar todas</button>
-              <button class="btn" type="button" onclick="retCrossClearCarriers()">Limpar</button>
-            </div>
-          </div>
-        </div>
+        <label>Transportadora</label>
+        <input id="retCrossCarrierManual" placeholder="Ex: CTT, NACEX, CORREOS ES" oninput="retCrossUpdateCarrierPreview()">
         <div id="retCrossCarrierPreview" class="enviosSaveHint"></div>`;
       const labelIds = idsBox.previousElementSibling;
       (labelIds && labelIds.parentNode ? labelIds.parentNode : idsBox.parentNode).insertBefore(block, labelIds || idsBox);
@@ -5775,9 +6048,7 @@ Queres continuar?`);
   }
 
   function retCrossSelectAllCarriers(){
-    const sel = $("retCrossCarrierMulti");
-    if(!sel) return;
-    Array.from(sel.options).forEach(o=>o.selected = true);
+    // Selector removido: já não há ação "selecionar todas" no Crosscheck Returns.
     retCrossUpdateCarrierPreview();
   }
   window.retCrossSelectAllCarriers = retCrossSelectAllCarriers;
@@ -6265,7 +6536,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       ids = Array.from(new Set(ids));
     } else {
       const selected = retCrossSelectedCarriers();
-      if(!selected.length){ retCrossSetStatus("Seleciona a transportadora ou transportadoras antes de cruzar.", "bad"); retCrossUpdateCarrierPreview(); return; }
+      if(!selected.length){ retCrossSetStatus("Escreve a transportadora antes de cruzar.", "bad"); retCrossUpdateCarrierPreview(); return; }
       ids = getReturnCrossIds();
       selected.forEach(c=>{});
       ids.forEach(id=>{ carrierMap[id] = new Set(selected); });
@@ -6386,7 +6657,7 @@ Esta ação remove estes registos guardados na Firebase.`);
     }
 
     function getTextareaDrafts(){
-      const ids = ["carrierIds","jointIds","enviosIds","semPicIds","retCrossIds","retCrossSource","semPicCarrierManual"];
+      const ids = ["carrierIds","jointIds","enviosIds","envioDeleteIds","semPicIds","retCrossIds","retCrossSource","semPicCarrierManual"];
       const data = {};
       ids.forEach(id=>{ const el = byId(id); if(el) data[id] = el.value || ""; });
       return data;
@@ -6488,7 +6759,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       catch(e){}
     }
     function attachDraftAutosave(){
-      ["carrierIds","jointIds","enviosIds","semPicIds","retCrossIds","retCrossSource","semPicCarrierManual"].forEach(id=>{
+      ["carrierIds","jointIds","enviosIds","envioDeleteIds","semPicIds","retCrossIds","retCrossSource","semPicCarrierManual"].forEach(id=>{
         const el = byId(id);
         if(el && !el.dataset.uxDraftBound){
           el.dataset.uxDraftBound = "1";
@@ -6530,7 +6801,8 @@ Esta ação remove estes registos guardados na Firebase.`);
           jointIds: "run",
           enviosIds: "saveEnviosIdsAndRun",
           semPicIds: "saveSemPicIdsAndRun",
-          retCrossIds: "runReturnCrosscheck"
+          retCrossIds: "runReturnCrosscheck",
+          envioDeleteIds: "deleteEnvioIdsFromInput"
         };
         const fnName = actions[active.id];
         if(fnName && typeof win[fnName] === "function"){
@@ -6541,7 +6813,7 @@ Esta ação remove estes registos guardados na Firebase.`);
     }
 
     function installSafetyBeforeDestructiveActions(){
-      const dangerousNames = ["deleteEnvioId","deleteAllEnviosIds","deleteSemPicId","deleteAllSemPicIds"];
+      const dangerousNames = ["deleteEnvioId","deleteEnvioIdsFromInput","deleteAllEnviosIds","deleteSemPicId","deleteAllSemPicIds"];
       dangerousNames.forEach(name=>{
         const original = win[name];
         if(typeof original === "function" && !original._uxWrapped){
@@ -6640,6 +6912,2318 @@ Esta ação remove estes registos guardados na Firebase.`);
   updateEnviosKPIs();
   renderEnviosTable();
 
+
+
+  // ===== v3: Crosscheck Returns - filtros por uma ou varias transportadoras =====
+  (function(){
+    "use strict";
+
+    function byId(id){ return document.getElementById(id); }
+    function normCarrier(v){ return String(v || "").trim().toUpperCase(); }
+    function uniqueSorted(arr){ return Array.from(new Set((arr || []).map(normCarrier).filter(Boolean))).sort(); }
+
+    function retCrossGetCarrierFilterValues(){
+      const sel = byId("retCrossCarrierFilter");
+      if(!sel) return [];
+      let vals = [];
+      if(sel.multiple){
+        vals = Array.from(sel.selectedOptions || []).map(o=>normCarrier(o.value)).filter(Boolean);
+      } else {
+        vals = [normCarrier(sel.value || "ALL")];
+      }
+      vals = vals.filter(v=>v && v !== "ALL");
+      return uniqueSorted(vals);
+    }
+    window.retCrossGetCarrierFilterValues = retCrossGetCarrierFilterValues;
+
+    function retCrossRowCarrierSet(row){
+      const set = new Set();
+      const add = v => { v = normCarrier(v); if(v) set.add(v); };
+      if(!row) return set;
+      if(Array.isArray(row.selectedCarriers)) row.selectedCarriers.forEach(add);
+      add(row.selectedCarrier);
+      add(row.selectedCarrierLabel);
+      add(row.carrier);
+      (row.records || []).forEach(r=>add(r && (r.carrier || r.Carrier)));
+      (row.matchedRecords || []).forEach(r=>add(r && (r.carrier || r.Carrier)));
+      if(row.packingRecord) add(row.packingRecord.carrier || row.packingRecord.Carrier);
+      if(row.comparedReturnRecord) add(row.comparedReturnRecord.carrier || row.comparedReturnRecord.Carrier);
+      return set;
+    }
+    window.retCrossRowCarrierSet = retCrossRowCarrierSet;
+
+    function retCrossCarrierMatchesAny(row, selected){
+      selected = uniqueSorted(selected || []);
+      if(!selected.length) return true;
+      const set = retCrossRowCarrierSet(row);
+      return selected.some(c=>set.has(c));
+    }
+    window.retCrossCarrierMatchesAny = retCrossCarrierMatchesAny;
+
+    function retCrossCarrierFilterLabel(){
+      const vals = retCrossGetCarrierFilterValues();
+      return vals.length ? vals.join(" + ") : "Todas";
+    }
+    window.retCrossCarrierFilterLabel = retCrossCarrierFilterLabel;
+
+    function retCrossEnsureMultiCarrierFilter(){
+      const sel = byId("retCrossCarrierFilter");
+      if(!sel) return;
+      sel.multiple = true;
+      sel.size = Math.min(Math.max((sel.options || []).length, 4), 8);
+      sel.title = "Seleciona uma ou mais transportadoras. Ctrl/Cmd ou Shift permitem seleção múltipla.";
+      sel.onchange = function(){
+        const selected = retCrossGetCarrierFilterValues();
+        if(Array.from(sel.selectedOptions || []).some(o=>o.value === "ALL") && selected.length){
+          Array.from(sel.options || []).forEach(o=>{ if(o.value === "ALL") o.selected = false; });
+        }
+        renderReturnCrosscheckTable();
+      };
+      const wrap = sel.parentElement;
+      if(wrap && !byId("retCrossCarrierFilterHelp")){
+        const help = document.createElement("div");
+        help.id = "retCrossCarrierFilterHelp";
+        help.className = "mini";
+        help.style.marginTop = "6px";
+        help.innerHTML = "Podes selecionar <b>uma ou mais</b> transportadoras. O filtro considera a transportadora da lista e a transportadora encontrada na Firebase.";
+        wrap.appendChild(help);
+      }
+      if(wrap && !byId("retCrossCarrierFilterActions")){
+        const actions = document.createElement("div");
+        actions.id = "retCrossCarrierFilterActions";
+        actions.className = "row";
+        actions.style.marginTop = "8px";
+        actions.innerHTML = '<button class="btn" type="button" onclick="retCrossFilterSelectAllCarriers()">Todas</button><button class="btn" type="button" onclick="retCrossFilterClearCarriers()">Limpar transportadoras</button>';
+        wrap.appendChild(actions);
+      }
+    }
+    window.retCrossEnsureMultiCarrierFilter = retCrossEnsureMultiCarrierFilter;
+
+    function retCrossFilterSelectAllCarriers(){
+      const sel = byId("retCrossCarrierFilter");
+      if(!sel) return;
+      Array.from(sel.options || []).forEach(o=>{ o.selected = o.value !== "ALL"; });
+      renderReturnCrosscheckTable();
+    }
+    window.retCrossFilterSelectAllCarriers = retCrossFilterSelectAllCarriers;
+
+    function retCrossFilterClearCarriers(){
+      const sel = byId("retCrossCarrierFilter");
+      if(!sel) return;
+      Array.from(sel.options || []).forEach(o=>{ o.selected = o.value === "ALL"; });
+      renderReturnCrosscheckTable();
+    }
+    window.retCrossFilterClearCarriers = retCrossFilterClearCarriers;
+
+    retCrossSetSelectOptions = function(selectId, carriers){
+      const el = byId(selectId);
+      if(!el) return;
+      const isRetCrossMain = selectId === "retCrossCarrierFilter";
+      const previous = el.multiple
+        ? Array.from(el.selectedOptions || []).map(o=>normCarrier(o.value)).filter(Boolean)
+        : [normCarrier(el.value || "ALL")];
+      const cleanCarriers = uniqueSorted(carriers || []);
+      el.innerHTML = '<option value="ALL">Todas as transportadoras</option>' + cleanCarriers.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+      if(isRetCrossMain){
+        el.multiple = true;
+        el.size = Math.min(Math.max(cleanCarriers.length + 1, 4), 8);
+        const prevReal = previous.filter(v=>v && v !== "ALL" && cleanCarriers.includes(v));
+        Array.from(el.options || []).forEach(o=>{ o.selected = prevReal.length ? prevReal.includes(normCarrier(o.value)) : o.value === "ALL"; });
+        retCrossEnsureMultiCarrierFilter();
+      } else {
+        const prev = previous.find(v=>v && cleanCarriers.includes(v)) || "ALL";
+        el.value = cleanCarriers.includes(prev) ? prev : "ALL";
+      }
+    };
+    window.retCrossSetSelectOptions = retCrossSetSelectOptions;
+
+    retCrossUpdateCarrierFilters = function(){
+      const fromRows = [];
+      (retCrossState.rows || []).forEach(r=>{
+        retCrossRowCarrierSet(r).forEach(c=>fromRows.push(c));
+      });
+      const fromMonitor = (typeof retCrossAllMonitorItems === "function" ? retCrossAllMonitorItems() : []).map(x=>x.carrier);
+      const fromConfigured = state && Array.isArray(state.carriers) ? state.carriers : [];
+      const carriers = uniqueSorted([...fromRows, ...fromMonitor, ...fromConfigured]);
+      retCrossSetSelectOptions("retCrossCarrierFilter", carriers);
+      retCrossSetSelectOptions("retMonitorCarrierFilter", carriers);
+    };
+    window.retCrossUpdateCarrierFilters = retCrossUpdateCarrierFilters;
+
+    retCrossPassFilters = function(r){
+      const kind = byId("retCrossFilterKind") ? byId("retCrossFilterKind").value : "ALL";
+      if(kind === "FOUND" && !r.found) return false;
+      if(kind === "RETURN" && !r.hasReturn) return false;
+      if(kind === "REFUND" && !r.hasRefund) return false;
+      if(kind === "MISSING" && r.found) return false;
+      if(kind === "WITH_TRACKING" && !r.tracking) return false;
+      if(kind === "DUPLICATE" && !(retCrossState.duplicates || []).includes(r.id)) return false;
+      if(kind === "DIFF_PRODUCTS" && !r.hasProductDiff) return false;
+      if(!retCrossCarrierMatchesAny(r, retCrossGetCarrierFilterValues())) return false;
+      const q = String(byId("retCrossFilterText") ? byId("retCrossFilterText").value : "").trim().toLowerCase();
+      if(!q) return true;
+      const carrierHay = Array.from(retCrossRowCarrierSet(r)).join(" ");
+      const hay = [r.id, r.source, r.selectedCarrierLabel, carrierHay, r.label, r.mode, r.tracking, r.carrier, r.batchKey, r.batchName, r.dateTime, r.user, r.items, r.packingItems, r.returnItems, r.comparison && r.comparison.summary].join(" ").toLowerCase();
+      return hay.includes(q);
+    };
+    window.retCrossPassFilters = retCrossPassFilters;
+
+    updateReturnCrosscheckActiveFilters = function(){
+      const kind = byId("retCrossFilterKind") ? byId("retCrossFilterKind").value : "ALL";
+      const q = String(byId("retCrossFilterText") ? byId("retCrossFilterText").value : "").trim();
+      const carriers = retCrossGetCarrierFilterValues();
+      const parts = [];
+      if(kind && kind !== "ALL") parts.push("Mostrar: " + retCrossFilterLabel(kind));
+      if(carriers.length) parts.push("Transportadora(s): " + carriers.join(" + "));
+      if(q) parts.push("Texto: " + q);
+      if(byId("retCrossActiveFilters")) byId("retCrossActiveFilters").textContent = parts.length ? ("Filtro ativo → " + parts.join(" | ")) : "Sem filtros";
+      updateReturnCrosscheckKpiActive();
+    };
+    window.updateReturnCrosscheckActiveFilters = updateReturnCrosscheckActiveFilters;
+
+    clearReturnCrosscheckFilters = function(){
+      if(byId("retCrossFilterText")) byId("retCrossFilterText").value = "";
+      if(byId("retCrossFilterKind")) byId("retCrossFilterKind").value = "ALL";
+      retCrossFilterClearCarriers();
+      renderReturnCrosscheckTable();
+    };
+    window.clearReturnCrosscheckFilters = clearReturnCrosscheckFilters;
+
+    getReturnCrosscheckRowsForKind = function(kind){
+      let rows = sortReturnCrossRows(retCrossState.rows || []);
+      const selected = retCrossGetCarrierFilterValues();
+      if(selected.length) rows = rows.filter(r=>retCrossCarrierMatchesAny(r, selected));
+      if(kind === "FOUND") rows = rows.filter(r=>r.found);
+      else if(kind === "RETURN") rows = rows.filter(r=>r.hasReturn);
+      else if(kind === "REFUND") rows = rows.filter(r=>r.hasRefund);
+      else if(kind === "MISSING") rows = rows.filter(r=>!r.found);
+      else if(kind === "WITH_TRACKING") rows = rows.filter(r=>!!r.tracking);
+      else if(kind === "DUPLICATE") rows = rows.filter(r=>(retCrossState.duplicates || []).includes(r.id));
+      else if(kind === "DIFF_PRODUCTS") rows = rows.filter(r=>!!r.hasProductDiff);
+      return rows;
+    };
+    window.getReturnCrosscheckRowsForKind = getReturnCrosscheckRowsForKind;
+
+    // Faz o CSV respeitar os filtros ativos, porque em operação normalmente queres exportar só o que estás a ver.
+    exportReturnCrosscheckCsv = function(){
+      const rows = sortReturnCrossRows((retCrossState.rows || []).filter(retCrossPassFilters));
+      if(!rows.length){ retCrossSetStatus("Não há resultados filtrados para exportar.", "bad"); return; }
+      const header = ["order_id","origem_lista","transportadoras_filtro_linha","resultado","return","refund","diferenca_produtos","resumo_diferencas","falta_no_return_refund","extra_no_return_refund","items_packing","items_return_refund","modo_ultima_picagem","data_picagem","tracking","transportadora_firebase","batch","user","items","registos_return_refund"];
+      const delimiter = ";";
+      const lines = [header.map(csvCell).join(delimiter)];
+      rows.forEach(r=>lines.push([r.id,r.source,Array.from(retCrossRowCarrierSet(r)).join(" + "),r.found ? "ENCONTRADO" : "NAO_ENCONTRADO",enviosYesNo(r.hasReturn),enviosYesNo(r.hasRefund),enviosYesNo(r.hasProductDiff),r.comparison && r.comparison.summary || "",retCrossDiffListToText(r.comparison && r.comparison.missing || []),retCrossDiffListToText(r.comparison && r.comparison.extra || []),r.packingItems,r.returnItems,r.mode,r.dateTime,r.tracking,r.carrier,r.batchName || r.batchKey,r.user,r.items,(r.matchedRecords || []).length].map(csvCell).join(delimiter)));
+      const blob = new Blob(["\ufeffsep=;\r\n" + lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      const suffix = retCrossGetCarrierFilterValues().length ? "_" + retCrossGetCarrierFilterValues().join("_").replace(/[^A-Z0-9_]+/g,"_") : "";
+      a.download = "crosscheck_returns_refunds_filtrado" + suffix + ".csv";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      retCrossSetStatus(`${rows.length} linha(s) exportadas com filtros ativos ✅`, "ok");
+    };
+    window.exportReturnCrosscheckCsv = exportReturnCrosscheckCsv;
+
+    function retCrossInitMultiCarrierFilter(){
+      try{
+        if(typeof injectReturnCrosscheckPersistentUI === "function") injectReturnCrosscheckPersistentUI();
+        retCrossUpdateCarrierFilters();
+        retCrossEnsureMultiCarrierFilter();
+        updateReturnCrosscheckActiveFilters();
+      }catch(e){ console.warn("retCross multi carrier filter init", e); }
+    }
+    window.retCrossInitMultiCarrierFilter = retCrossInitMultiCarrierFilter;
+
+    if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", retCrossInitMultiCarrierFilter);
+    else retCrossInitMultiCarrierFilter();
+  })();
+
 </script>
+
+<script>
+
+  // ===== v4: Crosscheck Returns - listagens automáticas de trabalho =====
+  // Regra operacional reforçada:
+  // 1) ID com diferença de produtos entre PACKING e RETURN/REFUND fica guardado em "Returns com diferença de produtos".
+  // 2) ID sem qualquer RETURN ou REFUND fica guardado em "Sem returns/refund".
+  // 3) ID OK (tem RETURN/REFUND e produtos sem diferença) não fica guardado; se estava guardado, é removido.
+  // 4) Quando um ID guardado recebe nova picagem RETURN/REFUND, a reanálise usa sempre esta mesma regra.
+  (function(){
+    "use strict";
+
+    function byId(id){ return document.getElementById(id); }
+    function v4Path(name, fallback){
+      try{ return eval("typeof " + name + " !== 'undefined' ? " + name + " : undefined") || fallback; }
+      catch(e){ return fallback; }
+    }
+
+    const V4_DIFF_PATH = v4Path("RETCROSS_DIFF_DB_PATH", "returns_com_diferenca_produtos/items");
+    const V4_MISSING_PATH = v4Path("RETCROSS_MISSING_DB_PATH", "sem_returns_refund/items");
+    const V4_RESOLVED_PATH = v4Path("RETCROSS_RESOLVED_DB_PATH", "returns_com_diferenca_produtos/resolvidos");
+
+    function v4Mode(record){ return String(record && (record.mode || record.Mode || record.type || record.Type) || "").toUpperCase(); }
+    function v4IsReturnRefund(record){ const m = v4Mode(record); return m.includes("RETURN") || m.includes("REFUND"); }
+    function v4IsReturn(record){ return v4Mode(record).includes("RETURN"); }
+    function v4IsRefund(record){ return v4Mode(record).includes("REFUND"); }
+    function v4RecordDate(record){ return String(record && (record.dateTime || record.DateTime || record.dateClean || "") || ""); }
+    function v4SortRecords(records){
+      return (records || []).slice().sort((a,b)=>{
+        const ad = v4RecordDate(a);
+        const bd = v4RecordDate(b);
+        if(ad !== bd) return ad.localeCompare(bd);
+        return v4Mode(a).localeCompare(v4Mode(b));
+      });
+    }
+
+    function retCrossBuildAutoRow(row){
+      row = row || {};
+      const sortedRecords = v4SortRecords(row.records || []);
+      const returnRefundRecords = sortedRecords.filter(v4IsReturnRefund);
+      const latest = returnRefundRecords.length ? returnRefundRecords[returnRefundRecords.length - 1] : null;
+      const ret = returnRefundRecords.filter(v4IsReturn).pop() || null;
+      const refund = returnRefundRecords.filter(v4IsRefund).pop() || null;
+      const found = !!latest;
+      const packingRecord = typeof retCrossFindPackingRecord === "function" ? retCrossFindPackingRecord(sortedRecords, latest) : null;
+      const comparison = typeof retCrossBuildComparison === "function"
+        ? retCrossBuildComparison(packingRecord, latest)
+        : {status: found ? "MATCH" : "NO_RETURN", hasDiff:false, summary: found ? "Sem comparação disponível." : "Sem return/refund para comparar.", missing:[], extra:[], ignoredWarranty:[]};
+
+      let label = "Não encontrado";
+      let badgeClass = "missing";
+      if(refund){ label = ret ? "Return + Refund" : "Refund"; badgeClass = "refund"; }
+      else if(ret){ label = "Return"; badgeClass = "return"; }
+      else if(found){ label = "Encontrado"; badgeClass = "ok"; }
+
+      return Object.assign({}, row, {
+        found,
+        result: found ? "FOUND" : "MISSING",
+        label,
+        badgeClass,
+        hasReturn: !!ret,
+        hasRefund: !!refund,
+        hasProductDiff: !!(comparison && comparison.hasDiff),
+        comparison,
+        packingRecord,
+        comparedReturnRecord: latest,
+        packingItems: fmt(packingRecord && packingRecord.items || ""),
+        returnItems: fmt(latest && latest.items || ""),
+        mode: fmt(latest && latest.mode || ""),
+        tracking: fmt(latest && latest.tracking || ""),
+        carrier: fmt(latest && latest.carrier || ""),
+        batchKey: fmt(latest && latest.batchKey || ""),
+        batchName: fmt(latest && latest.batchName || ""),
+        dateTime: fmt(latest && latest.dateTime || ""),
+        dateClean: fmt(latest && latest.dateClean || ""),
+        user: fmt(latest && latest.user || ""),
+        items: fmt(latest && latest.items || ""),
+        matchedRecords: returnRefundRecords
+      });
+    }
+    window.retCrossBuildAutoRow = retCrossBuildAutoRow;
+
+    function retCrossAutoListState(row){
+      const autoRow = retCrossBuildAutoRow(row);
+      if(autoRow.hasProductDiff) return {state:"DIFF", row:autoRow};
+      if(!autoRow.found) return {state:"MISSING", row:autoRow};
+      return {state:"OK", row:autoRow};
+    }
+    window.retCrossAutoListState = retCrossAutoListState;
+
+    syncReturnCrossRowsToFirebase = async function(rows){
+      if(!auth.currentUser || !rows || !rows.length) return;
+      const updates = {};
+      const now = new Date().toISOString();
+      const user = typeof enviosCurrentUser === "function" ? enviosCurrentUser() : "UNKNOWN";
+
+      rows.forEach(originalRow=>{
+        const classified = retCrossAutoListState(originalRow);
+        const row = classified.row;
+        const carriers = Array.isArray(row.selectedCarriers) && row.selectedCarriers.length
+          ? row.selectedCarriers
+          : (typeof retCrossSelectedCarriers === "function" ? retCrossSelectedCarriers() : []);
+
+        carriers.forEach(carrierRaw=>{
+          const carrier = String(carrierRaw || "").trim().toUpperCase();
+          if(!carrier || !row.id) return;
+          const key = typeof retCrossMonitorKey === "function" ? retCrossMonitorKey(row.id, carrier) : (safeKey(carrier) + "__" + enviosItemKey(row.id));
+          const diffPath = `${V4_DIFF_PATH}/${key}`;
+          const missPath = `${V4_MISSING_PATH}/${key}`;
+
+          if(classified.state === "DIFF"){
+            const sig = typeof retCrossDiffSignature === "function" ? retCrossDiffSignature(row) : `${row.packingItems || ""}||${row.returnItems || ""}||${row.dateTime || ""}`;
+            updates[missPath] = null;
+            if(typeof retCrossResolvedStillApplies === "function" && retCrossResolvedStillApplies(key, sig)){
+              updates[diffPath] = null;
+            } else if(typeof retCrossRowSnapshot === "function"){
+              updates[diffPath] = retCrossRowSnapshot(row, carrier, "DIFF_PRODUCTS");
+            } else {
+              updates[diffPath] = {
+                id: row.id, carrier, status:"DIFF_PRODUCTS", createdAt: now, lastCheckedAt: now,
+                lastCheckedBy: user, found:true, hasReturn:!!row.hasReturn, hasRefund:!!row.hasRefund,
+                hasProductDiff:true, comparisonSummary: row.comparison && row.comparison.summary || "Diferença de produtos",
+                packingItems: row.packingItems || "", returnItems: row.returnItems || "", tracking: row.tracking || "",
+                dateTime: row.dateTime || "", firebaseCarrier: row.carrier || ""
+              };
+            }
+          } else if(classified.state === "MISSING"){
+            updates[diffPath] = null;
+            if(typeof retCrossRowSnapshot === "function"){
+              updates[missPath] = retCrossRowSnapshot(row, carrier, "MISSING_RETURN_REFUND");
+            } else {
+              updates[missPath] = {id: row.id, carrier, status:"MISSING_RETURN_REFUND", createdAt: now, lastCheckedAt: now, lastCheckedBy: user, found:false};
+            }
+          } else {
+            // OK: nao fica guardado em nenhuma listagem operacional.
+            updates[diffPath] = null;
+            updates[missPath] = null;
+          }
+        });
+      });
+
+      updates[`returns_com_diferenca_produtos/meta/lastSyncAt`] = now;
+      updates[`returns_com_diferenca_produtos/meta/lastSyncBy`] = user;
+      updates[`returns_com_diferenca_produtos/meta/rule`] = "DIFF_ONLY_OK_REMOVED";
+      updates[`sem_returns_refund/meta/lastSyncAt`] = now;
+      updates[`sem_returns_refund/meta/lastSyncBy`] = user;
+      updates[`sem_returns_refund/meta/rule`] = "MISSING_ONLY_OK_REMOVED";
+      await db.ref().update(updates);
+    };
+    window.syncReturnCrossRowsToFirebase = syncReturnCrossRowsToFirebase;
+
+    async function retCrossReanalyseSavedLists(){
+      if(typeof runReturnCrosscheck !== "function") return;
+      return await runReturnCrosscheck({useMonitor:true, fromManualRefresh:true, forceAutoRules:true});
+    }
+    window.retCrossReanalyseSavedLists = retCrossReanalyseSavedLists;
+
+    function ensureRetCrossV4Ui(){
+      const section = byId("retMonitorSection");
+      if(section && !byId("retMonitorRuleNotice")){
+        const notice = document.createElement("div");
+        notice.id = "retMonitorRuleNotice";
+        notice.className = "notice";
+        notice.style.marginTop = "10px";
+        notice.style.background = "#ecfdf5";
+        notice.style.borderLeft = "6px solid var(--packing)";
+        notice.innerHTML = "<b>Regra automática:</b> diferenças de produtos ficam guardadas na lista <b>Returns com diferença de produtos</b>; IDs sem RETURN/REFUND ficam na lista <b>Sem returns/refund</b>; IDs OK são removidos e não ficam guardados. A reanálise dos guardados usa sempre RETURN + REFUND, mesmo que o filtro visual esteja noutro modo.";
+        const firstHr = section.querySelector(".hr");
+        if(firstHr && firstHr.parentNode) firstHr.parentNode.insertBefore(notice, firstHr);
+        else section.insertBefore(notice, section.firstChild);
+      }
+      const row = section && section.querySelector(".row[style*='margin-bottom:12px']");
+      if(row && !byId("btnRetMonitorReanalyse")){
+        const btn = document.createElement("button");
+        btn.id = "btnRetMonitorReanalyse";
+        btn.className = "btn primary";
+        btn.type = "button";
+        btn.textContent = "Atualizar listagens guardadas";
+        btn.onclick = function(){ retCrossReanalyseSavedLists(); };
+        row.insertBefore(btn, row.firstChild);
+      }
+      const runBtn = byId("btnRetCrossRun");
+      if(runBtn && !byId("retCrossRunRuleHint")){
+        const hint = document.createElement("div");
+        hint.id = "retCrossRunRuleHint";
+        hint.className = "mini";
+        hint.style.marginTop = "8px";
+        hint.innerHTML = "Ao cruzar, só ficam guardados os IDs que precisam de seguimento: <b>diferença de produtos</b> ou <b>sem return/refund</b>. Os OK são removidos automaticamente das listagens.";
+        const parent = runBtn.closest(".enviosActions") || runBtn.parentNode;
+        if(parent && parent.parentNode) parent.parentNode.insertBefore(hint, parent.nextSibling);
+      }
+    }
+    window.ensureRetCrossV4Ui = ensureRetCrossV4Ui;
+
+    const originalRenderMonitor = typeof renderReturnMonitorLists === "function" ? renderReturnMonitorLists : null;
+    if(originalRenderMonitor && !originalRenderMonitor._v4Wrapped){
+      renderReturnMonitorLists = function(){
+        ensureRetCrossV4Ui();
+        return originalRenderMonitor.apply(this, arguments);
+      };
+      renderReturnMonitorLists._v4Wrapped = true;
+      window.renderReturnMonitorLists = renderReturnMonitorLists;
+    }
+
+    const originalSchedule = typeof scheduleRetCrossMonitorRefresh === "function" ? scheduleRetCrossMonitorRefresh : null;
+    if(originalSchedule && !originalSchedule._v4Wrapped){
+      scheduleRetCrossMonitorRefresh = function(reason, delay){
+        retCrossSetStatus("Vai reanalisar listagens guardadas: " + (reason || "alteração detetada") + "...", "warn");
+        return originalSchedule.call(this, reason, delay);
+      };
+      scheduleRetCrossMonitorRefresh._v4Wrapped = true;
+      window.scheduleRetCrossMonitorRefresh = scheduleRetCrossMonitorRefresh;
+    }
+
+    try{
+      ensureRetCrossV4Ui();
+      if(typeof loadRetMonitorLists === "function" && auth && auth.currentUser){ loadRetMonitorLists().catch(()=>{}); }
+      if(typeof renderReturnMonitorLists === "function") renderReturnMonitorLists();
+    }catch(e){ console.warn("retCross v4 init", e); }
+  })();
+
+</script>
+
+
+<script>
+  // ===== v6: Crosscheck Returns - novo cruzamento inclui listagens antigas =====
+  // Objetivo operacional:
+  // - Antes de qualquer novo cruzamento, recarrega as listagens antigas guardadas na Firebase.
+  // - Um cruzamento normal passa a reanalisar também os IDs guardados em:
+  //   returns_com_diferenca_produtos/items e sem_returns_refund/items.
+  // - Assim, se um ID antigo sem return/refund entretanto recebeu RETURN/REFUND,
+  //   a mesma regra automática volta a ser aplicada: OK remove, diferença move/guarda, sem return/refund mantém.
+  (function(){
+    "use strict";
+
+    function byId(id){ return document.getElementById(id); }
+    function v6SetStatus(txt, kind){ try{ if(typeof retCrossSetStatus === "function") retCrossSetStatus(txt, kind || ""); }catch(e){} }
+
+    function v6SavedItems(){
+      try{
+        if(typeof retCrossAllMonitorItems === "function") return retCrossAllMonitorItems() || [];
+      }catch(e){}
+      return [];
+    }
+
+    async function v6LoadSavedListsBeforeCrosscheck(showStatus){
+      if(!auth || !auth.currentUser) return [];
+      if(typeof loadRetMonitorLists !== "function") return v6SavedItems();
+      try{
+        if(showStatus) v6SetStatus("A carregar listagens antigas guardadas...", "warn");
+        await loadRetMonitorLists();
+      }catch(e){
+        console.warn("v6 load saved return lists", e);
+        v6SetStatus("Não consegui carregar as listagens antigas. Verifica permissões Firebase.", "warn");
+      }
+      return v6SavedItems();
+    }
+    window.v6LoadSavedListsBeforeCrosscheck = v6LoadSavedListsBeforeCrosscheck;
+
+    function v6AddCarrier(carrierMap, id, carrier){
+      id = typeof normaliseOrderId === "function" ? normaliseOrderId(id) : String(id || "").trim();
+      carrier = String(carrier || "").trim().toUpperCase();
+      if(!id || !carrier) return;
+      if(!carrierMap[id]) carrierMap[id] = new Set();
+      carrierMap[id].add(carrier);
+    }
+
+    function v6BuildCombinedCrosscheckInput(opts, savedItems){
+      opts = opts || {};
+      savedItems = savedItems || [];
+      const carrierMap = {};
+      const pastedIds = (typeof getReturnCrossIds === "function" ? getReturnCrossIds() : []) || [];
+      const selected = (typeof retCrossSelectedCarriers === "function" ? retCrossSelectedCarriers() : []) || [];
+      const sourceById = {};
+
+      if(opts.useMonitor){
+        savedItems.forEach(item=>{
+          v6AddCarrier(carrierMap, item.id, item.carrier);
+          if(item && item.id && item.source) sourceById[item.id] = item.source;
+        });
+      } else {
+        if(pastedIds.length && !selected.length){
+          return {error:"Seleciona a transportadora ou transportadoras antes de cruzar os IDs colados."};
+        }
+        pastedIds.forEach(id=>{
+          selected.forEach(carrier=>v6AddCarrier(carrierMap, id, carrier));
+        });
+
+        // Ponto essencial da v6: o novo cruzamento também reanalisa as listagens antigas.
+        savedItems.forEach(item=>{
+          v6AddCarrier(carrierMap, item.id, item.carrier);
+          if(item && item.id && item.source) sourceById[item.id] = item.source;
+        });
+      }
+
+      const ids = Object.keys(carrierMap).filter(Boolean).sort((a,b)=>String(a).localeCompare(String(b), undefined, {numeric:true}));
+      return {ids, carrierMap, pastedCount:pastedIds.length, savedCount:savedItems.length, sourceById};
+    }
+
+    function v6EnsureOldListsButton(){
+      const runBtn = byId("btnRetCrossRun");
+      if(runBtn && !byId("btnRetCrossOpenSavedLists")){
+        const btn = document.createElement("button");
+        btn.id = "btnRetCrossOpenSavedLists";
+        btn.className = "btn";
+        btn.type = "button";
+        btn.textContent = "Ver listas guardadas";
+        btn.onclick = async function(){
+          await v6LoadSavedListsBeforeCrosscheck(true);
+          const sec = byId("retMonitorSection");
+          if(sec){ sec.scrollIntoView({behavior:"smooth", block:"start"}); }
+          if(typeof renderReturnMonitorLists === "function") renderReturnMonitorLists();
+          v6SetStatus("Listagens guardadas carregadas ✅", "ok");
+        };
+        runBtn.insertAdjacentElement("afterend", btn);
+      }
+
+      const runBtn2 = byId("btnRetCrossRun");
+      if(runBtn2 && !byId("retCrossV6OldListsHint")){
+        const hint = document.createElement("div");
+        hint.id = "retCrossV6OldListsHint";
+        hint.className = "notice";
+        hint.style.marginTop = "10px";
+        hint.style.background = "#eff6ff";
+        hint.style.borderLeft = "6px solid var(--accent)";
+        hint.innerHTML = "<b>Novo cruzamento:</b> agora também recarrega e reanalisa automaticamente as listagens antigas guardadas. Se um ID que estava em <b>Sem returns/refund</b> já tiver RETURN/REFUND, ele muda de lista ou sai automaticamente se estiver OK.";
+        const parent = runBtn2.closest(".enviosActions") || runBtn2.parentNode;
+        if(parent && parent.parentNode) parent.parentNode.insertBefore(hint, parent.nextSibling);
+      }
+    }
+    window.v6EnsureOldListsButton = v6EnsureOldListsButton;
+
+    const v6PreviousRunReturnCrosscheck = typeof runReturnCrosscheck === "function" ? runReturnCrosscheck : null;
+
+    runReturnCrosscheck = async function(opts){
+      opts = opts || {};
+      if(retCrossState && retCrossState.running){ v6SetStatus("Cruzamento já em curso..."); return; }
+      if(!auth || !auth.currentUser){ v6SetStatus("Faz login primeiro.", "bad"); if(typeof openLogin === "function") openLogin(); return; }
+
+      const savedItems = await v6LoadSavedListsBeforeCrosscheck(true);
+      const built = v6BuildCombinedCrosscheckInput(opts, savedItems);
+      if(built.error){ v6SetStatus(built.error, "bad"); if(typeof retCrossUpdateCarrierPreview === "function") retCrossUpdateCarrierPreview(); return; }
+      const ids = built.ids || [];
+      const carrierMap = built.carrierMap || {};
+      if(!ids.length){ v6SetStatus("Não há IDs para cruzar nem listagens antigas para atualizar.", "bad"); return; }
+
+      if(!opts.useMonitor){
+        try{
+          const info = typeof getReturnCrossDuplicateInfo === "function" ? getReturnCrossDuplicateInfo() : {duplicates:[]};
+          if(typeof showReturnCrossDuplicateWarning === "function") showReturnCrossDuplicateWarning(info);
+        }catch(e){}
+      }
+
+      retCrossState.running = true;
+      const btn = byId("btnRetCrossRun");
+      if(btn) btn.disabled = true;
+      retCrossState.rows = [];
+      if(typeof renderReturnCrosscheckTable === "function") renderReturnCrosscheckTable();
+
+      try{
+        const rows = [];
+        const useHistory = byId("retCrossHistoryMode") && byId("retCrossHistoryMode").value === "YES";
+        const chunk = 20;
+        const savedUniqueIds = Array.from(new Set((savedItems || []).map(x=>x.id).filter(Boolean)));
+        const pastedCount = built.pastedCount || 0;
+        const savedCount = savedUniqueIds.length;
+        const detail = opts.useMonitor
+          ? `${savedCount} ID(s) das listagens antigas`
+          : `${pastedCount} ID(s) colado(s) + ${savedCount} ID(s) guardado(s)`;
+
+        for(let i=0; i<ids.length; i+=chunk){
+          v6SetStatus(`A cruzar ${Math.min(i + chunk, ids.length)} / ${ids.length} (${detail})...`);
+          const slice = ids.slice(i, i + chunk);
+          const partial = await Promise.all(slice.map(async id=>{
+            let records = await fetchRegistosForOrderId(id).catch(()=>[]);
+            if(useHistory){
+              const hist = await fetchHistoryFallbackForEnvio(id).catch(()=>[]);
+              records = mergeEnviosRecords(records, hist);
+            }
+            records = await enrichEnviosRecordsWithBatchInfo(records);
+            const selectedCarriers = Array.from(carrierMap[id] || []);
+            const row = buildReturnCrossRow(id, records, {selectedCarriers});
+            // Mantém alguma origem antiga se o ID veio só das listagens guardadas.
+            if((!row.source || !String(row.source).trim()) && built.sourceById && built.sourceById[id]) row.source = built.sourceById[id];
+            row.fromSavedReturnList = savedUniqueIds.includes(id);
+            row.fromCurrentPaste = (typeof getReturnCrossIds === "function" ? getReturnCrossIds() : []).includes(id);
+            return row;
+          }));
+          rows.push(...partial);
+          retCrossState.rows = sortReturnCrossRows(rows);
+          if(typeof updateReturnCrosscheckKPIs === "function") updateReturnCrosscheckKPIs();
+          if(typeof renderReturnCrosscheckTable === "function") renderReturnCrosscheckTable();
+        }
+
+        retCrossState.rows = sortReturnCrossRows(rows);
+        retCrossState.lastRunAt = new Date();
+        try{
+          if(typeof syncReturnCrossRowsToFirebase === "function") await syncReturnCrossRowsToFirebase(retCrossState.rows);
+        }catch(saveErr){
+          console.warn("v6 syncReturnCrossRowsToFirebase", saveErr);
+          v6SetStatus("Cruzado, mas não consegui atualizar as listagens antigas. Verifica permissões Firebase.", "warn");
+        }
+        await v6LoadSavedListsBeforeCrosscheck(false);
+        if(typeof updateReturnCrosscheckKPIs === "function") updateReturnCrosscheckKPIs();
+        if(typeof renderReturnCrosscheckTable === "function") renderReturnCrosscheckTable();
+        if(typeof renderReturnMonitorLists === "function") renderReturnMonitorLists();
+        v6SetStatus(`Cruzamento concluído: ${ids.length} ID(s) analisados, incluindo listagens antigas ✅`, "ok");
+      }catch(e){
+        console.error(e);
+        v6SetStatus("Erro ao cruzar returns/refunds.", "bad");
+        // Fallback conservador: se algo inesperado falhar no patch, tenta o comportamento anterior.
+        if(v6PreviousRunReturnCrosscheck && !opts._v6FallbackTried){
+          try{ return await v6PreviousRunReturnCrosscheck.call(this, Object.assign({}, opts, {_v6FallbackTried:true})); }catch(fallbackErr){ console.warn("v6 fallback failed", fallbackErr); }
+        }
+      }finally{
+        retCrossState.running = false;
+        if(btn) btn.disabled = false;
+      }
+    };
+    window.runReturnCrosscheck = runReturnCrosscheck;
+
+    const v6PreviousSwitchTab = typeof switchTab === "function" ? switchTab : null;
+    if(v6PreviousSwitchTab && !v6PreviousSwitchTab._v6OldListsWrapped){
+      switchTab = function(tab){
+        const res = v6PreviousSwitchTab.apply(this, arguments);
+        if(tab === "crossreturns"){
+          v6EnsureOldListsButton();
+          v6LoadSavedListsBeforeCrosscheck(false).then(()=>{
+            try{ if(typeof renderReturnMonitorLists === "function") renderReturnMonitorLists(); }catch(e){}
+          });
+        }
+        return res;
+      };
+      switchTab._v6OldListsWrapped = true;
+      window.switchTab = switchTab;
+    }
+
+    try{
+      v6EnsureOldListsButton();
+      if(auth && auth.onAuthStateChanged){
+        auth.onAuthStateChanged(user=>{
+          if(user){
+            setTimeout(()=>{
+              v6EnsureOldListsButton();
+              v6LoadSavedListsBeforeCrosscheck(false).catch(()=>{});
+            }, 700);
+          }
+        });
+      }
+      if(auth && auth.currentUser){ v6LoadSavedListsBeforeCrosscheck(false).catch(()=>{}); }
+    }catch(e){ console.warn("retCross v6 init", e); }
+  })();
+
+  // ===== v7: modo operacional critico - devolucoes e perdidas =====
+  // Objetivo:
+  // - As listagens automaticas passam a ser tratadas como lista de trabalho critica.
+  // - Ao abrir/login, carrega Firebase e, se houver falha de leitura, mostra backup local do ultimo carregamento.
+  // - Enquanto a pagina esta aberta, reanalisa periodicamente as listagens guardadas para apanhar returns/refunds que aparecam depois.
+  // - Mantem a regra: DIFERENCA fica guardada; SEM RETURN/REFUND fica guardada como perdida/em aberto; OK sai das listas.
+  (function(){
+    "use strict";
+
+    const V7_BACKUP_KEY = "wh_murtede_ret_cross_monitor_backup_v7";
+    const V7_HEARTBEAT_MS = 5 * 60 * 1000; // 5 minutos
+    const V7_FIRST_CHECK_MS = 12000; // apos login/carregamento
+    let v7Timer = null;
+    let v7LastAutoRunAt = "";
+    let v7LastLoadAt = "";
+    let v7LastLoadSource = "";
+    let v7InAutoRun = false;
+
+    function byId(id){ return document.getElementById(id); }
+    function txt(v){ return String(v == null ? "" : v); }
+    function currentUser(){
+      try{ return (auth && auth.currentUser && (auth.currentUser.email || auth.currentUser.uid)) || ""; }
+      catch(e){ return ""; }
+    }
+    function nowIso(){ return new Date().toISOString(); }
+    function setStatus(msg, kind){ try{ if(typeof retCrossSetStatus === "function") retCrossSetStatus(msg, kind || ""); }catch(e){} }
+    function localTime(iso){
+      if(!iso) return "-";
+      try{ return new Date(iso).toLocaleString(); }catch(e){ return txt(iso); }
+    }
+    function monitorItems(){
+      try{ if(typeof retCrossAllMonitorItems === "function") return retCrossAllMonitorItems() || []; }catch(e){}
+      return [];
+    }
+    function monitorCounts(){
+      const items = monitorItems();
+      return {
+        total: items.length,
+        diff: items.filter(x=>x && x.monitorStatus === "DIFF").length,
+        missing: items.filter(x=>x && x.monitorStatus === "MISSING").length,
+        carriers: Array.from(new Set(items.map(x=>txt(x.carrier).trim()).filter(Boolean))).sort()
+      };
+    }
+
+    function v7BackupPayload(source){
+      return {
+        version: 7,
+        savedAt: nowIso(),
+        savedBy: currentUser(),
+        source: source || "manual",
+        diffItems: (typeof retMonitorState !== "undefined" && retMonitorState.diffItems) ? retMonitorState.diffItems : {},
+        missingItems: (typeof retMonitorState !== "undefined" && retMonitorState.missingItems) ? retMonitorState.missingItems : {},
+        resolvedItems: (typeof retMonitorState !== "undefined" && retMonitorState.resolvedItems) ? retMonitorState.resolvedItems : {}
+      };
+    }
+
+    function saveLocalMonitorBackup(source){
+      try{
+        const payload = v7BackupPayload(source || "firebase");
+        localStorage.setItem(V7_BACKUP_KEY, JSON.stringify(payload));
+        return payload;
+      }catch(e){ console.warn("v7 save backup", e); return null; }
+    }
+    window.retCrossSaveLocalBackup = saveLocalMonitorBackup;
+
+    function readLocalMonitorBackup(){
+      try{
+        const raw = localStorage.getItem(V7_BACKUP_KEY);
+        return raw ? JSON.parse(raw) : null;
+      }catch(e){ return null; }
+    }
+    window.retCrossReadLocalBackup = readLocalMonitorBackup;
+
+    function restoreLocalMonitorBackup(silent){
+      const backup = readLocalMonitorBackup();
+      if(!backup) return false;
+      try{
+        if(typeof retMonitorState !== "undefined"){
+          retMonitorState.diffItems = backup.diffItems || {};
+          retMonitorState.missingItems = backup.missingItems || {};
+          retMonitorState.resolvedItems = backup.resolvedItems || {};
+        }
+        v7LastLoadAt = backup.savedAt || nowIso();
+        v7LastLoadSource = "backup local";
+        if(typeof renderReturnCrossCarrierSelect === "function") renderReturnCrossCarrierSelect();
+        if(typeof renderReturnMonitorLists === "function") renderReturnMonitorLists();
+        updateV7OpsPanel();
+        if(!silent) setStatus("Mostrei backup local das listagens. Confirma permissões Firebase para dados atuais.", "warn");
+        return true;
+      }catch(e){ console.warn("v7 restore backup", e); return false; }
+    }
+    window.retCrossRestoreLocalBackup = restoreLocalMonitorBackup;
+
+    function ensureV7OpsPanel(){
+      const section = byId("retMonitorSection");
+      if(!section || byId("retCrossOpsPanel")) return;
+      const panel = document.createElement("div");
+      panel.id = "retCrossOpsPanel";
+      panel.className = "notice";
+      panel.style.marginTop = "12px";
+      panel.style.background = "#fff7ed";
+      panel.style.borderLeft = "6px solid var(--returns)";
+      panel.innerHTML = `
+        <div style="display:flex; gap:12px; justify-content:space-between; align-items:flex-start; flex-wrap:wrap;">
+          <div>
+            <b>Controlo operacional:</b> esta zona controla encomendas que vieram para trás e encomendas perdidas/em aberto.<br>
+            <span class="mini">Regra: <b>Diferença de produtos</b> fica guardada; <b>Perdidas / sem return-refund</b> ficam guardadas; <b>OK</b> sai automaticamente.</span>
+          </div>
+          <div class="row">
+            <button class="btn" type="button" onclick="retCrossForceOperationalRefresh()">Atualizar agora</button>
+            <button class="btn" type="button" onclick="retCrossExportOperationalBackup()">Exportar backup</button>
+            <button class="btn" type="button" onclick="retCrossRestoreLocalBackup(false)">Mostrar backup local</button>
+          </div>
+        </div>
+        <div id="retCrossOpsStatus" class="mini" style="margin-top:10px; font-weight:800;"></div>`;
+      const tabs = section.querySelector(".semPicListTabs");
+      if(tabs && tabs.parentNode) tabs.parentNode.insertBefore(panel, tabs);
+      else section.insertBefore(panel, section.firstChild);
+    }
+
+    function updateV7Labels(){
+      const btn = byId("retMonitorBtnMISSING");
+      if(btn){
+        const count = byId("retMonitorCountMISSING") ? byId("retMonitorCountMISSING").outerHTML : '<span class="count" id="retMonitorCountMISSING">0</span>';
+        btn.innerHTML = 'Perdidas / sem returns-refund ' + count;
+      }
+      const filter = byId("retMonitorCarrierFilter");
+      if(filter && filter.previousElementSibling && filter.previousElementSibling.tagName === "LABEL"){
+        filter.previousElementSibling.textContent = "Transportadora";
+      }
+      const tbody = byId("retMonitorTbody");
+      if(tbody){
+        tbody.querySelectorAll(".retCross-badge.missing").forEach(el=>{
+          if(/Sem returns\/refund/i.test(el.textContent || "")) el.textContent = "Perdida / sem return-refund";
+        });
+      }
+    }
+
+    function updateV7OpsPanel(){
+      ensureV7OpsPanel();
+      updateV7Labels();
+      const el = byId("retCrossOpsStatus");
+      if(!el) return;
+      const c = monitorCounts();
+      const carriers = c.carriers.length ? c.carriers.join(" + ") : "-";
+      el.innerHTML = `Guardadas: <b>${c.total}</b> | Diferenças: <b>${c.diff}</b> | Perdidas/sem return-refund: <b>${c.missing}</b> | Transportadoras: <b>${escapeHtml(carriers)}</b><br>` +
+        `Última leitura: <b>${escapeHtml(localTime(v7LastLoadAt))}</b> (${escapeHtml(v7LastLoadSource || "-")}) | Última reanálise automática: <b>${escapeHtml(localTime(v7LastAutoRunAt))}</b> | Próxima verificação: de 5 em 5 min com página aberta.`;
+    }
+    window.retCrossUpdateOpsPanel = updateV7OpsPanel;
+
+    const previousRenderMonitor = typeof renderReturnMonitorLists === "function" ? renderReturnMonitorLists : null;
+    if(previousRenderMonitor && !previousRenderMonitor._v7Wrapped){
+      renderReturnMonitorLists = function(){
+        const res = previousRenderMonitor.apply(this, arguments);
+        try{ updateV7OpsPanel(); }catch(e){}
+        return res;
+      };
+      renderReturnMonitorLists._v7Wrapped = true;
+      window.renderReturnMonitorLists = renderReturnMonitorLists;
+    }
+
+    const previousLoad = typeof loadRetMonitorLists === "function" ? loadRetMonitorLists : null;
+    if(previousLoad && !previousLoad._v7Wrapped){
+      loadRetMonitorLists = async function(){
+        try{
+          const res = await previousLoad.apply(this, arguments);
+          v7LastLoadAt = nowIso();
+          v7LastLoadSource = "Firebase";
+          saveLocalMonitorBackup("firebase_load");
+          updateV7OpsPanel();
+          return res;
+        }catch(e){
+          console.warn("v7 wrapped loadRetMonitorLists", e);
+          const restored = restoreLocalMonitorBackup(true);
+          if(restored){ setStatus("Falha ao ler Firebase; mostrei backup local das listagens.", "warn"); return; }
+          throw e;
+        }
+      };
+      loadRetMonitorLists._v7Wrapped = true;
+      window.loadRetMonitorLists = loadRetMonitorLists;
+      window.refreshRetMonitorLists = loadRetMonitorLists;
+    }
+
+    const previousSync = typeof syncReturnCrossRowsToFirebase === "function" ? syncReturnCrossRowsToFirebase : null;
+    if(previousSync && !previousSync._v7Wrapped){
+      syncReturnCrossRowsToFirebase = async function(rows){
+        const res = await previousSync.apply(this, arguments);
+        try{
+          if(typeof loadRetMonitorLists === "function") await loadRetMonitorLists();
+          else saveLocalMonitorBackup("after_sync");
+        }catch(e){ saveLocalMonitorBackup("after_sync_no_reload"); }
+        updateV7OpsPanel();
+        return res;
+      };
+      syncReturnCrossRowsToFirebase._v7Wrapped = true;
+      window.syncReturnCrossRowsToFirebase = syncReturnCrossRowsToFirebase;
+    }
+
+    function shouldAutoRefresh(){
+      try{
+        if(!auth || !auth.currentUser) return false;
+        if(typeof retCrossState !== "undefined" && retCrossState.running) return false;
+        if(document.hidden) return false;
+        return monitorItems().length > 0;
+      }catch(e){ return false; }
+    }
+
+    async function runOperationalRefresh(reason){
+      if(v7InAutoRun) return;
+      if(!shouldAutoRefresh()) return;
+      v7InAutoRun = true;
+      try{
+        setStatus("A reanalisar listagens guardadas" + (reason ? " (" + reason + ")" : "") + "...", "warn");
+        if(typeof runReturnCrosscheck === "function") await runReturnCrosscheck({useMonitor:true, fromV7Auto:true});
+        v7LastAutoRunAt = nowIso();
+        saveLocalMonitorBackup("after_auto_recheck");
+        updateV7OpsPanel();
+      }catch(e){
+        console.warn("v7 operational refresh", e);
+        setStatus("Não consegui reanalisar automaticamente as listagens. Tenta Atualizar agora.", "warn");
+      }finally{
+        v7InAutoRun = false;
+      }
+    }
+    window.retCrossRunOperationalRefresh = runOperationalRefresh;
+
+    function scheduleV7Loop(){
+      if(v7Timer) clearInterval(v7Timer);
+      v7Timer = setInterval(()=>{ runOperationalRefresh("verificação periódica"); }, V7_HEARTBEAT_MS);
+    }
+
+    window.retCrossForceOperationalRefresh = async function(){
+      if(!auth || !auth.currentUser){ setStatus("Faz login primeiro.", "bad"); if(typeof openLogin === "function") openLogin(); return; }
+      try{ if(typeof loadRetMonitorLists === "function") await loadRetMonitorLists(); }catch(e){}
+      if(!monitorItems().length){ setStatus("Não há IDs guardados nas listagens para reanalisar.", "warn"); updateV7OpsPanel(); return; }
+      await runOperationalRefresh("manual");
+    };
+
+    window.retCrossExportOperationalBackup = function(){
+      const payload = saveLocalMonitorBackup("manual_export") || v7BackupPayload("manual_export");
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "crosscheck_returns_listagens_backup_" + new Date().toISOString().replace(/[:.]/g,"-") + ".json";
+      a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+      setStatus("Backup das listagens exportado ✅", "ok");
+    };
+
+    const previousStartRealtime = typeof startRetCrossMonitorRealtime === "function" ? startRetCrossMonitorRealtime : null;
+    if(previousStartRealtime && !previousStartRealtime._v7Wrapped){
+      startRetCrossMonitorRealtime = async function(){
+        const res = await previousStartRealtime.apply(this, arguments);
+        try{ updateV7OpsPanel(); scheduleV7Loop(); setTimeout(()=>runOperationalRefresh("arranque"), V7_FIRST_CHECK_MS); }catch(e){}
+        return res;
+      };
+      startRetCrossMonitorRealtime._v7Wrapped = true;
+      window.startRetCrossMonitorRealtime = startRetCrossMonitorRealtime;
+    }
+
+    const previousStopRealtime = typeof stopRetCrossMonitorRealtime === "function" ? stopRetCrossMonitorRealtime : null;
+    if(previousStopRealtime && !previousStopRealtime._v7Wrapped){
+      stopRetCrossMonitorRealtime = function(){
+        if(v7Timer) clearInterval(v7Timer);
+        v7Timer = null;
+        return previousStopRealtime.apply(this, arguments);
+      };
+      stopRetCrossMonitorRealtime._v7Wrapped = true;
+      window.stopRetCrossMonitorRealtime = stopRetCrossMonitorRealtime;
+    }
+
+    const previousSwitchTab = typeof switchTab === "function" ? switchTab : null;
+    if(previousSwitchTab && !previousSwitchTab._v7Wrapped){
+      switchTab = function(tab){
+        const res = previousSwitchTab.apply(this, arguments);
+        if(tab === "crossreturns"){
+          setTimeout(async ()=>{
+            try{
+              ensureV7OpsPanel();
+              if(typeof loadRetMonitorLists === "function") await loadRetMonitorLists();
+              updateV7OpsPanel();
+            }catch(e){ restoreLocalMonitorBackup(true); updateV7OpsPanel(); }
+          }, 150);
+        }
+        return res;
+      };
+      switchTab._v7Wrapped = true;
+      window.switchTab = switchTab;
+    }
+
+    try{
+      ensureV7OpsPanel();
+      updateV7OpsPanel();
+      scheduleV7Loop();
+      if(auth && auth.onAuthStateChanged){
+        auth.onAuthStateChanged(user=>{
+          if(user){
+            setTimeout(async ()=>{
+              try{ if(typeof loadRetMonitorLists === "function") await loadRetMonitorLists(); }
+              catch(e){ restoreLocalMonitorBackup(true); }
+              try{ if(typeof startRetCrossMonitorRealtime === "function") await startRetCrossMonitorRealtime(); }catch(e){}
+              updateV7OpsPanel();
+              setTimeout(()=>runOperationalRefresh("login"), V7_FIRST_CHECK_MS);
+            }, 900);
+          }
+        });
+      }
+      if(auth && auth.currentUser){
+        setTimeout(async ()=>{
+          try{ if(typeof loadRetMonitorLists === "function") await loadRetMonitorLists(); }
+          catch(e){ restoreLocalMonitorBackup(true); }
+          updateV7OpsPanel();
+          setTimeout(()=>runOperationalRefresh("abertura"), V7_FIRST_CHECK_MS);
+        }, 900);
+      } else {
+        restoreLocalMonitorBackup(true);
+      }
+    }catch(e){ console.warn("retCross v7 init", e); }
+  })();
+
+</script>
+
+
+
+<script>
+  // ===== v13: BROKEN / SWIPE / LOST com opções removidas persistentes =====
+  // ===== v10: Novo separador BROKEN / SWIPE / LOST =====
+  (function(){
+    "use strict";
+    const CASES_ROOT = "casos_broken_swipe_lost";
+    const CASES_ITEMS_PATH = CASES_ROOT + "/items";
+    const CASES_OPTIONS_PATH = CASES_ROOT + "/options";
+    const CASES_HISTORY_PATH = CASES_ROOT + "/history";
+    const CASES_DELETED_OPTIONS_PATH = CASES_ROOT + "/deleted_options";
+    const CASES_LS_ITEMS = "cases_broken_swipe_lost_items_v1";
+    const CASES_LS_OPTIONS = "cases_broken_swipe_lost_options_v1";
+    const CASES_LS_HISTORY = "cases_broken_swipe_lost_history_v1";
+    const CASES_LS_DELETED_OPTIONS = "cases_broken_swipe_lost_deleted_options_v1";
+
+    function byId(id){ return document.getElementById(id); }
+    function val(id){ const el = byId(id); return el ? String(el.value || "").trim() : ""; }
+    function setVal(id, value){ const el = byId(id); if(el) el.value = value == null ? "" : String(value); }
+    function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch])); }
+    function safe(s){ return String(s || "").trim().replace(/[.#$/[\]]/g,"_").replace(/\s+/g,"_").toUpperCase() || "SEM_ID"; }
+    function normalId(s){ return String(s || "").trim().replace(/[\u200B-\u200D\uFEFF]/g, ""); }
+    function today(){ const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); }
+    function nowIso(){ return new Date().toISOString(); }
+    function histKey(){ return nowIso().replace(/[:.]/g,"-") + "_" + Math.random().toString(36).slice(2,8); }
+    function hasFirebase(){ return typeof db !== "undefined" && typeof auth !== "undefined" && auth && auth.currentUser; }
+    function currentUserEmail(){ return (typeof auth !== "undefined" && auth && auth.currentUser && auth.currentUser.email) ? auth.currentUser.email : ""; }
+    function setStatus(msg, kind){
+      const el = byId("casesStatus");
+      if(!el) return;
+      el.textContent = msg || "Pronto";
+      el.style.borderColor = "";
+      if(kind === "ok") el.style.borderColor = "rgba(40,167,69,.55)";
+      if(kind === "bad") el.style.borderColor = "rgba(231,76,60,.55)";
+      if(kind === "warn") el.style.borderColor = "rgba(245,158,11,.55)";
+    }
+
+    const FIELD_CONFIGS = {
+      BROKEN: [
+        {key:"damageDescription", label:"DAMAGE DESCRIPTION", selectable:true, optionKey:"brokenDamageDescription", full:true},
+        {key:"trackingId", label:"TRACKING ID"},
+        {key:"dateWarehouse", label:"DATE WAREHOUSE", type:"date"},
+        {key:"caseReference", label:"CASE REFERENCE"},
+        {key:"trackingTroca", label:"TRACKING TROCA"},
+        {key:"status", label:"STATUS", selectable:true, optionKey:"brokenStatus"},
+        {key:"paid", label:"PAID"},
+        {key:"paymentDoc", label:"PAYMENT DOC"},
+        {key:"product", label:"PRODUCT", full:true},
+        {key:"price", label:"PRICE"},
+        {key:"amspedStatus", label:"AMSPED STATUS", selectable:true, optionKey:"brokenAmspedStatus"},
+        {key:"employee", label:"EMPLOYEE"}
+      ],
+      SWIPE: [
+        {key:"productReceived", label:"PRODUCT RECEIVED", full:true},
+        {key:"trackingId", label:"TRACKING ID"},
+        {key:"dateWarehouse", label:"DATE WAREHOUSE", type:"date"},
+        {key:"caseReference", label:"CASE REFERENCE"},
+        {key:"status1", label:"WRONG PRODUCT STATUS", selectable:true, optionKey:"swipeStatus1"},
+        {key:"status2", label:"OUR PRODUCT STATUS", selectable:true, optionKey:"swipeStatus2"},
+        {key:"paid", label:"PAID"},
+        {key:"paymentDoc", label:"PAYMENT DOC"},
+        {key:"product", label:"PRODUCT", full:true},
+        {key:"price", label:"PRICE"},
+        {key:"amspedStatus", label:"AMSPED STATUS", selectable:true, optionKey:"swipeAmspedStatus"}
+      ],
+      LOST: [
+        {key:"ticket", label:"TICKET"},
+        {key:"trackingId", label:"TRACKING ID"},
+        {key:"trackingTroca", label:"TRACKING TROCA"},
+        {key:"status", label:"STATUS", selectable:true, optionKey:"lostStatus"},
+        {key:"paid", label:"PAID"},
+        {key:"paymentDoc", label:"PAYMENT DOC"},
+        {key:"product", label:"PRODUCT", full:true},
+        {key:"price", label:"PRICE"},
+        {key:"amspedStatus", label:"AMSPED STATUS", selectable:true, optionKey:"lostAmspedStatus"}
+      ]
+    };
+
+    const OPTION_LABELS = {
+      carriers:"Transportadora",
+      brokenDamageDescription:"BROKEN · DAMAGE DESCRIPTION",
+      brokenStatus:"BROKEN · STATUS",
+      brokenAmspedStatus:"BROKEN · AMSPED STATUS",
+      swipeStatus1:"SWIPE · WRONG PRODUCT STATUS",
+      swipeStatus2:"SWIPE · OUR PRODUCT STATUS",
+      swipeAmspedStatus:"SWIPE · AMSPED STATUS",
+      lostStatus:"LOST · STATUS",
+      lostAmspedStatus:"LOST · AMSPED STATUS"
+    };
+
+    const DEFAULT_OPTIONS = {
+      carriers:["CORREOS ES","CORREOS PT","CTT","CTT ES","CTT ILHAS","NACEX","NACEX PT"],
+      brokenDamageDescription:["Produto danificado","Embalagem danificada","Artigo partido","Falta peça/acessório"],
+      brokenStatus:["ABERTO","EM ANÁLISE","AGUARDA TRANSPORTADORA","AGUARDA PAGAMENTO","FECHADO"],
+      brokenAmspedStatus:["PENDENTE","ENVIADO","ACEITE","RECUSADO","PAGO","FECHADO"],
+      swipeStatus1:["ABERTO","EM ANÁLISE","AGUARDA CONFIRMAÇÃO","FECHADO"],
+      swipeStatus2:["PENDENTE","RESOLVIDO","NÃO RESOLVIDO"],
+      swipeAmspedStatus:["PENDENTE","ENVIADO","ACEITE","RECUSADO","PAGO","FECHADO"],
+      lostStatus:["ABERTO","RECLAMAÇÃO ABERTA","AGUARDA TRANSPORTADORA","PERDIDO CONFIRMADO","FECHADO"],
+      lostAmspedStatus:["PENDENTE","ENVIADO","ACEITE","RECUSADO","PAGO","FECHADO"]
+    };
+
+    const state = {
+      records: [],
+      options: JSON.parse(JSON.stringify(DEFAULT_OPTIONS)),
+      deletedOptions: {},
+      history: {},
+      editingKey: "",
+      loaded: false,
+      currentAutoData: null,
+      currentCrosscheckData: null,
+      autoFetchTimer: null,
+      crosscheckFetchTimer: null,
+      inlineEditingKey: "",
+      columnFilters: {}
+    };
+
+    function sortedUnique(arr){
+      return Array.from(new Set((arr || []).map(x=>String(x || "").trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b, undefined, {numeric:true}));
+    }
+    function optionNorm(value){ return String(value || "").trim().toUpperCase(); }
+    function normalizeDeletedOptions(obj){
+      const out = {};
+      Object.keys(OPTION_LABELS).forEach(k=>{
+        const raw = obj && obj[k];
+        if(Array.isArray(raw)) out[k] = sortedUnique(raw.map(optionNorm));
+        else if(raw && typeof raw === "object") out[k] = sortedUnique(Object.keys(raw).filter(x=>raw[x]).map(optionNorm));
+        else out[k] = [];
+      });
+      return out;
+    }
+    function mergeDeletedOptions(a, b){
+      const out = normalizeDeletedOptions(a || {});
+      const bNorm = normalizeDeletedOptions(b || {});
+      Object.keys(OPTION_LABELS).forEach(k=>{ out[k] = sortedUnique([...(out[k] || []), ...(bNorm[k] || [])]); });
+      return out;
+    }
+    function isOptionDeleted(key, value){
+      const norm = optionNorm(value);
+      return !!(norm && state.deletedOptions && Array.isArray(state.deletedOptions[key]) && state.deletedOptions[key].includes(norm));
+    }
+    function applyDeletedOptions(key, arr){
+      return sortedUnique((arr || []).filter(v=>!isOptionDeleted(key, v)));
+    }
+    function markOptionDeleted(key, value){
+      const norm = optionNorm(value);
+      if(!key || !norm) return;
+      if(!state.deletedOptions[key]) state.deletedOptions[key] = [];
+      state.deletedOptions[key] = sortedUnique([...(state.deletedOptions[key] || []), norm]);
+    }
+    function unmarkOptionDeleted(key, value){
+      const norm = optionNorm(value);
+      if(!key || !norm || !state.deletedOptions[key]) return;
+      state.deletedOptions[key] = sortedUnique((state.deletedOptions[key] || []).filter(v=>v !== norm));
+    }
+    async function persistDeletedOptionsKey(key){
+      saveLocal();
+      if(hasFirebase()){
+        try{ await db.ref(CASES_DELETED_OPTIONS_PATH + "/" + key).set(state.deletedOptions[key] || []); }
+        catch(e){ console.warn("cases deleted option save", e); }
+      }
+    }
+    function mergeOptions(base, extra){
+      const out = JSON.parse(JSON.stringify(base || {}));
+      Object.keys(OPTION_LABELS).forEach(k=>{ out[k] = applyDeletedOptions(k, sortedUnique([...(out[k] || []), ...((extra && extra[k]) || [])])); });
+      return out;
+    }
+    function saveLocal(){
+      try{ localStorage.setItem(CASES_LS_ITEMS, JSON.stringify(state.records || [])); }catch(e){}
+      try{ localStorage.setItem(CASES_LS_OPTIONS, JSON.stringify(state.options || {})); }catch(e){}
+      try{ localStorage.setItem(CASES_LS_DELETED_OPTIONS, JSON.stringify(state.deletedOptions || {})); }catch(e){}
+      try{ localStorage.setItem(CASES_LS_HISTORY, JSON.stringify(state.history || {})); }catch(e){}
+    }
+    function loadLocal(){
+      try{
+        const r = JSON.parse(localStorage.getItem(CASES_LS_ITEMS) || "[]");
+        if(Array.isArray(r)) state.records = r.filter(x=>x && !x.deleted);
+      }catch(e){}
+      try{
+        const d = JSON.parse(localStorage.getItem(CASES_LS_DELETED_OPTIONS) || "{}");
+        state.deletedOptions = mergeDeletedOptions(state.deletedOptions || {}, d || {});
+      }catch(e){ state.deletedOptions = mergeDeletedOptions(state.deletedOptions || {}, {}); }
+      try{
+        const o = JSON.parse(localStorage.getItem(CASES_LS_OPTIONS) || "{}");
+        state.options = mergeOptions(DEFAULT_OPTIONS, o || {});
+      }catch(e){ state.options = mergeOptions(DEFAULT_OPTIONS, {}); }
+      try{
+        const h = JSON.parse(localStorage.getItem(CASES_LS_HISTORY) || "{}");
+        state.history = h && typeof h === "object" ? h : {};
+      }catch(e){ state.history = {}; }
+    }
+
+    function datalistIdForOption(key){ return "casesDatalist_" + key; }
+    function ensureDatalists(){
+      let holder = byId("casesDatalistHolder");
+      if(!holder){ holder = document.createElement("div"); holder.id = "casesDatalistHolder"; holder.style.display = "none"; document.body.appendChild(holder); }
+      holder.innerHTML = "";
+      Object.keys(OPTION_LABELS).forEach(key=>{
+        const dl = document.createElement("datalist");
+        dl.id = datalistIdForOption(key);
+        applyDeletedOptions(key, state.options[key] || []).forEach(v=>{
+          const opt = document.createElement("option"); opt.value = v; dl.appendChild(opt);
+        });
+        holder.appendChild(dl);
+      });
+      const carrierList = byId("casesCarrierList");
+      if(carrierList){
+        carrierList.innerHTML = "";
+        applyDeletedOptions("carriers", state.options.carriers || []).forEach(v=>{ const opt = document.createElement("option"); opt.value = v; carrierList.appendChild(opt); });
+      }
+      const statusFilterList = byId("casesStatusFilterList");
+      if(statusFilterList){
+        statusFilterList.innerHTML = "";
+        allStatusOptions().forEach(v=>{ const opt = document.createElement("option"); opt.value = v; statusFilterList.appendChild(opt); });
+      }
+    }
+
+    function initOptionGroupSelect(){
+      const sel = byId("casesOptionGroup");
+      if(!sel || sel.dataset.ready === "1") return;
+      sel.innerHTML = Object.keys(OPTION_LABELS).map(k=>`<option value="${esc(k)}">${esc(OPTION_LABELS[k])}</option>`).join("");
+      sel.dataset.ready = "1";
+    }
+
+    function getCurrentType(){ return val("casesType") || "BROKEN"; }
+    function getFields(type){ return FIELD_CONFIGS[type] || FIELD_CONFIGS.BROKEN; }
+    function getStatusFields(type){
+      // Status operacional apenas. AMSPED STATUS fica separado e não entra no filtro geral "Status".
+      return getFields(type).filter(f => {
+        const label = String(f.label || "").toUpperCase();
+        return label.includes("STATUS") && !label.includes("AMSPED");
+      });
+    }
+    function caseStatusValues(r){
+      const fields = r && r.fields ? r.fields : {};
+      return getStatusFields(r && r.type).map(f => fields[f.key]).map(v => String(v || "").trim()).filter(Boolean);
+    }
+    function allStatusOptions(){
+      const keys = ["brokenStatus","swipeStatus1","swipeStatus2","lostStatus"];
+      return sortedUnique(keys.flatMap(k => applyDeletedOptions(k, state.options[k] || [])));
+    }
+
+    function renderCasesFormFields(){
+      const type = getCurrentType();
+      const box = byId("casesDynamicFields");
+      if(!box) return;
+      const current = {};
+      getFields("BROKEN").concat(getFields("SWIPE"), getFields("LOST")).forEach(f=>{ const el = byId("caseField_" + f.key); if(el && el.value) current[f.key] = el.value; });
+      box.innerHTML = getFields(type).map(f=>{
+        const listAttr = f.selectable ? ` list="${esc(datalistIdForOption(f.optionKey))}"` : "";
+        const cls = f.full ? "casesFieldFull" : "";
+        const typeAttr = f.type === "date" ? "date" : "text";
+        return `<div class="${cls}"><label>${esc(f.label)}</label><input id="caseField_${esc(f.key)}" type="${typeAttr}"${listAttr} placeholder="${esc(f.label)}" autocomplete="off"></div>`;
+      }).join("");
+      Object.entries(current).forEach(([k,v])=>setVal("caseField_" + k, v));
+      const dw = byId("caseField_dateWarehouse");
+      if(dw && state.currentAutoData && state.currentAutoData.dateWarehouse && !dw.value) dw.value = state.currentAutoData.dateWarehouse;
+    }
+    window.renderCasesFormFields = renderCasesFormFields;
+
+    function collectFormData(){
+      const type = getCurrentType();
+      const id = normalId(val("casesId"));
+      const carrier = val("casesCarrier").toUpperCase();
+      const fields = {};
+      getFields(type).forEach(f=>{ fields[f.key] = val("caseField_" + f.key); });
+      return {type, id, carrier, fields};
+    }
+
+    function makeRecordKey(type, id){ return safe(type) + "_" + safe(id); }
+    function recordSearchText(r){
+      const fd = r.firebaseData || {};
+      const cd = r.crosscheckData || {};
+      return [r.type,r.id,r.carrier,r.entryDate,fd.dateWarehouse,fd.returnRefundMode,fd.returnRefundDateTime,fd.returnRefundTracking,fd.packingDate,fd.packingDateTime,fd.packingItems,fd.packingTracking,crosscheckSummaryText(cd), ...(Object.values(r.fields || {}))].join(" ").toLowerCase();
+    }
+    function fieldLabelFor(type, fieldKey){
+      if(fieldKey === "type") return "TIPO";
+      if(fieldKey === "id") return "ID";
+      if(fieldKey === "carrier") return "TRANSPORTADORA";
+      const cfg = getFields(type).find(f=>f.key === fieldKey) || Object.values(FIELD_CONFIGS).flat().find(f=>f.key === fieldKey);
+      return cfg ? cfg.label : String(fieldKey || "").toUpperCase();
+    }
+
+
+
+    function fmtDateTimeFromReg(r){
+      if(!r) return "";
+      const date = String(r.dateClean || r.date || r.Date || "").trim();
+      const time = String(r.endTime || r.time || r.startTime || r.Time || "").trim();
+      return (date + " " + time).trim();
+    }
+    function dateFromAny(v){
+      const s = String(v || "").trim();
+      const m = s.match(/\d{4}-\d{2}-\d{2}/);
+      return m ? m[0] : "";
+    }
+    function regMode(r){ return String((r && (r.mode || r.Mode || r.type || r.Type)) || "").toUpperCase(); }
+    function regItems(r){ return String((r && (r.prods || r.items || r.Items || r.content || r.Items_or_Content || r.expectedContent)) || "").trim(); }
+    function regTracking(r){ return String((r && (r.track || r.tracking || r.Tracking || r.trackingId)) || "").trim(); }
+    function regCarrier(r){ return String((r && (r.carrier || r.Carrier)) || "").trim(); }
+    function regUser(r){ return String((r && (r.user || r.User || r.employee || r.Employee)) || "").trim(); }
+    function regBatch(r){ return String((r && (r.batch || r.Batch || r.batchKey || r.batchName)) || "").trim(); }
+    function latestByDate(records){
+      return (records || []).slice().sort((a,b)=>String(fmtDateTimeFromReg(b) || b.key || "").localeCompare(String(fmtDateTimeFromReg(a) || a.key || "")))[0] || null;
+    }
+    function summarizeAutoData(data){
+      if(!data) return "";
+      return [data.dateWarehouse || "", data.returnRefundMode || "", data.returnRefundDateTime || "", data.packingDateTime || "", data.packingItems || ""].join(" | ");
+    }
+    function renderCasesAutoData(data, msg){
+      const box = byId("casesAutoData");
+      if(!box) return;
+      if(!data){
+        box.innerHTML = `<div class="casesAutoItem"><b>Estado</b>${esc(msg || "Ainda sem pesquisa.")}</div>`;
+        return;
+      }
+      const wh = data.dateWarehouse || "Não encontrado em RETURN/REFUND";
+      const rr = data.returnRefundMode ? `${data.returnRefundMode} · ${data.returnRefundDateTime || "sem data"}` : "Sem RETURN/REFUND encontrado";
+      const pk = data.packingDateTime || data.packingDate || "Sem PACKING encontrado";
+      const trk = data.returnRefundTracking || data.packingTracking || "—";
+      box.innerHTML = `
+        <div class="casesAutoItem"><b>DATE WAREHOUSE</b>${esc(wh)}</div>
+        <div class="casesAutoItem"><b>RETURN / REFUND</b>${esc(rr)}</div>
+        <div class="casesAutoItem"><b>PACKING DATE</b>${esc(pk)}</div>
+        <div class="casesAutoItem"><b>TRACKING</b>${esc(trk)}</div>
+        <div class="casesAutoItem"><b>PACKING CARRIER</b>${esc(data.packingCarrier || "—")}</div>
+        <div class="casesAutoItem"><b>Última pesquisa</b>${esc((data.fetchedAt || "").slice(0,19).replace("T"," ") || "—")}</div>
+        <div class="casesFieldFull"><b style="font-size:11px; text-transform:uppercase; color:#334155;">Produtos PACKING</b><div class="casesAutoItems">${esc(data.packingItems || "Sem produtos de PACKING encontrados.")}</div></div>
+      `;
+    }
+    async function fetchCaseAutoData(id, opts){
+      opts = opts || {};
+      id = normalId(id);
+      if(!id){ if(!opts.silent) setStatus("Escreve o ID para buscar dados.", "bad"); return null; }
+      if(!hasFirebase()){ if(!opts.silent) setStatus("Faz login para buscar dados na Firebase.", "warn"); return null; }
+      if(!opts.silent) setStatus("A buscar RETURN/REFUND e PACKING na Firebase...", "warn");
+      try{
+        const snap = await db.ref("registos").orderByChild("id").equalTo(id).once("value");
+        const raw = snap.val() || {};
+        const records = Object.entries(raw).map(([key,r])=>Object.assign({}, r || {}, {key, source:"registos"})).filter(r=>normalId(r.id || r.ID || r.order_id || r.orderId) === id);
+        const rrRecords = records.filter(r=>{ const m = regMode(r); return m.includes("RETURN") || m.includes("REFUND"); });
+        const pkRecords = records.filter(r=>regMode(r).includes("PACK"));
+        const rr = latestByDate(rrRecords);
+        const pk = latestByDate(pkRecords);
+        const data = {
+          id,
+          fetchedAt: nowIso(),
+          recordsCount: records.length,
+          returnRefundCount: rrRecords.length,
+          packingCount: pkRecords.length,
+          dateWarehouse: rr ? (dateFromAny(rr.dateClean) || dateFromAny(fmtDateTimeFromReg(rr))) : "",
+          returnRefundMode: rr ? regMode(rr) : "",
+          returnRefundDateTime: rr ? fmtDateTimeFromReg(rr) : "",
+          returnRefundTracking: rr ? regTracking(rr) : "",
+          returnRefundCarrier: rr ? regCarrier(rr) : "",
+          returnRefundItems: rr ? regItems(rr) : "",
+          packingDate: pk ? (dateFromAny(pk.dateClean) || dateFromAny(fmtDateTimeFromReg(pk))) : "",
+          packingDateTime: pk ? fmtDateTimeFromReg(pk) : "",
+          packingTracking: pk ? regTracking(pk) : "",
+          packingCarrier: pk ? regCarrier(pk) : "",
+          packingUser: pk ? regUser(pk) : "",
+          packingBatch: pk ? regBatch(pk) : "",
+          packingItems: pk ? regItems(pk) : ""
+        };
+        state.currentAutoData = data;
+        renderCasesAutoData(data);
+        const dw = byId("caseField_dateWarehouse");
+        if(dw && data.dateWarehouse && !dw.value) dw.value = data.dateWarehouse;
+        if(data.dateWarehouse && !opts.silent) setStatus("Dados Firebase encontrados e DATE WAREHOUSE preenchida ✅", "ok");
+        else if(!opts.silent) setStatus("Pesquisa feita. Sem RETURN/REFUND para preencher DATE WAREHOUSE; mantém manual.", "warn");
+        return data;
+      }catch(e){
+        console.error(e);
+        if(!opts.silent) setStatus("Erro ao buscar dados Firebase para este ID.", "bad");
+        return null;
+      }
+    }
+    async function fetchCaseAutoDataFromForm(){
+      const data = await fetchCaseAutoData(val("casesId"), {silent:false});
+      await fetchCaseCrosscheckData(val("casesId"), {silent:true});
+      return data;
+    }
+    window.fetchCaseAutoDataFromForm = fetchCaseAutoDataFromForm;
+    function scheduleCaseAutoFetch(){
+      if(state.autoFetchTimer) clearTimeout(state.autoFetchTimer);
+      state.autoFetchTimer = setTimeout(()=>{
+        const id = val("casesId");
+        if(id && id.length >= 4) fetchCaseAutoData(id, {silent:true});
+      }, 900);
+    }
+    function caseRecordFirebaseSummary(r){
+      const fd = r && r.firebaseData || {};
+      if(!fd || !Object.keys(fd).length) return "";
+      const bits = [];
+      if(fd.dateWarehouse) bits.push("WH: " + fd.dateWarehouse);
+      if(fd.packingDate) bits.push("PACK: " + fd.packingDate);
+      if(fd.packingItems) bits.push("Produtos PACKING guardados");
+      return bits.join(" · ");
+    }
+
+
+    function asObjectValues(obj){ return obj && typeof obj === "object" ? Object.entries(obj).map(([key,value])=>({key, value:value || {}})) : []; }
+    function activeOperationalItem(item){ return item && !item.deleted && item.deleted !== true && item.deleted !== "true"; }
+    function itemDate(item){ return String(item.insertedDate || item.entryDate || item.createdDate || item.dateClean || item.createdAt || item.updatedAt || "").slice(0,10); }
+    function itemCarrier(item){ return String(item.carrier || item.expectedCarrier || item.transportadora || item.packingCarrier || "").trim(); }
+    function itemTracking(item){ return String(item.tracking || item.track || item.trackingId || item.trackingID || item.packingTracking || "").trim(); }
+    function itemStatusBits(item){
+      const bits = [];
+      if(item.hasReturn || item.returnFound || item.returnDate) bits.push("RETURN");
+      if(item.hasRefund || item.refundFound || item.refundDate) bits.push("REFUND");
+      if(item.isVerified || item.verified) bits.push("VERIFICADO");
+      if(item.manualSaiu || item.manualSaiuNote) bits.push("SAIU MANUAL");
+      if(item.resolutionStatus) bits.push(String(item.resolutionStatus));
+      if(item.status) bits.push(String(item.status));
+      if(item.listState) bits.push(String(item.listState));
+      if(item.expectedCarrier && item.packingCarrier && String(item.expectedCarrier).toUpperCase() !== String(item.packingCarrier).toUpperCase()) bits.push("TRANSPORTADORA DIFERENTE");
+      return sortedUnique(bits).join(" · ");
+    }
+    function buildCaseMatch(source, key, item){
+      const label = source === "envios" ? "Envios em Análise" : "IDs sem picagem";
+      return {
+        source,
+        label,
+        key,
+        id: normalId(item.id || item.orderId || item.order_id || ""),
+        carrier: itemCarrier(item),
+        insertedDate: itemDate(item),
+        tracking: itemTracking(item),
+        status: itemStatusBits(item),
+        note: String(item.manualSaiuNote || item.resolutionNote || item.note || item.notes || item.lastResult || item.resultKind || "").trim(),
+        raw: item
+      };
+    }
+    function hasCrossMatches(data){ return !!(data && ((data.envios && data.envios.length) || (data.semPic && data.semPic.length))); }
+    function crosscheckSummaryText(data){
+      if(!data || !data.id) return "";
+      const env = (data.envios || []).length;
+      const sp = (data.semPic || []).length;
+      const parts = [];
+      if(env) parts.push(env + " em Envios em Análise");
+      if(sp) parts.push(sp + " em IDs sem picagem");
+      return parts.length ? parts.join(" · ") : "Sem coincidências";
+    }
+    function crosscheckBadgeHtml(data){
+      if(!data || !data.id) return '<span class="casesCrossBadge none">Não verificado</span>';
+      const env = (data.envios || []).length;
+      const sp = (data.semPic || []).length;
+      if(!env && !sp) return '<span class="casesCrossBadge ok">Sem coincidências</span>';
+      return `<span class="casesCrossBadge bad">${esc(env + sp)} coincidência(s)</span>` +
+        (env ? `<span class="casesCrossBadge warn">Envios: ${esc(env)}</span>` : "") +
+        (sp ? `<span class="casesCrossBadge warn">Sem picagem: ${esc(sp)}</span>` : "");
+    }
+    function renderCasesCrosscheckData(data, msg){
+      const box = byId("casesCrossData");
+      if(!box) return;
+      if(!data){
+        box.innerHTML = `<div class="casesCrossItem"><b>Estado</b>${esc(msg || "Ainda sem cruzamento.")}</div>`;
+        return;
+      }
+      const env = data.envios || [];
+      const sp = data.semPic || [];
+      const total = env.length + sp.length;
+      const stateText = total ? `${total} coincidência(s) encontrada(s)` : "Sem coincidências";
+      const preview = (arr)=> arr.length ? arr.slice(0,3).map(m=>`${m.carrier || "sem carrier"}${m.status ? " · " + m.status : ""}${m.insertedDate ? " · " + m.insertedDate : ""}`).join(" | ") : "—";
+      box.innerHTML = `
+        <div class="casesCrossItem"><b>Estado</b>${esc(stateText)}</div>
+        <div class="casesCrossItem"><b>Envios em Análise</b>${esc(env.length)}${env.length ? `<div class="casesCrossBox">${esc(preview(env))}</div>` : ""}</div>
+        <div class="casesCrossItem"><b>IDs sem picagem</b>${esc(sp.length)}${sp.length ? `<div class="casesCrossBox">${esc(preview(sp))}</div>` : ""}</div>
+        <div class="casesCrossItem"><b>Última verificação</b>${esc((data.checkedAt || "").slice(0,19).replace("T"," ") || "—")}</div>
+      `;
+    }
+    async function fetchCaseCrosscheckData(id, opts){
+      opts = opts || {};
+      id = normalId(id);
+      if(!id){ if(!opts.silent) setStatus("Escreve o ID para cruzar.", "bad"); return null; }
+      const data = {id, checkedAt: nowIso(), envios: [], semPic: [], source:"firebase"};
+      if(hasFirebase()){
+        try{
+          const envSnap = await db.ref("envios_analise/items").orderByChild("id").equalTo(id).once("value");
+          data.envios = asObjectValues(envSnap.val()).filter(x=>activeOperationalItem(x.value)).map(x=>buildCaseMatch("envios", x.key, x.value));
+        }catch(e){ console.warn("cases envios crosscheck", e); data.enviosError = String(e && e.message || e); }
+        try{
+          const semSnap = await db.ref("ids_sem_picagens_transportadora/items").orderByChild("id").equalTo(id).once("value");
+          data.semPic = asObjectValues(semSnap.val()).filter(x=>activeOperationalItem(x.value)).map(x=>buildCaseMatch("sempic", x.key, x.value));
+        }catch(e){ console.warn("cases sem pic crosscheck", e); data.semPicError = String(e && e.message || e); }
+      } else {
+        data.source = "local";
+        try{
+          if(typeof enviosState !== "undefined" && enviosState && enviosState.savedItems){
+            data.envios = Object.entries(enviosState.savedItems || {}).filter(([k,item])=>normalId(item && item.id || k) === id && activeOperationalItem(item)).map(([k,item])=>buildCaseMatch("envios", k, item));
+          }
+          if(typeof semPicState !== "undefined" && semPicState && semPicState.savedItems){
+            data.semPic = Object.entries(semPicState.savedItems || {}).filter(([k,item])=>normalId(item && item.id || "") === id && activeOperationalItem(item)).map(([k,item])=>buildCaseMatch("sempic", k, item));
+          }
+        }catch(e){ console.warn("cases local crosscheck", e); }
+      }
+      state.currentCrosscheckData = data;
+      renderCasesCrosscheckData(data);
+      if(!opts.silent){
+        if(hasCrossMatches(data)) setStatus("Atenção: ID encontrado também em Envios/Sem Picagem.", "warn");
+        else setStatus("Cruzamento feito: sem coincidências.", "ok");
+      }
+      return data;
+    }
+    async function fetchCaseCrosscheckFromForm(){ return await fetchCaseCrosscheckData(val("casesId"), {silent:false}); }
+    window.fetchCaseCrosscheckFromForm = fetchCaseCrosscheckFromForm;
+    function scheduleCaseCrosscheckFetch(){
+      if(state.crosscheckFetchTimer) clearTimeout(state.crosscheckFetchTimer);
+      state.crosscheckFetchTimer = setTimeout(()=>{ const id = val("casesId"); if(id && id.length >= 4) fetchCaseCrosscheckData(id, {silent:true}); }, 1000);
+    }
+    async function refreshCaseCrosschecks(opts){
+      opts = opts || {};
+      const rows = opts.all ? (state.records || []) : getFilteredRecords();
+      if(!rows.length){ if(!opts.silent) setStatus("Não há registos para cruzar.", "warn"); return; }
+      if(!hasFirebase() && !opts.allowLocal){ if(!opts.silent) setStatus("Faz login para cruzar com Firebase.", "bad"); return; }
+      if(!opts.silent) setStatus("A cruzar Broken/Swipe/Lost com Envios e Sem Picagem...", "warn");
+      let matches = 0;
+      for(let i=0; i<rows.length; i+=15){
+        const chunk = rows.slice(i, i+15);
+        const results = await Promise.all(chunk.map(r=>fetchCaseCrosscheckData(r.id, {silent:true})));
+        for(let j=0; j<chunk.length; j++){
+          const r = chunk[j];
+          const data = results[j];
+          if(!data) continue;
+          if(hasCrossMatches(data)) matches++;
+          r.crosscheckData = data;
+          r.crossCheckedAt = data.checkedAt;
+          const idx = (state.records || []).findIndex(x=>x.key === r.key);
+          if(idx >= 0){ state.records[idx].crosscheckData = data; state.records[idx].crossCheckedAt = data.checkedAt; }
+          if(opts.persist !== false && hasFirebase()){
+            try{ await db.ref(CASES_ITEMS_PATH + "/" + r.key + "/crosscheckData").set(data); await db.ref(CASES_ITEMS_PATH + "/" + r.key + "/crossCheckedAt").set(data.checkedAt); }
+            catch(e){ console.warn("persist case crosscheck", e); }
+          }
+        }
+      }
+      saveLocal();
+      renderCasesTable();
+      if(!opts.silent) setStatus("Cruzamento atualizado: " + matches + " registo(s) com coincidência.", matches ? "warn" : "ok");
+    }
+    window.refreshCaseCrosschecks = refreshCaseCrosschecks;
+    function crossMatchesTable(title, rows){
+      if(!rows || !rows.length) return `<h2 style="font-size:16px;">${esc(title)}</h2><div class="muted">Sem coincidências.</div>`;
+      return `<h2 style="font-size:16px;">${esc(title)}</h2><div class="tableWrap"><table><thead><tr><th>Origem</th><th>Transportadora</th><th>Data entrada</th><th>Tracking</th><th>Estado</th><th>Nota</th></tr></thead><tbody>${rows.map(m=>`<tr><td><b>${esc(m.label)}</b></td><td>${esc(m.carrier || "—")}</td><td class="mono">${esc(m.insertedDate || "—")}</td><td class="mono">${esc(m.tracking || "—")}</td><td>${esc(m.status || "—")}</td><td>${esc(m.note || "—")}</td></tr>`).join("")}</tbody></table></div>`;
+    }
+    async function openCaseCrosscheck(id, recordKey){
+      id = normalId(id || val("casesId"));
+      if(!id){ setStatus("Escreve o ID para ver coincidências.", "bad"); return; }
+      const title = byId("detailTitle");
+      const body = byId("detailBody");
+      const modal = byId("detailModal");
+      if(!body || !modal){ alert("Cruzamento do ID " + id); return; }
+      if(title) title.textContent = "Coincidências do ID " + id;
+      body.innerHTML = `<div class="notice">A cruzar <span class="mono"><b>${esc(id)}</b></span> com Envios em Análise e IDs sem picagem...</div>`;
+      modal.style.display = "flex";
+      let data = null;
+      const rec = recordKey ? (state.records || []).find(r=>r.key === recordKey) : null;
+      if(rec && rec.crosscheckData && rec.crosscheckData.id === id) data = rec.crosscheckData;
+      data = await fetchCaseCrosscheckData(id, {silent:true}) || data || {id, checkedAt:nowIso(), envios:[], semPic:[]};
+      if(rec){ rec.crosscheckData = data; rec.crossCheckedAt = data.checkedAt; saveLocal(); try{ if(hasFirebase()) await db.ref(CASES_ITEMS_PATH + "/" + rec.key + "/crosscheckData").set(data); }catch(e){} }
+      const total = (data.envios || []).length + (data.semPic || []).length;
+      body.innerHTML = `
+        <div class="notice"><b>ID:</b> <span class="mono">${esc(id)}</span><br><b>Resultado:</b> ${total ? `<span class="bad"><b>${esc(total)} coincidência(s) encontrada(s)</b></span>` : `<span class="ok"><b>sem coincidências</b></span>`}<br><b>Verificado em:</b> ${esc((data.checkedAt || "").slice(0,19).replace("T"," ") || "—")}</div>
+        <div class="hr"></div>
+        ${crossMatchesTable("Envios em Análise", data.envios || [])}
+        <div class="hr"></div>
+        ${crossMatchesTable("IDs sem picagem da transportadora", data.semPic || [])}
+      `;
+      renderCasesTable();
+    }
+    window.openCaseCrosscheck = openCaseCrosscheck;
+    function openCaseCrosscheckFromForm(){ openCaseCrosscheck(val("casesId"), state.editingKey); }
+    window.openCaseCrosscheckFromForm = openCaseCrosscheckFromForm;
+
+    function buildChanges(existing, rec){
+      const oldRec = existing && existing.key ? existing : null;
+      if(!oldRec){
+        return [{fieldKey:"__created", fieldLabel:"REGISTO", oldValue:"", newValue:"Criado"}];
+      }
+      const changes = [];
+      [["type", oldRec.type, rec.type], ["id", oldRec.id, rec.id], ["carrier", oldRec.carrier, rec.carrier], ["entryDate", oldRec.entryDate, rec.entryDate]].forEach(([k, oldV, newV])=>{
+        if(String(oldV || "") !== String(newV || "")) changes.push({fieldKey:k, fieldLabel:fieldLabelFor(rec.type, k), oldValue:String(oldV || ""), newValue:String(newV || "")});
+      });
+      const allFieldKeys = Array.from(new Set([...(Object.keys(oldRec.fields || {})), ...(Object.keys(rec.fields || {}))]));
+      allFieldKeys.forEach(k=>{
+        const oldV = String((oldRec.fields || {})[k] || "");
+        const newV = String((rec.fields || {})[k] || "");
+        if(oldV !== newV) changes.push({fieldKey:k, fieldLabel:fieldLabelFor(rec.type, k), oldValue:oldV, newValue:newV});
+      });
+      const oldFb = summarizeAutoData(oldRec.firebaseData || {});
+      const newFb = summarizeAutoData(rec.firebaseData || {});
+      if(oldFb !== newFb) changes.push({fieldKey:"firebaseData", fieldLabel:"DADOS FIREBASE", oldValue:oldFb, newValue:newFb});
+      const oldCross = crosscheckSummaryText(oldRec.crosscheckData || {});
+      const newCross = crosscheckSummaryText(rec.crosscheckData || {});
+      if(oldCross !== newCross) changes.push({fieldKey:"crosscheckData", fieldLabel:"CRUZAMENTO ENVIOS/SEM PICAGEM", oldValue:oldCross, newValue:newCross});
+      return changes;
+    }
+
+    async function pushCaseHistory(recordKey, rec, changes, action){
+      if(!recordKey || !changes || !changes.length) return;
+      const entry = {
+        historyKey: histKey(),
+        recordKey,
+        action: action || "UPDATE",
+        changeDate: today(),
+        changedAt: nowIso(),
+        user: currentUserEmail(),
+        type: rec && rec.type || "",
+        id: rec && rec.id || "",
+        carrier: rec && rec.carrier || "",
+        changes: changes
+      };
+      if(!state.history[recordKey]) state.history[recordKey] = [];
+      state.history[recordKey].push(entry);
+      state.history[recordKey].sort((a,b)=>(b.changedAt || "").localeCompare(a.changedAt || ""));
+      saveLocal();
+      if(hasFirebase()){
+        try{ await db.ref(CASES_HISTORY_PATH + "/" + recordKey + "/" + entry.historyKey).set(entry); }
+        catch(e){ console.warn("case history save", e); }
+      }
+    }
+
+
+    async function addOption(key, value, persist=true, restoreDeleted=false){
+      const v = String(value || "").trim();
+      if(!key || !v) return;
+      if(restoreDeleted){
+        unmarkOptionDeleted(key, v);
+      } else if(isOptionDeleted(key, v)){
+        // Valor removido pelo utilizador: não voltar a aparecer automaticamente por causa de registos antigos.
+        return;
+      }
+      if(!state.options[key]) state.options[key] = [];
+      state.options[key] = applyDeletedOptions(key, sortedUnique([...(state.options[key] || []), v]));
+      ensureDatalists();
+      renderCasesOptionManager();
+      saveLocal();
+      if(persist && hasFirebase()){
+        try{
+          await db.ref(CASES_OPTIONS_PATH + "/" + key).set(state.options[key]);
+          if(restoreDeleted) await db.ref(CASES_DELETED_OPTIONS_PATH + "/" + key).set(state.deletedOptions[key] || []);
+        }catch(e){ console.warn("cases option save", e); }
+      }
+    }
+    window.addCaseOption = addOption;
+
+    async function removeOption(key, value, persist=true){
+      const v = String(value || "").trim();
+      if(!key || !v) return;
+      markOptionDeleted(key, v);
+      state.options[key] = applyDeletedOptions(key, sortedUnique((state.options[key] || []).filter(x=>optionNorm(x) !== optionNorm(v))));
+      ensureDatalists();
+      renderCasesOptionManager();
+      saveLocal();
+      if(persist && hasFirebase()){
+        try{
+          await db.ref(CASES_OPTIONS_PATH + "/" + key).set(state.options[key]);
+          await db.ref(CASES_DELETED_OPTIONS_PATH + "/" + key).set(state.deletedOptions[key] || []);
+        }catch(e){ console.warn("cases option remove", e); }
+      }
+    }
+    window.removeCaseOption = removeOption;
+
+    async function addCaseOptionFromManager(){
+      await addOption(val("casesOptionGroup"), val("casesOptionValue"), true, true);
+      setVal("casesOptionValue", "");
+      setStatus("Valor adicionado à lista ✅", "ok");
+    }
+    window.addCaseOptionFromManager = addCaseOptionFromManager;
+
+    async function removeCaseOptionFromManager(){
+      const group = val("casesOptionGroup");
+      const value = val("casesOptionValue");
+      if(!value){ setStatus("Escreve o valor a eliminar.", "bad"); return; }
+      if(!confirm("Eliminar este valor da lista? Os registos já guardados não são apagados.")) return;
+      await removeOption(group, value);
+      setVal("casesOptionValue", "");
+      setStatus("Valor removido da lista e bloqueado para não reaparecer automaticamente ✅", "ok");
+    }
+    window.removeCaseOptionFromManager = removeCaseOptionFromManager;
+
+    function renderCasesOptionManager(){
+      const group = val("casesOptionGroup") || "carriers";
+      const list = byId("casesOptionList");
+      if(!list) return;
+      const values = applyDeletedOptions(group, state.options[group] || []);
+      list.innerHTML = values.length ? values.map(v=>`<span class="casesOptionChip">${esc(v)} <button type="button" title="Eliminar" onclick="removeCaseOption('${esc(group)}','${esc(String(v).replace(/'/g,"\\'"))}')">×</button></span>`).join("") : `<span class="mini">Sem valores nesta lista.</span>`;
+    }
+    window.renderCasesOptionManager = renderCasesOptionManager;
+
+    async function saveCaseRecord(){
+      let data = collectFormData();
+      if(!data.id){ setStatus("Preenche o ID.", "bad"); return; }
+      if(!data.carrier){ setStatus("Preenche a transportadora.", "bad"); return; }
+      if(!state.currentAutoData || state.currentAutoData.id !== data.id){
+        await fetchCaseAutoData(data.id, {silent:true});
+        data = collectFormData();
+      }
+      if(!state.currentCrosscheckData || state.currentCrosscheckData.id !== data.id){
+        await fetchCaseCrosscheckData(data.id, {silent:true});
+        data = collectFormData();
+      }
+      const key = state.editingKey || makeRecordKey(data.type, data.id);
+      const existing = state.records.find(r=>r.key === key) || {};
+      const firebaseData = state.currentAutoData && state.currentAutoData.id === data.id ? state.currentAutoData : (existing.firebaseData || null);
+      const crosscheckData = state.currentCrosscheckData && state.currentCrosscheckData.id === data.id ? state.currentCrosscheckData : (existing.crosscheckData || null);
+      const rec = {
+        key,
+        type:data.type,
+        id:data.id,
+        carrier:data.carrier,
+        fields:data.fields,
+        firebaseData: firebaseData || {},
+        crosscheckData: crosscheckData || {},
+        crossCheckedAt: crosscheckData && crosscheckData.checkedAt || existing.crossCheckedAt || "",
+        entryDate: existing.entryDate || today(),
+        entryAt: existing.entryAt || nowIso(),
+        createdAt: existing.createdAt || nowIso(),
+        updatedAt: nowIso(),
+        updatedDate: today(),
+        createdDate: existing.createdDate || today(),
+        user: currentUserEmail() || (existing.user || "")
+      };
+      const changes = buildChanges(existing, rec);
+      state.records = (state.records || []).filter(r=>r.key !== key);
+      state.records.push(rec);
+      state.records.sort((a,b)=>(b.updatedAt || "").localeCompare(a.updatedAt || ""));
+      await addOption("carriers", rec.carrier, true);
+      for(const f of getFields(rec.type)){
+        if(f.selectable && rec.fields && rec.fields[f.key]) await addOption(f.optionKey, rec.fields[f.key], true);
+      }
+      saveLocal();
+      if(hasFirebase()){
+        try{
+          await db.ref(CASES_ITEMS_PATH + "/" + key).set(rec);
+          await pushCaseHistory(key, rec, changes, existing && existing.key ? "UPDATE" : "CREATE");
+          setStatus(changes.length ? "Registo guardado + histórico atualizado ✅" : "Registo guardado sem alterações ✅", "ok");
+        }
+        catch(e){
+          console.error(e);
+          await pushCaseHistory(key, rec, changes, existing && existing.key ? "UPDATE" : "CREATE");
+          setStatus("Guardado localmente, mas falhou na Firebase.", "warn");
+        }
+      } else {
+        await pushCaseHistory(key, rec, changes, existing && existing.key ? "UPDATE" : "CREATE");
+        setStatus("Guardado localmente com histórico. Faz login para guardar na Firebase.", "warn");
+      }
+      state.editingKey = "";
+      const hint = byId("casesEditingHint"); if(hint) hint.textContent = "";
+      clearCaseForm(false);
+      renderCasesTable();
+    }
+    window.saveCaseRecord = saveCaseRecord;
+
+    function clearCaseForm(clearType=true){
+      if(clearType) setVal("casesType", "BROKEN");
+      setVal("casesId", ""); setVal("casesCarrier", "");
+      state.editingKey = "";
+      state.inlineEditingKey = "";
+      state.currentAutoData = null;
+      state.currentCrosscheckData = null;
+      renderCasesAutoData(null);
+      renderCasesCrosscheckData(null);
+      const hint = byId("casesEditingHint"); if(hint) hint.textContent = "";
+      renderCasesFormFields();
+    }
+    window.clearCaseForm = clearCaseForm;
+
+    function startInlineEditCaseRecord(key){
+      const r = (state.records || []).find(x=>x.key === key);
+      if(!r) return;
+      state.inlineEditingKey = key;
+      renderCasesTable();
+      setStatus("Edição aberta na própria linha. Altera os campos e clica em Guardar edição.", "warn");
+      setTimeout(()=>{
+        const el = byId("caseInline_id_" + safe(key));
+        if(el && el.focus) el.focus();
+      }, 80);
+    }
+    window.startInlineEditCaseRecord = startInlineEditCaseRecord;
+
+    function cancelInlineEditCaseRecord(){
+      state.inlineEditingKey = "";
+      renderCasesTable();
+      setStatus("Edição cancelada.", "warn");
+    }
+    window.cancelInlineEditCaseRecord = cancelInlineEditCaseRecord;
+
+    function inlineInputId(recordKey, fieldKey){
+      return "caseInline_" + fieldKey + "_" + safe(recordKey);
+    }
+
+    function renderCaseInlineEditorRow(r, colspan){
+      const type = r.type || "BROKEN";
+      const recordKey = r.key || "";
+      const baseFields = getFields(type);
+      const fieldHtml = baseFields.map(f=>{
+        const inputId = inlineInputId(recordKey, f.key);
+        const listAttr = f.selectable ? ` list="${esc(datalistIdForOption(f.optionKey))}"` : "";
+        const typeAttr = f.type === "date" ? "date" : "text";
+        const value = (r.fields || {})[f.key] || "";
+        return `<div class="${f.full ? "casesFieldFull" : ""}"><label>${esc(f.label)}</label><input id="${esc(inputId)}" type="${typeAttr}"${listAttr} value="${esc(value)}" autocomplete="off"></div>`;
+      }).join("");
+      const idInput = inlineInputId(recordKey, "id");
+      const carrierInput = inlineInputId(recordKey, "carrier");
+      return `<tr class="casesInlineEditRow"><td colspan="${Number(colspan || 1)}">
+        <div class="casesInlineEditor">
+          <h3>✏️ Editar diretamente na linha — ${esc(type)} · <span class="mono">${esc(r.id || "")}</span></h3>
+          <div class="casesInlineEditHint">Edita aqui os dados guardados. Os campos selecionáveis mantêm as listas certas. Ao guardar, fica histórico com data, hora, utilizador, valor antigo e valor novo.</div>
+          <div class="casesInlineEditorGrid">
+            <div><label>TIPO</label><input value="${esc(type)}" disabled></div>
+            <div><label>ID</label><input id="${esc(idInput)}" value="${esc(r.id || "")}" autocomplete="off"></div>
+            <div><label>TRANSPORTADORA</label><input id="${esc(carrierInput)}" list="casesCarrierList" value="${esc(r.carrier || "")}" autocomplete="off"></div>
+            ${fieldHtml}
+          </div>
+          <div class="casesInlineEditActions">
+            <div class="row">
+              <button class="btn primary" type="button" onclick="saveCaseInlineEdit('${esc(recordKey)}')">Guardar edição</button>
+              <button class="btn" type="button" onclick="cancelInlineEditCaseRecord()">Cancelar</button>
+            </div>
+            <span class="casesInlineEditHint">Não precisas voltar ao formulário de cima para alterar status, produto, preço, tracking ou outros campos.</span>
+          </div>
+        </div>
+      </td></tr>`;
+    }
+
+    async function saveCaseInlineEdit(key){
+      const existing = (state.records || []).find(x=>x.key === key);
+      if(!existing){ setStatus("Registo não encontrado.", "bad"); return; }
+      const type = existing.type || "BROKEN";
+      const id = normalId(val(inlineInputId(key, "id")) || existing.id);
+      const carrier = (val(inlineInputId(key, "carrier")) || existing.carrier || "").toUpperCase();
+      if(!id){ setStatus("Preenche o ID.", "bad"); return; }
+      if(!carrier){ setStatus("Preenche a transportadora.", "bad"); return; }
+      const fields = {};
+      getFields(type).forEach(f=>{ fields[f.key] = val(inlineInputId(key, f.key)); });
+      let firebaseData = existing.firebaseData || {};
+      let crosscheckData = existing.crosscheckData || {};
+      let crossCheckedAt = existing.crossCheckedAt || "";
+      if(id !== existing.id){
+        try{
+          const auto = await fetchCaseAutoData(id, {silent:true});
+          if(auto) firebaseData = auto;
+        }catch(e){ console.warn("inline case auto fetch", e); }
+        try{
+          const cross = await fetchCaseCrosscheckData(id, {silent:true});
+          if(cross){ crosscheckData = cross; crossCheckedAt = cross.checkedAt || nowIso(); }
+        }catch(e){ console.warn("inline case cross fetch", e); }
+      }
+      const rec = Object.assign({}, existing, {
+        type,
+        id,
+        carrier,
+        fields,
+        firebaseData: firebaseData || {},
+        crosscheckData: crosscheckData || {},
+        crossCheckedAt,
+        entryDate: existing.entryDate || today(),
+        entryAt: existing.entryAt || nowIso(),
+        createdAt: existing.createdAt || nowIso(),
+        createdDate: existing.createdDate || today(),
+        updatedAt: nowIso(),
+        updatedDate: today(),
+        user: currentUserEmail() || (existing.user || "")
+      });
+      const changes = buildChanges(existing, rec);
+      state.records = (state.records || []).map(x=>x.key === key ? rec : x).sort((a,b)=>(b.updatedAt || "").localeCompare(a.updatedAt || ""));
+      await addOption("carriers", rec.carrier, true);
+      for(const f of getFields(rec.type)){
+        if(f.selectable && rec.fields && rec.fields[f.key]) await addOption(f.optionKey, rec.fields[f.key], true);
+      }
+      saveLocal();
+      if(hasFirebase()){
+        try{
+          await db.ref(CASES_ITEMS_PATH + "/" + key).set(rec);
+          await pushCaseHistory(key, rec, changes, "UPDATE");
+          setStatus(changes.length ? "Edição guardada + histórico atualizado ✅" : "Sem alterações para guardar ✅", "ok");
+        }catch(e){
+          console.error(e);
+          await pushCaseHistory(key, rec, changes, "UPDATE");
+          setStatus("Edição guardada localmente, mas falhou na Firebase.", "warn");
+        }
+      } else {
+        await pushCaseHistory(key, rec, changes, "UPDATE");
+        setStatus("Edição guardada localmente com histórico. Faz login para guardar na Firebase.", "warn");
+      }
+      state.inlineEditingKey = "";
+      renderCasesTable();
+    }
+    window.saveCaseInlineEdit = saveCaseInlineEdit;
+
+    function editCaseRecord(key){
+      const r = (state.records || []).find(x=>x.key === key);
+      if(!r) return;
+      state.editingKey = key;
+      setVal("casesType", r.type || "BROKEN");
+      setVal("casesId", r.id || "");
+      setVal("casesCarrier", r.carrier || "");
+      state.currentAutoData = r.firebaseData || null;
+      state.currentCrosscheckData = r.crosscheckData || null;
+      renderCasesAutoData(state.currentAutoData, "Sem dados Firebase guardados neste registo.");
+      renderCasesCrosscheckData(state.currentCrosscheckData, "Sem cruzamento guardado neste registo.");
+      renderCasesFormFields();
+      getFields(r.type).forEach(f=>setVal("caseField_" + f.key, r.fields && r.fields[f.key] || ""));
+      const hint = byId("casesEditingHint"); if(hint) hint.innerHTML = `A editar <b>${esc(r.type)}</b> · <span class="mono">${esc(r.id)}</span>. Os campos estão preenchidos com os dados guardados. Ao guardar, fica registado o histórico das alterações.`;
+      switchTab("cases");
+      window.scrollTo({top:0, behavior:"smooth"});
+    }
+    window.editCaseRecord = editCaseRecord;
+
+    async function deleteCaseRecord(key){
+      const r = (state.records || []).find(x=>x.key === key);
+      if(!r) return;
+      if(!confirm("Eliminar o registo " + r.type + " / " + r.id + "?")) return;
+      await pushCaseHistory(key, r, [{fieldKey:"__deleted", fieldLabel:"REGISTO", oldValue:"Ativo", newValue:"Eliminado"}], "DELETE");
+      state.records = state.records.filter(x=>x.key !== key);
+      saveLocal();
+      if(hasFirebase()){
+        try{ await db.ref(CASES_ITEMS_PATH + "/" + key).remove(); setStatus("Registo eliminado com histórico ✅", "ok"); }
+        catch(e){ console.error(e); setStatus("Eliminado localmente, mas falhou na Firebase.", "warn"); }
+      } else setStatus("Registo eliminado localmente com histórico.", "ok");
+      renderCasesTable();
+    }
+    window.deleteCaseRecord = deleteCaseRecord;
+
+    async function deleteAllCaseRecords(){
+      if(!state.records.length){ setStatus("Não há registos para eliminar.", "warn"); return; }
+      const visible = getFilteredRecords();
+      const msg = visible.length === state.records.length ? `Eliminar TODOS os ${state.records.length} registos?` : `Eliminar os ${visible.length} registos visíveis/filtrados?`;
+      if(!confirm(msg + " Esta ação não elimina as listas de opções.")) return;
+      for(const r of visible){ await pushCaseHistory(r.key, r, [{fieldKey:"__deleted", fieldLabel:"REGISTO", oldValue:"Ativo", newValue:"Eliminado"}], "DELETE"); }
+      const keys = new Set(visible.map(r=>r.key));
+      state.records = state.records.filter(r=>!keys.has(r.key));
+      saveLocal();
+      if(hasFirebase()){
+        try{ await Promise.all(Array.from(keys).map(k=>db.ref(CASES_ITEMS_PATH + "/" + k).remove())); setStatus("Registos eliminados ✅", "ok"); }
+        catch(e){ console.error(e); setStatus("Eliminado localmente, mas falhou na Firebase.", "warn"); }
+      } else setStatus("Registos eliminados localmente.", "ok");
+      renderCasesTable();
+    }
+    window.deleteAllCaseRecords = deleteAllCaseRecords;
+
+    function setCaseColumnFilter(key, value){
+      if(!state.columnFilters) state.columnFilters = {};
+      value = String(value || "").trim();
+      if(value) state.columnFilters[key] = value;
+      else delete state.columnFilters[key];
+      renderCasesTable();
+    }
+    window.setCaseColumnFilter = setCaseColumnFilter;
+
+    function getCaseColumnFilter(key){
+      return state.columnFilters && state.columnFilters[key] ? state.columnFilters[key] : "";
+    }
+
+    function clearCaseColumnFilters(){
+      state.columnFilters = {};
+      renderCasesTable();
+    }
+    window.clearCaseColumnFilters = clearCaseColumnFilters;
+
+    function caseFilterInputHtml(key, placeholder, listId){
+      const v = esc(getCaseColumnFilter(key));
+      const listAttr = listId ? ` list="${esc(listId)}"` : "";
+      return `<input class="casesColFilter" value="${v}"${listAttr} placeholder="${esc(placeholder || 'Filtrar')}" onchange="setCaseColumnFilter('${esc(key)}', this.value)" onkeydown="if(event.key==='Enter'){this.blur();}">`;
+    }
+
+    function caseFilterSelectHtml(key, options){
+      const v = getCaseColumnFilter(key);
+      const opts = [`<option value="">Todos</option>`].concat((options || []).map(o=>`<option value="${esc(o)}" ${String(o)===String(v)?'selected':''}>${esc(o)}</option>`));
+      return `<select class="casesColFilter" onchange="setCaseColumnFilter('${esc(key)}', this.value)">${opts.join('')}</select>`;
+    }
+
+    function caseHeaderCell(label, filterHtml, hint){
+      return `<th><span class="casesThLabel">${esc(label)}</span>${filterHtml || ""}${hint ? `<span class="casesColFilterHint">${esc(hint)}</span>` : ""}</th>`;
+    }
+
+    function caseColumnValue(r, key){
+      if(key === "__type") return r.type || "";
+      if(key === "__id") return [r.id, r.entryDate, r.createdDate, r.updatedAt].join(" ");
+      if(key === "__carrier") return r.carrier || "";
+      if(key === "__firebase") return caseRecordFirebaseSummary(r) || "";
+      if(key === "__crosscheck") return crosscheckSummaryText(r.crosscheckData || {});
+      return ((r.fields || {})[key] || "");
+    }
+
+    function recordMatchesColumnFilters(r){
+      const filters = state.columnFilters || {};
+      return Object.entries(filters).every(([key, value])=>{
+        const q = String(value || "").trim().toLowerCase();
+        if(!q) return true;
+        const actual = String(caseColumnValue(r, key) || "").toLowerCase();
+        return actual.includes(q);
+      });
+    }
+
+    function getFilteredRecords(){
+      const q = val("casesFilterText").toLowerCase();
+      const type = val("casesFilterType") || "ALL";
+      const carrier = val("casesFilterCarrier").toLowerCase();
+      const status = val("casesFilterStatus").toLowerCase();
+      return (state.records || []).filter(r=>{
+        if(type !== "ALL" && r.type !== type) return false;
+        if(carrier && String(r.carrier || "").toLowerCase() !== carrier) return false;
+        if(status){
+          const statusText = caseStatusValues(r).join(" ").toLowerCase();
+          if(!statusText.includes(status)) return false;
+        }
+        if(q && !recordSearchText(r).includes(q)) return false;
+        if(!recordMatchesColumnFilters(r)) return false;
+        return true;
+      }).sort((a,b)=>(b.updatedAt || "").localeCompare(a.updatedAt || ""));
+    }
+
+    function visibleFieldSet(records){
+      const type = val("casesFilterType") || "ALL";
+      if(type !== "ALL") return getFields(type);
+      const keys = new Map();
+      records.forEach(r=>getFields(r.type).forEach(f=>{ if((r.fields || {})[f.key] || ["trackingId","status","amspedStatus","product","price"].includes(f.key)) keys.set(f.key, f); }));
+      return Array.from(keys.values()).slice(0, 9);
+    }
+
+    function renderCasesTable(){
+      const thead = byId("casesThead"), tbody = byId("casesTbody");
+      if(!thead || !tbody) return;
+      const rows = getFilteredRecords();
+      const fields = visibleFieldSet(rows);
+      thead.innerHTML = `<tr>
+        ${caseHeaderCell("Tipo", caseFilterSelectHtml("__type", ["BROKEN","SWIPE","LOST"]))}
+        ${caseHeaderCell("ID / Entrada", caseFilterInputHtml("__id", "ID/data"))}
+        ${caseHeaderCell("Transportadora", caseFilterInputHtml("__carrier", "Carrier", "casesCarrierList"))}
+        ${caseHeaderCell("Firebase", caseFilterInputHtml("__firebase", "Packing/return"))}
+        ${caseHeaderCell("Cruzamento", caseFilterInputHtml("__crosscheck", "Coincidência"))}
+        ${fields.map(f=>caseHeaderCell(f.label, caseFilterInputHtml(f.key, "Filtrar", f.selectable ? datalistIdForOption(f.optionKey) : ""), f.label.toUpperCase().includes("AMSPED") ? "Filtro próprio" : "")).join("")}
+        <th><span class="casesThLabel">Ações</span><button class="casesColClearBtn" type="button" onclick="clearCaseColumnFilters()">Limpar coluna</button></th>
+      </tr>`;
+      if(!rows.length){
+        tbody.innerHTML = `<tr><td colspan="${6+fields.length}" class="muted" style="padding:16px;">Sem registos para estes filtros.</td></tr>`;
+      } else {
+        tbody.innerHTML = rows.map(r=>{
+          const fd = r.firebaseData || {};
+          const fb = caseRecordFirebaseSummary(r) || "Sem dados Firebase guardados";
+          const isInlineEditing = state.inlineEditingKey === r.key;
+          const mainRow = `<tr class="${isInlineEditing ? 'casesInlineEditingMain' : ''}">
+          <td><span class="casesTypeBadge ${esc(r.type)}">${esc(r.type)}</span></td>
+          <td class="mono"><b>${esc(r.id)}</b><span class="envio-subline">Entrada: ${esc(r.entryDate || r.createdDate || "")}</span><span class="envio-subline">Atualizado: ${esc((r.updatedAt || "").slice(0,16).replace("T"," "))}</span></td>
+          <td><b>${esc(r.carrier)}</b></td>
+          <td><span class="mini">${esc(fb)}</span>${fd.packingItems ? '<span class="casesDbBadge">PACKING DB</span>' : ''}</td>
+          <td>${crosscheckBadgeHtml(r.crosscheckData || {})}<div class="mini">${esc(crosscheckSummaryText(r.crosscheckData || {}))}</div></td>
+          ${fields.map(f=>`<td>${esc((r.fields || {})[f.key] || "")}</td>`).join("")}
+          <td><div class="casesActions"><button class="btn-mini info" type="button" onclick="startInlineEditCaseRecord('${esc(r.key)}')">${isInlineEditing ? 'A editar' : 'Editar'}</button><button class="btn-mini warn" type="button" onclick="openCaseHistory('${esc(r.key)}')">Histórico</button><button class="btn-mini mutedBtn" type="button" onclick="openCaseIdHistory('${esc(r.id)}','${esc(r.key)}')">Hist. ID</button><button class="btn-mini ok" type="button" onclick="openCaseCrosscheck('${esc(r.id)}','${esc(r.key)}')">Coincid.</button><button class="btn-mini danger" type="button" onclick="deleteCaseRecord('${esc(r.key)}')">Eliminar</button></div></td>
+        </tr>`;
+          return mainRow + (isInlineEditing ? renderCaseInlineEditorRow(r, 6 + fields.length) : "");
+        }).join("");
+      }
+      const shown = byId("casesRowsShown"); if(shown) shown.textContent = rows.length + " linha(s)";
+      updateCasesKpis();
+      updateCasesActiveFilters();
+    }
+    window.renderCasesTable = renderCasesTable;
+
+    function historyEntriesFor(recordKey){
+      return (state.history && state.history[recordKey] ? state.history[recordKey] : []).slice().sort((a,b)=>(b.changedAt || "").localeCompare(a.changedAt || ""));
+    }
+
+    function openCaseHistory(recordKey){
+      const rec = (state.records || []).find(r=>r.key === recordKey) || null;
+      const entries = historyEntriesFor(recordKey);
+      const title = byId("detailTitle");
+      const body = byId("detailBody");
+      const modal = byId("detailModal");
+      if(!body || !modal){ alert("Histórico: " + entries.length + " alteração(ões)."); return; }
+      if(title) title.textContent = "Histórico de alterações";
+      const head = rec ? `<div class="notice"><b>${esc(rec.type)}</b> · <span class="mono">${esc(rec.id)}</span> · ${esc(rec.carrier || "")}</div>` : `<div class="notice">Registo removido ou não carregado. Histórico guardado pela chave <span class="mono">${esc(recordKey)}</span>.</div>`;
+      const html = entries.length ? entries.map(entry=>{
+        const changes = Array.isArray(entry.changes) ? entry.changes : [];
+        return `<div class="casesHistoryItem">
+          <div class="casesHistoryMeta"><b>${esc(entry.changeDate || (entry.changedAt || "").slice(0,10))}</b> · ${esc((entry.changedAt || "").slice(11,19))} · ${esc(entry.action || "UPDATE")} · ${esc(entry.user || "sem user")}</div>
+          ${changes.map(ch=>`<div class="casesHistoryChange"><b>${esc(ch.fieldLabel || ch.fieldKey)}</b>: <span class="casesHistoryOld">${esc(ch.oldValue || "") || "—"}</span> → <span class="casesHistoryNew">${esc(ch.newValue || "") || "—"}</span></div>`).join("")}
+        </div>`;
+      }).join("") : `<div class="muted" style="padding:12px 0;">Ainda não há histórico para este registo.</div>`;
+      body.innerHTML = `${head}<div class="hr"></div><div class="casesHistoryList">${html}</div>`;
+      modal.style.display = "flex";
+    }
+    window.openCaseHistory = openCaseHistory;
+
+
+
+    async function openCaseIdHistory(id, recordKey){
+      id = normalId(id || val("casesId"));
+      if(!id){ setStatus("Escreve o ID para ver o histórico.", "bad"); return; }
+      const title = byId("detailTitle");
+      const body = byId("detailBody");
+      const modal = byId("detailModal");
+      if(!body || !modal){ alert("Histórico do ID " + id); return; }
+      if(title) title.textContent = "Histórico completo do ID " + id;
+      body.innerHTML = `<div class="notice">A carregar histórico do ID <span class="mono"><b>${esc(id)}</b></span>...</div>`;
+      modal.style.display = "flex";
+      let registos = [];
+      let histEvents = [];
+      if(hasFirebase()){
+        try{
+          const snap = await db.ref("registos").orderByChild("id").equalTo(id).once("value");
+          registos = Object.entries(snap.val() || {}).map(([key,r])=>Object.assign({}, r || {}, {key})).filter(r=>normalId(r.id || r.ID || r.order_id || r.orderId) === id);
+          registos.sort((a,b)=>String(fmtDateTimeFromReg(b) || b.key || "").localeCompare(String(fmtDateTimeFromReg(a) || a.key || "")));
+        }catch(e){ console.warn("case id registos history", e); }
+        try{
+          const hs = await db.ref("id_history/" + id).once("value");
+          histEvents = Object.values(hs.val() || {}).filter(Boolean).sort((a,b)=>String(b.DateTime || b.dateTime || b.ts || "").localeCompare(String(a.DateTime || a.dateTime || a.ts || "")));
+        }catch(e){ console.warn("case id_history", e); }
+      }
+      const localRecords = (state.records || []).filter(r=>normalId(r.id) === id);
+      const localHist = [];
+      Object.entries(state.history || {}).forEach(([k, arr])=>{
+        (arr || []).forEach(e=>{ if(normalId(e.id) === id || (recordKey && k === recordKey)) localHist.push(e); });
+      });
+      localHist.sort((a,b)=>(b.changedAt || "").localeCompare(a.changedAt || ""));
+      const regHtml = registos.length ? `<div class="tableWrap"><table><thead><tr><th>Modo</th><th>Data</th><th>Tracking</th><th>Carrier</th><th>Batch</th><th>User</th><th>Items</th></tr></thead><tbody>${registos.map(r=>`<tr><td><b>${esc(regMode(r))}</b></td><td class="mono">${esc(fmtDateTimeFromReg(r))}</td><td class="mono">${esc(regTracking(r))}</td><td>${esc(regCarrier(r))}</td><td>${esc(regBatch(r))}</td><td>${esc(regUser(r))}</td><td><div class="envio-items-cell">${esc(regItems(r))}</div></td></tr>`).join("")}</tbody></table></div>` : `<div class="muted">Sem registos PACKING/RETURN/REFUND encontrados em registos para este ID.</div>`;
+      const idHistHtml = histEvents.length ? `<div class="tableWrap"><table><thead><tr><th>Tipo</th><th>Data</th><th>Batch</th><th>Carrier</th><th>User</th><th>Tracking</th><th>Conteúdo</th></tr></thead><tbody>${histEvents.map(e=>`<tr><td><b>${esc(e.Type || e.type || "")}</b></td><td class="mono">${esc(e.DateTime || e.dateTime || "")}</td><td>${esc(e.Batch || e.batch || "")}</td><td>${esc(e.Carrier || e.carrier || "")}</td><td>${esc(e.User || e.user || "")}</td><td>${esc(e.Tracking || e.tracking || "")}</td><td><div class="envio-items-cell">${esc(e.Items_or_Content || e.items || e.content || e.Details || "")}</div></td></tr>`).join("")}</tbody></table></div>` : `<div class="muted">Sem id_history encontrado ou sem permissão de leitura.</div>`;
+      const localHtml = localHist.length ? localHist.map(entry=>`<div class="casesHistoryItem"><div class="casesHistoryMeta"><b>${esc(entry.changeDate || (entry.changedAt || "").slice(0,10))}</b> · ${esc((entry.changedAt || "").slice(11,19))} · ${esc(entry.action || "UPDATE")} · ${esc(entry.user || "sem user")}</div>${(entry.changes || []).map(ch=>`<div class="casesHistoryChange"><b>${esc(ch.fieldLabel || ch.fieldKey)}</b>: <span class="casesHistoryOld">${esc(ch.oldValue || "") || "—"}</span> → <span class="casesHistoryNew">${esc(ch.newValue || "") || "—"}</span></div>`).join("")}</div>`).join("") : `<div class="muted">Sem alterações locais registadas neste separador.</div>`;
+      const localRecordsHtml = localRecords.length ? localRecords.map(r=>`<span class="tag">${esc(r.type)} · ${esc(r.carrier)} · entrada ${esc(r.entryDate || r.createdDate || "")}</span>`).join("") : `<span class="muted">Sem registo local neste separador.</span>`;
+      body.innerHTML = `
+        <div class="notice"><b>ID:</b> <span class="mono">${esc(id)}</span><br><b>Registos neste separador:</b> ${localRecordsHtml}</div>
+        <div class="hr"></div>
+        <h2 style="font-size:16px;">Registos Firebase — PACKING / RETURN / REFUND</h2>${regHtml}
+        <div class="hr"></div>
+        <h2 style="font-size:16px;">id_history Firebase</h2>${idHistHtml}
+        <div class="hr"></div>
+        <h2 style="font-size:16px;">Histórico de alterações deste separador</h2><div class="casesHistoryList">${localHtml}</div>`;
+    }
+    window.openCaseIdHistory = openCaseIdHistory;
+    function openCaseIdHistoryFromForm(){ openCaseIdHistory(val("casesId"), state.editingKey); }
+    window.openCaseIdHistoryFromForm = openCaseIdHistoryFromForm;
+
+    async function loadCaseHistory(){
+      loadLocal();
+      if(hasFirebase()){
+        try{
+          const snap = await db.ref(CASES_HISTORY_PATH).once("value");
+          const val = snap.val() || {};
+          const merged = Object.assign({}, state.history || {});
+          Object.entries(val).forEach(([recordKey, group])=>{
+            const arr = Object.values(group || {}).filter(Boolean);
+            const existing = merged[recordKey] || [];
+            const byHist = {};
+            existing.concat(arr).forEach(e=>{ if(e){ byHist[e.historyKey || e.changedAt || JSON.stringify(e)] = e; } });
+            merged[recordKey] = Object.values(byHist).sort((a,b)=>(b.changedAt || "").localeCompare(a.changedAt || ""));
+          });
+          state.history = merged;
+          saveLocal();
+        }catch(e){ console.warn("load case history", e); }
+      }
+    }
+    window.loadCaseHistory = loadCaseHistory;
+
+    function exportCaseHistoryCsv(){
+      const visibleKeys = new Set(getFilteredRecords().map(r=>r.key));
+      const entries = [];
+      Object.entries(state.history || {}).forEach(([recordKey, arr])=>{
+        if(visibleKeys.size && !visibleKeys.has(recordKey)) return;
+        (arr || []).forEach(entry=>{
+          (entry.changes || []).forEach(ch=>entries.push({recordKey, entry, ch}));
+        });
+      });
+      if(!entries.length){ setStatus("Não há histórico visível para exportar.", "bad"); return; }
+      const header = ["RECORD_KEY","CHANGE_DATE","CHANGED_AT","ACTION","USER","TYPE","ID","TRANSPORTADORA","FIELD","OLD_VALUE","NEW_VALUE"];
+      const lines = [header.map(csvCell).join(";")];
+      entries.sort((a,b)=>(b.entry.changedAt || "").localeCompare(a.entry.changedAt || "")).forEach(x=>{
+        lines.push([x.recordKey,x.entry.changeDate,x.entry.changedAt,x.entry.action,x.entry.user,x.entry.type,x.entry.id,x.entry.carrier,x.ch.fieldLabel || x.ch.fieldKey,x.ch.oldValue,x.ch.newValue].map(csvCell).join(";"));
+      });
+      const blob = new Blob(["\ufeffsep=;\r\n" + lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "historico_broken_swipe_lost_" + today() + ".csv";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      setStatus(entries.length + " linha(s) de histórico exportadas ✅", "ok");
+    }
+    window.exportCaseHistoryCsv = exportCaseHistoryCsv;
+
+    function updateCasesKpis(){
+      const rows = state.records || [];
+      const ids = {casesKpiTotal:rows.length, casesKpiBroken:rows.filter(r=>r.type==="BROKEN").length, casesKpiSwipe:rows.filter(r=>r.type==="SWIPE").length, casesKpiLost:rows.filter(r=>r.type==="LOST").length};
+      Object.entries(ids).forEach(([id,n])=>{ const el = byId(id); if(el) el.textContent = n; });
+    }
+    function updateCasesActiveFilters(){
+      const parts = [];
+      if(val("casesFilterText")) parts.push("Texto: " + val("casesFilterText"));
+      if(val("casesFilterType") && val("casesFilterType") !== "ALL") parts.push("Tipo: " + val("casesFilterType"));
+      if(val("casesFilterStatus")) parts.push("Status: " + val("casesFilterStatus"));
+      if(val("casesFilterCarrier")) parts.push("Transportadora: " + val("casesFilterCarrier"));
+      const colCount = Object.keys(state.columnFilters || {}).filter(k=>state.columnFilters[k]).length;
+      if(colCount) parts.push("Filtros por coluna: " + colCount);
+      const el = byId("casesActiveFilters"); if(el) el.textContent = parts.length ? "Filtro ativo → " + parts.join(" | ") : "Sem filtros";
+    }
+    function clearCasesFilters(){ setVal("casesFilterText", ""); setVal("casesFilterType", "ALL"); setVal("casesFilterStatus", ""); setVal("casesFilterCarrier", ""); state.columnFilters = {}; renderCasesTable(); }
+    window.clearCasesFilters = clearCasesFilters;
+
+    function csvCell(v){ return '"' + String(v == null ? "" : v).replace(/"/g,'""') + '"'; }
+    function exportCasesCsv(){
+      const rows = getFilteredRecords();
+      if(!rows.length){ setStatus("Não há registos visíveis para exportar.", "bad"); return; }
+      const allKeys = Array.from(new Set(rows.flatMap(r=>getFields(r.type).map(f=>f.key))));
+      const labels = {};
+      Object.values(FIELD_CONFIGS).flat().forEach(f=>labels[f.key] = f.label);
+      const header = ["TYPE","ID","TRANSPORTADORA","ENTRY_DATE","DATE_WAREHOUSE_DB","RETURN_REFUND_MODE","RETURN_REFUND_DATETIME","PACKING_DATE","PACKING_ITEMS","COINCIDE_ENVIOS_ANALISE","COINCIDE_IDS_SEM_PICAGEM","COINCIDENCIAS_RESUMO",...allKeys.map(k=>labels[k] || k),"CREATED_AT","UPDATED_AT","USER"];
+      const lines = [header.map(csvCell).join(";")];
+      rows.forEach(r=>{ const fd = r.firebaseData || {}; const cd = r.crosscheckData || {}; lines.push([r.type,r.id,r.carrier,r.entryDate || r.createdDate || "",fd.dateWarehouse || "",fd.returnRefundMode || "",fd.returnRefundDateTime || "",fd.packingDateTime || fd.packingDate || "",fd.packingItems || "",(cd.envios || []).length,(cd.semPic || []).length,crosscheckSummaryText(cd),...allKeys.map(k=>(r.fields || {})[k] || ""),r.createdAt,r.updatedAt,r.user].map(csvCell).join(";")); });
+      const blob = new Blob(["\ufeffsep=;\r\n" + lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "broken_swipe_lost_" + today() + ".csv";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      setStatus(rows.length + " registo(s) exportado(s) ✅", "ok");
+    }
+    window.exportCasesCsv = exportCasesCsv;
+
+    async function copyVisibleCaseIds(){
+      const txt = getFilteredRecords().map(r=>r.id).join("\n");
+      if(!txt){ setStatus("Não há IDs visíveis para copiar.", "bad"); return; }
+      try{ await navigator.clipboard.writeText(txt); setStatus("IDs copiados ✅", "ok"); }
+      catch(e){ const ta=document.createElement("textarea"); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); setStatus("IDs copiados ✅", "ok"); }
+    }
+    window.copyVisibleCaseIds = copyVisibleCaseIds;
+
+    async function loadCaseOptions(){
+      loadLocal();
+      if(hasFirebase()){
+        try{
+          const deletedSnap = await db.ref(CASES_DELETED_OPTIONS_PATH).once("value");
+          state.deletedOptions = mergeDeletedOptions(state.deletedOptions || {}, deletedSnap.val() || {});
+        }catch(e){ console.warn("load deleted case options", e); }
+        try{
+          const snap = await db.ref(CASES_OPTIONS_PATH).once("value");
+          state.options = mergeOptions(state.options, snap.val() || {});
+        }catch(e){ console.warn("load case options", e); }
+      }
+      Object.keys(OPTION_LABELS).forEach(k=>{ state.options[k] = applyDeletedOptions(k, state.options[k] || []); });
+      ensureDatalists();
+      initOptionGroupSelect();
+      renderCasesOptionManager();
+      saveLocal();
+    }
+    window.loadCaseOptions = loadCaseOptions;
+
+    async function loadCaseRecords(){
+      loadLocal();
+      if(hasFirebase()){
+        try{
+          const snap = await db.ref(CASES_ITEMS_PATH).once("value");
+          const val = snap.val() || {};
+          state.records = Object.entries(val).map(([key,r])=>Object.assign({}, r || {}, {key:key})).filter(r=>r && !r.deleted && r.id);
+          state.records.sort((a,b)=>(b.updatedAt || "").localeCompare(a.updatedAt || ""));
+          setStatus("Registos carregados da Firebase ✅", "ok");
+        }catch(e){ console.warn("load case records", e); setStatus("Não consegui ler Firebase; usei backup local.", "warn"); }
+      }
+      await loadCaseHistory();
+      state.loaded = true;
+      saveLocal();
+      renderCasesTable();
+      if(hasFirebase() && state.records && state.records.length){
+        try{ await refreshCaseCrosschecks({silent:true, persist:false, all:true}); }
+        catch(e){ console.warn("auto refresh case crosschecks", e); }
+      }
+    }
+    window.loadCaseRecords = loadCaseRecords;
+
+    function extendSwitchTab(){
+      if(window.switchTab && window.switchTab._casesWrapped) return;
+      const previous = window.switchTab;
+      window.switchTab = function(tab){
+        if(tab === "cases"){
+          ["tabCrosscheck","tabCrossReturns","tabEnvios","tabSemPic","tabCases"].forEach(id=>{ const el = byId(id); if(el) el.classList.toggle("active", id === "tabCases"); });
+          ["tabBtnCrosscheck","tabBtnCrossReturns","tabBtnEnvios","tabBtnSemPic","tabBtnCases"].forEach(id=>{ const el = byId(id); if(el) el.classList.toggle("active", id === "tabBtnCases"); });
+          try{ renderCasesFormFields(); renderCasesTable(); }catch(e){}
+          return;
+        }
+        if(previous) previous.apply(this, arguments);
+        const panel = byId("tabCases"); if(panel) panel.classList.remove("active");
+        const btn = byId("tabBtnCases"); if(btn) btn.classList.remove("active");
+      };
+      window.switchTab._casesWrapped = true;
+    }
+
+    async function initCases(){
+      initOptionGroupSelect();
+      ensureDatalists();
+      renderCasesFormFields();
+      extendSwitchTab();
+      await loadCaseOptions();
+      await loadCaseRecords();
+      const idEl = byId("casesId");
+      if(idEl && !idEl.dataset.autoFirebaseReady){
+        idEl.dataset.autoFirebaseReady = "1";
+        idEl.addEventListener("input", scheduleCaseAutoFetch);
+        idEl.addEventListener("input", scheduleCaseCrosscheckFetch);
+        idEl.addEventListener("change", ()=>{ fetchCaseAutoData(val("casesId"), {silent:true}); fetchCaseCrosscheckData(val("casesId"), {silent:true}); });
+        idEl.addEventListener("blur", ()=>{ fetchCaseAutoData(val("casesId"), {silent:true}); fetchCaseCrosscheckData(val("casesId"), {silent:true}); });
+      }
+      if(typeof auth !== "undefined" && auth && auth.onAuthStateChanged){
+        auth.onAuthStateChanged(async user=>{
+          if(user){ await loadCaseOptions(); await loadCaseRecords(); }
+        });
+      }
+    }
+
+    if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", initCases);
+    else initCases();
+  })();
+</script>
+
 </body>
 </html>
