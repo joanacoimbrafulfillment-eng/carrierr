@@ -8077,6 +8077,74 @@ Esta ação remove estes registos guardados na Firebase.`);
         catch(e){ console.warn("cases deleted option save", e); }
       }
     }
+
+
+    // ===== v21: opções selecionáveis globais multiutilizador =====
+    // As listas selecionáveis passam a usar a Firebase como fonte global quando há login.
+    // Assim, adicionar/remover opções afeta todos os utilizadores e não apenas o browser atual.
+    function optionArrayFromRaw(raw){
+      if(Array.isArray(raw)) return sortedUnique(raw);
+      if(raw && typeof raw === "object") return sortedUnique(Object.keys(raw).filter(k=>!!raw[k] || raw[k] === ""));
+      return [];
+    }
+
+    async function fetchGlobalDeletedOptionNorms(key){
+      if(!hasFirebase()) return state.deletedOptions[key] || [];
+      try{
+        const snap = await db.ref(CASES_DELETED_OPTIONS_PATH + "/" + key).once("value");
+        const serverDeleted = normalizeDeletedOptions({[key]: snap.val() || []});
+        return serverDeleted[key] || [];
+      }catch(e){
+        console.warn("cases fetch deleted option key", key, e);
+        return state.deletedOptions[key] || [];
+      }
+    }
+
+    function requireFirebaseForGlobalOptions(){
+      if(hasFirebase()) return true;
+      setStatus("Faz login Firebase para alterar listas selecionáveis globais.", "bad");
+      return false;
+    }
+
+    async function persistCaseOptionAddGlobal(key, value, restoreDeleted){
+      const v = String(value || "").trim();
+      const norm = optionNorm(v);
+      if(!key || !v || !norm) return false;
+      if(!requireFirebaseForGlobalOptions()) return false;
+
+      if(restoreDeleted){
+        await db.ref(CASES_DELETED_OPTIONS_PATH + "/" + key).transaction(current=>{
+          const arr = normalizeDeletedOptions({[key]: current || []})[key] || [];
+          return arr.filter(x=>x !== norm);
+        });
+      } else {
+        const deleted = await fetchGlobalDeletedOptionNorms(key);
+        if(deleted.includes(norm)) return "deleted";
+      }
+
+      await db.ref(CASES_OPTIONS_PATH + "/" + key).transaction(current=>{
+        const arr = optionArrayFromRaw(current);
+        return sortedUnique([...arr, v]);
+      });
+      return true;
+    }
+
+    async function persistCaseOptionRemoveGlobal(key, value){
+      const v = String(value || "").trim();
+      const norm = optionNorm(v);
+      if(!key || !v || !norm) return false;
+      if(!requireFirebaseForGlobalOptions()) return false;
+
+      await db.ref(CASES_OPTIONS_PATH + "/" + key).transaction(current=>{
+        const arr = optionArrayFromRaw(current);
+        return sortedUnique(arr.filter(x=>optionNorm(x) !== norm));
+      });
+      await db.ref(CASES_DELETED_OPTIONS_PATH + "/" + key).transaction(current=>{
+        const arr = normalizeDeletedOptions({[key]: current || []})[key] || [];
+        return sortedUnique([...arr, norm]);
+      });
+      return true;
+    }
     function mergeOptions(base, extra){
       const out = JSON.parse(JSON.stringify(base || {}));
       Object.keys(OPTION_LABELS).forEach(k=>{ out[k] = applyDeletedOptions(k, sortedUnique([...(out[k] || []), ...((extra && extra[k]) || [])])); });
@@ -8540,10 +8608,25 @@ Esta ação remove estes registos guardados na Firebase.`);
     async function addOption(key, value, persist=true, restoreDeleted=false){
       const v = String(value || "").trim();
       if(!key || !v) return;
+
+      if(persist){
+        try{
+          const persisted = await persistCaseOptionAddGlobal(key, v, restoreDeleted);
+          if(!persisted) return;
+          if(persisted === "deleted"){
+            setStatus("Esta opção foi eliminada globalmente. Para voltar a usar, adiciona-a manualmente no gestor de opções.", "warn");
+            return;
+          }
+        }catch(e){
+          console.warn("cases global option add", e);
+          setStatus("Não consegui guardar a opção global na Firebase.", "bad");
+          return;
+        }
+      }
+
       if(restoreDeleted){
         unmarkOptionDeleted(key, v);
       } else if(isOptionDeleted(key, v)){
-        // Valor removido pelo utilizador: não voltar a aparecer automaticamente por causa de registos antigos.
         return;
       }
       if(!state.options[key]) state.options[key] = [];
@@ -8551,29 +8634,29 @@ Esta ação remove estes registos guardados na Firebase.`);
       ensureDatalists();
       renderCasesOptionManager();
       saveLocal();
-      if(persist && hasFirebase()){
-        try{
-          await db.ref(CASES_OPTIONS_PATH + "/" + key).set(state.options[key]);
-          if(restoreDeleted) await db.ref(CASES_DELETED_OPTIONS_PATH + "/" + key).set(state.deletedOptions[key] || []);
-        }catch(e){ console.warn("cases option save", e); }
-      }
     }
     window.addCaseOption = addOption;
 
     async function removeOption(key, value, persist=true){
       const v = String(value || "").trim();
       if(!key || !v) return;
+
+      if(persist){
+        try{
+          const ok = await persistCaseOptionRemoveGlobal(key, v);
+          if(!ok) return;
+        }catch(e){
+          console.warn("cases global option remove", e);
+          setStatus("Não consegui eliminar a opção global na Firebase.", "bad");
+          return;
+        }
+      }
+
       markOptionDeleted(key, v);
       state.options[key] = applyDeletedOptions(key, sortedUnique((state.options[key] || []).filter(x=>optionNorm(x) !== optionNorm(v))));
       ensureDatalists();
       renderCasesOptionManager();
       saveLocal();
-      if(persist && hasFirebase()){
-        try{
-          await db.ref(CASES_OPTIONS_PATH + "/" + key).set(state.options[key]);
-          await db.ref(CASES_DELETED_OPTIONS_PATH + "/" + key).set(state.deletedOptions[key] || []);
-        }catch(e){ console.warn("cases option remove", e); }
-      }
     }
     window.removeCaseOption = removeOption;
 
@@ -9145,11 +9228,13 @@ Esta ação remove estes registos guardados na Firebase.`);
       if(hasFirebase()){
         try{
           const deletedSnap = await db.ref(CASES_DELETED_OPTIONS_PATH).once("value");
-          state.deletedOptions = mergeDeletedOptions(state.deletedOptions || {}, deletedSnap.val() || {});
+          // Com login, a Firebase é a fonte de verdade global para opções apagadas.
+          state.deletedOptions = normalizeDeletedOptions(deletedSnap.val() || {});
         }catch(e){ console.warn("load deleted case options", e); }
         try{
           const snap = await db.ref(CASES_OPTIONS_PATH).once("value");
-          state.options = mergeOptions(state.options, snap.val() || {});
+          // Com login, não misturamos opções antigas locais; isto evita reaparecerem só neste browser.
+          state.options = mergeOptions(DEFAULT_OPTIONS, snap.val() || {});
         }catch(e){ console.warn("load case options", e); }
       }
       Object.keys(OPTION_LABELS).forEach(k=>{ state.options[k] = applyDeletedOptions(k, state.options[k] || []); });
@@ -9235,7 +9320,8 @@ Esta ação remove estes registos guardados na Firebase.`);
 
     function applyCaseOptionsSnapshot(raw){
       try{
-        state.options = mergeOptions(mergeOptions(DEFAULT_OPTIONS, state.options || {}), raw || {});
+        // Firebase é a fonte global das opções. Defaults entram como base, opções locais antigas não são reintroduzidas.
+        state.options = mergeOptions(DEFAULT_OPTIONS, raw || {});
         Object.keys(OPTION_LABELS).forEach(k=>{ state.options[k] = applyDeletedOptions(k, state.options[k] || []); });
         ensureDatalists();
         initOptionGroupSelect();
@@ -9248,7 +9334,8 @@ Esta ação remove estes registos guardados na Firebase.`);
 
     function applyCaseDeletedOptionsSnapshot(raw){
       try{
-        state.deletedOptions = mergeDeletedOptions(state.deletedOptions || {}, raw || {});
+        // Firebase é a fonte global das opções apagadas. Isto impede que uma opção volte a aparecer só num browser.
+        state.deletedOptions = normalizeDeletedOptions(raw || {});
         Object.keys(OPTION_LABELS).forEach(k=>{ state.options[k] = applyDeletedOptions(k, state.options[k] || []); });
         ensureDatalists();
         renderCasesOptionManager();
@@ -9363,6 +9450,356 @@ Esta ação remove estes registos guardados na Firebase.`);
 
     if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", initCases);
     else initCases();
+  })();
+</script>
+
+
+
+<script>
+  // ===== v22: opções e dados globais/realtime em todos os separadores =====
+  // Objetivo: opções selecionáveis partilhadas entre utilizadores e atualizações realtime em todos os separadores.
+  (function(){
+    "use strict";
+    const SHARED_OPTIONS_ROOT = "casos_broken_swipe_lost";
+    const SHARED_OPTIONS_PATH = SHARED_OPTIONS_ROOT + "/options";
+    const SHARED_DELETED_OPTIONS_PATH = SHARED_OPTIONS_ROOT + "/deleted_options";
+    const SHARED_CARRIER_KEY = "carriers";
+    const SHARED_CARRIER_DATALIST_ID = "sharedCarrierDatalistAllTabs";
+    const FALLBACK_CARRIERS = ["CORREOS ES","CORREOS PT","CTT","CTT ES","CTT ILHAS","NACEX","NACEX PT"];
+    const sharedState = {
+      carrierOptions: [],
+      deletedCarrierNorms: [],
+      refs: [],
+      started: false,
+      applying: false,
+      lastUpdateAt: ""
+    };
+
+    function $(id){ return document.getElementById(id); }
+    function hasFirebase(){ return typeof db !== "undefined" && typeof auth !== "undefined" && auth && auth.currentUser; }
+    function norm(v){ return String(v || "").trim().toUpperCase(); }
+    function clean(v){ return String(v || "").trim().toUpperCase().replace(/\s+/g, " "); }
+    function unique(arr){ return Array.from(new Set((arr || []).map(clean).filter(Boolean))).sort((a,b)=>a.localeCompare(b, undefined, {numeric:true})); }
+    function optionArray(raw){
+      if(Array.isArray(raw)) return unique(raw);
+      if(raw && typeof raw === "object") return unique(Object.keys(raw).filter(k=>raw[k] || raw[k] === ""));
+      return [];
+    }
+    function deletedArray(raw){
+      if(Array.isArray(raw)) return unique(raw.map(norm));
+      if(raw && typeof raw === "object") return unique(Object.keys(raw).filter(k=>raw[k]).map(norm));
+      return [];
+    }
+    function currentGlobalCarriers(){
+      const base = [];
+      try{ if(typeof state !== "undefined" && state && Array.isArray(state.carriers)) base.push(...state.carriers); }catch(e){}
+      base.push(...FALLBACK_CARRIERS, ...(sharedState.carrierOptions || []));
+      const deleted = new Set(sharedState.deletedCarrierNorms || []);
+      return unique(base).filter(c=>!deleted.has(norm(c)));
+    }
+    function setGlobalCarrierState(carriers){
+      const list = unique(carriers || []);
+      try{
+        if(typeof state !== "undefined" && state){
+          state.carriers = list.slice();
+        }
+      }catch(e){}
+      return list;
+    }
+    function setStatusEverywhere(msg, kind){
+      try{ if(typeof setStatus === "function") setStatus(msg, kind || "ok"); }catch(e){}
+      try{ if(typeof enviosSetStatus === "function") enviosSetStatus(msg, kind || "ok"); }catch(e){}
+      try{ if(typeof semPicSetStatus === "function") semPicSetStatus(msg, kind || "ok"); }catch(e){}
+      try{ if(typeof retCrossSetStatus === "function") retCrossSetStatus(msg, kind || "ok"); }catch(e){}
+    }
+    function renderAllCarrierConsumers(){
+      ensureSharedCarrierDatalist();
+      try{ if(typeof renderCarrierSelect === "function") renderCarrierSelect(); }catch(e){}
+      try{ if(typeof renderSemPicCarrierSelect === "function") renderSemPicCarrierSelect(); }catch(e){}
+      try{ if(typeof retCrossUpdateCarrierFilters === "function") retCrossUpdateCarrierFilters(); }catch(e){}
+      try{ if(typeof retCrossUpdateCarrierPreview === "function") retCrossUpdateCarrierPreview(); }catch(e){}
+      try{ if(typeof updateEnviosCarrierFilterOptions === "function") updateEnviosCarrierFilterOptions(); }catch(e){}
+      try{ if(typeof updateSemPicCarrierFilterOptions === "function") updateSemPicCarrierFilterOptions(); }catch(e){}
+      try{ if(typeof renderCasesOptionManager === "function") renderCasesOptionManager(); }catch(e){}
+    }
+    function ensureSharedCarrierDatalist(){
+      let dl = $(SHARED_CARRIER_DATALIST_ID);
+      if(!dl){
+        dl = document.createElement("datalist");
+        dl.id = SHARED_CARRIER_DATALIST_ID;
+        document.body.appendChild(dl);
+      }
+      const carriers = currentGlobalCarriers();
+      dl.innerHTML = carriers.map(c=>`<option value="${escapeHtml(String(c))}"></option>`).join("");
+      ["newCarrier","retCrossSource","semPicCarrierManual","casesCarrier"].forEach(id=>{
+        const el = $(id);
+        if(el) el.setAttribute("list", SHARED_CARRIER_DATALIST_ID);
+      });
+    }
+    async function loadSharedCarrierOptions(){
+      let serverOptions = [];
+      let serverDeleted = [];
+      if(hasFirebase()){
+        try{
+          const snap = await db.ref(SHARED_OPTIONS_PATH + "/" + SHARED_CARRIER_KEY).once("value");
+          serverOptions = optionArray(snap.val());
+        }catch(e){ console.warn("shared carrier options read", e); }
+        try{
+          const snapDel = await db.ref(SHARED_DELETED_OPTIONS_PATH + "/" + SHARED_CARRIER_KEY).once("value");
+          serverDeleted = deletedArray(snapDel.val());
+        }catch(e){ console.warn("shared carrier deleted options read", e); }
+      } else {
+        try{ serverOptions = JSON.parse(localStorage.getItem("shared_carriers_all_tabs_v1") || "[]"); }catch(e){}
+        try{ serverDeleted = JSON.parse(localStorage.getItem("shared_carriers_deleted_all_tabs_v1") || "[]"); }catch(e){}
+      }
+      sharedState.carrierOptions = unique(serverOptions);
+      sharedState.deletedCarrierNorms = unique(serverDeleted.map(norm));
+      const finalCarriers = setGlobalCarrierState(currentGlobalCarriers());
+      try{ localStorage.setItem("shared_carriers_all_tabs_v1", JSON.stringify(finalCarriers)); }catch(e){}
+      renderAllCarrierConsumers();
+      sharedState.lastUpdateAt = new Date().toISOString();
+      return finalCarriers;
+    }
+    window.loadSharedCarrierOptionsAllTabs = loadSharedCarrierOptions;
+
+    async function addSharedCarrierGlobal(value, opts){
+      opts = opts || {};
+      const v = clean(value);
+      if(!v) return false;
+      if(hasFirebase()){
+        if(opts.restoreDeleted !== false){
+          await db.ref(SHARED_DELETED_OPTIONS_PATH + "/" + SHARED_CARRIER_KEY).transaction(current=>{
+            return deletedArray(current).filter(x=>x !== norm(v));
+          });
+        }
+        await db.ref(SHARED_OPTIONS_PATH + "/" + SHARED_CARRIER_KEY).transaction(current=>{
+          return unique([...optionArray(current), v]);
+        });
+      } else {
+        const list = unique([...(sharedState.carrierOptions || []), v]);
+        sharedState.carrierOptions = list;
+        sharedState.deletedCarrierNorms = (sharedState.deletedCarrierNorms || []).filter(x=>x !== norm(v));
+        try{ localStorage.setItem("shared_carriers_all_tabs_v1", JSON.stringify(list)); }catch(e){}
+        try{ localStorage.setItem("shared_carriers_deleted_all_tabs_v1", JSON.stringify(sharedState.deletedCarrierNorms)); }catch(e){}
+      }
+      sharedState.carrierOptions = unique([...(sharedState.carrierOptions || []), v]);
+      sharedState.deletedCarrierNorms = (sharedState.deletedCarrierNorms || []).filter(x=>x !== norm(v));
+      setGlobalCarrierState(currentGlobalCarriers());
+      renderAllCarrierConsumers();
+      return true;
+    }
+    window.addSharedCarrierGlobal = addSharedCarrierGlobal;
+
+    async function removeSharedCarrierGlobal(value){
+      const v = clean(value);
+      if(!v) return false;
+      if(!confirm("Eliminar a transportadora '" + v + "' das listas selecionáveis globais?\n\nOs registos já guardados não são apagados, mas a opção desaparece para todos os utilizadores.")) return false;
+      if(hasFirebase()){
+        await db.ref(SHARED_OPTIONS_PATH + "/" + SHARED_CARRIER_KEY).transaction(current=>{
+          return optionArray(current).filter(x=>norm(x) !== norm(v));
+        });
+        await db.ref(SHARED_DELETED_OPTIONS_PATH + "/" + SHARED_CARRIER_KEY).transaction(current=>{
+          return unique([...deletedArray(current), norm(v)]);
+        });
+      } else {
+        sharedState.carrierOptions = (sharedState.carrierOptions || []).filter(x=>norm(x) !== norm(v));
+        sharedState.deletedCarrierNorms = unique([...(sharedState.deletedCarrierNorms || []), norm(v)]);
+        try{ localStorage.setItem("shared_carriers_all_tabs_v1", JSON.stringify(sharedState.carrierOptions)); }catch(e){}
+        try{ localStorage.setItem("shared_carriers_deleted_all_tabs_v1", JSON.stringify(sharedState.deletedCarrierNorms)); }catch(e){}
+      }
+      sharedState.carrierOptions = (sharedState.carrierOptions || []).filter(x=>norm(x) !== norm(v));
+      sharedState.deletedCarrierNorms = unique([...(sharedState.deletedCarrierNorms || []), norm(v)]);
+      setGlobalCarrierState(currentGlobalCarriers());
+      renderAllCarrierConsumers();
+      setStatusEverywhere("Transportadora removida das opções globais ✅", "ok");
+      return true;
+    }
+    window.removeSharedCarrierGlobal = removeSharedCarrierGlobal;
+
+    function ensureGlobalCarrierManagerInCrosscheck(){
+      const input = $("newCarrier");
+      if(!input || $("btnRemoveGlobalCarrier")) return;
+      input.setAttribute("list", SHARED_CARRIER_DATALIST_ID);
+      const holder = input.parentElement;
+      if(holder){
+        const btn = document.createElement("button");
+        btn.id = "btnRemoveGlobalCarrier";
+        btn.type = "button";
+        btn.className = "btn danger";
+        btn.textContent = "Eliminar transportadora";
+        btn.title = "Remove a transportadora selecionada/escrita das opções globais para todos os utilizadores";
+        btn.onclick = function(){
+          const val = clean(input.value || ($("carrierSel") && $("carrierSel").value) || "");
+          if(!val){ setStatusEverywhere("Escreve ou seleciona a transportadora a eliminar.", "bad"); return; }
+          removeSharedCarrierGlobal(val);
+        };
+        holder.appendChild(btn);
+      }
+    }
+
+    function semPicCarrierFromInputs(){
+      const manual = clean($("semPicCarrierManual") && $("semPicCarrierManual").value);
+      if(manual) return manual;
+      return clean($("semPicCarrierSel") && $("semPicCarrierSel").value);
+    }
+    function retCrossCarriersFromInput(){
+      const raw = String(($("retCrossSource") && $("retCrossSource").value) || "");
+      return unique(raw.split(/[+,;|\/]+/g).map(clean).filter(Boolean));
+    }
+
+    function installGlobalOptionHooks(){
+      ensureGlobalCarrierManagerInCrosscheck();
+      ensureSharedCarrierDatalist();
+
+      if(typeof addCarrierLocal === "function" && !addCarrierLocal._v22Global){
+        const oldAddCarrierLocal = addCarrierLocal;
+        addCarrierLocal = async function(){
+          const v = clean($("newCarrier") && $("newCarrier").value);
+          if(!v) return oldAddCarrierLocal.apply(this, arguments);
+          try{ await addSharedCarrierGlobal(v, {restoreDeleted:true}); }
+          catch(e){ console.warn("global add carrier", e); oldAddCarrierLocal.apply(this, arguments); }
+          if($("newCarrier")) $("newCarrier").value = "";
+          setStatusEverywhere("Transportadora adicionada às opções globais ✅", "ok");
+        };
+        addCarrierLocal._v22Global = true;
+        window.addCarrierLocal = addCarrierLocal;
+      }
+
+      if(typeof saveSemPicIdsAndRun === "function" && !saveSemPicIdsAndRun._v22Global){
+        const oldSaveSemPicIdsAndRun = saveSemPicIdsAndRun;
+        saveSemPicIdsAndRun = async function(){
+          const c = semPicCarrierFromInputs();
+          if(c) await addSharedCarrierGlobal(c, {restoreDeleted:true}).catch(e=>console.warn("semPic global carrier", e));
+          return oldSaveSemPicIdsAndRun.apply(this, arguments);
+        };
+        saveSemPicIdsAndRun._v22Global = true;
+        window.saveSemPicIdsAndRun = saveSemPicIdsAndRun;
+      }
+
+      if(typeof runReturnCrosscheck === "function" && !runReturnCrosscheck._v22Global){
+        const oldRunReturnCrosscheck = runReturnCrosscheck;
+        runReturnCrosscheck = async function(){
+          const carriers = retCrossCarriersFromInput();
+          for(const c of carriers){ await addSharedCarrierGlobal(c, {restoreDeleted:true}).catch(e=>console.warn("retCross global carrier", e)); }
+          return oldRunReturnCrosscheck.apply(this, arguments);
+        };
+        runReturnCrosscheck._v22Global = true;
+        window.runReturnCrosscheck = runReturnCrosscheck;
+      }
+
+      if(typeof refreshCarrierFilterOptions === "function" && !refreshCarrierFilterOptions._v22Global){
+        const oldRefreshCarrierFilterOptions = refreshCarrierFilterOptions;
+        refreshCarrierFilterOptions = function(selectId, rows, getter, defaultLabel){
+          const sel = $(selectId);
+          if(!sel) return oldRefreshCarrierFilterOptions.apply(this, arguments);
+          const prev = sel.value || "ALL";
+          const map = new Map();
+          currentGlobalCarriers().forEach(c=>{ if(c) map.set(norm(c), c); });
+          (rows || []).forEach(row=>{
+            const label = String((getter && getter(row)) || "").trim();
+            const key = norm(label);
+            if(key && !map.has(key)) map.set(key, label);
+          });
+          const sorted = Array.from(map.entries()).sort((a,b)=>a[1].localeCompare(b[1], undefined, {numeric:true, sensitivity:"base"}));
+          sel.innerHTML = `<option value="ALL">${escapeHtml(defaultLabel || "Todas as transportadoras")}</option>` +
+            sorted.map(([key,label])=>`<option value="${escapeHtml(key)}">${escapeHtml(label)}</option>`).join("");
+          if(prev !== "ALL" && map.has(prev)) sel.value = prev;
+          else sel.value = "ALL";
+        };
+        refreshCarrierFilterOptions._v22Global = true;
+        window.refreshCarrierFilterOptions = refreshCarrierFilterOptions;
+      }
+    }
+
+    function stopSharedOptionsRealtime(){
+      try{
+        (sharedState.refs || []).forEach(item=>{ try{ item.ref.off("value", item.cb); }catch(e){} });
+      }catch(e){}
+      sharedState.refs = [];
+      sharedState.started = false;
+    }
+    window.stopSharedOptionsRealtimeAllTabs = stopSharedOptionsRealtime;
+
+    function startSharedOptionsRealtime(){
+      installGlobalOptionHooks();
+      if(!hasFirebase()){
+        loadSharedCarrierOptions();
+        return;
+      }
+      if(sharedState.started) return;
+      stopSharedOptionsRealtime();
+      sharedState.started = true;
+      const listeners = [
+        {path: SHARED_OPTIONS_PATH + "/" + SHARED_CARRIER_KEY},
+        {path: SHARED_DELETED_OPTIONS_PATH + "/" + SHARED_CARRIER_KEY}
+      ];
+      listeners.forEach(item=>{
+        try{
+          const ref = db.ref(item.path);
+          const cb = function(){
+            if(sharedState.applying) return;
+            sharedState.applying = true;
+            loadSharedCarrierOptions().finally(()=>{ sharedState.applying = false; });
+          };
+          ref.on("value", cb, err=>{ console.warn("shared options realtime", item.path, err); });
+          sharedState.refs.push({ref, cb});
+        }catch(e){ console.warn("shared options realtime start", item.path, e); }
+      });
+      loadSharedCarrierOptions();
+    }
+    window.startSharedOptionsRealtimeAllTabs = startSharedOptionsRealtime;
+
+    // Realtime de dados: garantir que todos os separadores arrancam os seus listeners quando existe login.
+    function startAllTabRealtime(){
+      try{ startSharedOptionsRealtime(); }catch(e){ console.warn(e); }
+      try{ if(typeof startRealtimeSync === "function") startRealtimeSync(); }catch(e){ console.warn(e); }
+      try{ if(typeof startRetCrossMonitorRealtime === "function") startRetCrossMonitorRealtime(); }catch(e){ console.warn(e); }
+      try{ if(typeof startCasesRealtime === "function") startCasesRealtime(); }catch(e){ console.warn(e); }
+    }
+    window.startAllTabRealtime = startAllTabRealtime;
+
+    function stopAllTabRealtime(){
+      try{ stopSharedOptionsRealtime(); }catch(e){}
+      try{ if(typeof stopRealtimeSync === "function") stopRealtimeSync(); }catch(e){}
+      try{ if(typeof stopRetCrossMonitorRealtime === "function") stopRetCrossMonitorRealtime(); }catch(e){}
+      try{ if(typeof stopCasesRealtime === "function") stopCasesRealtime(); }catch(e){}
+    }
+    window.stopAllTabRealtime = stopAllTabRealtime;
+
+    const prevStartRealtimeSync = typeof startRealtimeSync === "function" ? startRealtimeSync : null;
+    if(prevStartRealtimeSync && !prevStartRealtimeSync._v22AllTabs){
+      startRealtimeSync = async function(){
+        const res = await prevStartRealtimeSync.apply(this, arguments);
+        try{ startSharedOptionsRealtime(); }catch(e){ console.warn(e); }
+        return res;
+      };
+      startRealtimeSync._v22AllTabs = true;
+      window.startRealtimeSync = startRealtimeSync;
+    }
+
+    const prevStopRealtimeSync = typeof stopRealtimeSync === "function" ? stopRealtimeSync : null;
+    if(prevStopRealtimeSync && !prevStopRealtimeSync._v22AllTabs){
+      stopRealtimeSync = function(){
+        try{ stopSharedOptionsRealtime(); }catch(e){}
+        return prevStopRealtimeSync.apply(this, arguments);
+      };
+      stopRealtimeSync._v22AllTabs = true;
+      window.stopRealtimeSync = stopRealtimeSync;
+    }
+
+    try{
+      installGlobalOptionHooks();
+      loadSharedCarrierOptions();
+      if(typeof auth !== "undefined" && auth && auth.onAuthStateChanged){
+        auth.onAuthStateChanged(user=>{
+          setTimeout(()=>{
+            if(user) startAllTabRealtime();
+            else { stopSharedOptionsRealtime(); loadSharedCarrierOptions(); }
+          }, 400);
+        });
+      }
+      if(hasFirebase()) setTimeout(startAllTabRealtime, 800);
+    }catch(e){ console.warn("v22 init", e); }
   })();
 </script>
 
