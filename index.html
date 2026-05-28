@@ -527,6 +527,60 @@
     #tabSemPic > .semPicGrid > .card:first-child{border-top:6px solid var(--refunds);}
     #tabSemPic > .semPicGrid > .card:nth-child(2){border-top:6px solid var(--accent);}
 
+    /* ===== Crosscheck Returns / Refunds ===== */
+    .retCrossGrid{display:grid; grid-template-columns:minmax(340px,.82fr) minmax(520px,1.18fr); gap:25px; margin-top:0; align-items:start;}
+    @media(max-width:980px){.retCrossGrid{grid-template-columns:1fr;}}
+    #tabCrossReturns > .retCrossGrid > .card:first-child{border-top:6px solid var(--returns);}
+    #tabCrossReturns > .retCrossGrid > .card:nth-child(2){border-top:6px solid var(--refunds);}
+    #retCrossIds{min-height:230px; font-size:18px; border:3px solid var(--returns); border-radius:15px;}
+    #tabCrossReturns .retCross-results-table{min-width:1360px; table-layout:fixed;}
+    #tabCrossReturns .retCross-results-table th:nth-child(1), #tabCrossReturns .retCross-results-table td:nth-child(1){width:120px;}
+    #tabCrossReturns .retCross-results-table th:nth-child(2), #tabCrossReturns .retCross-results-table td:nth-child(2){width:150px;}
+    #tabCrossReturns .retCross-results-table th:nth-child(3), #tabCrossReturns .retCross-results-table td:nth-child(3){width:170px;}
+    #tabCrossReturns .retCross-results-table th:nth-child(4), #tabCrossReturns .retCross-results-table td:nth-child(4){width:205px;}
+    #tabCrossReturns .retCross-results-table th:nth-child(5), #tabCrossReturns .retCross-results-table td:nth-child(5){width:210px;}
+    #tabCrossReturns .retCross-results-table th:nth-child(6), #tabCrossReturns .retCross-results-table td:nth-child(6){width:240px;}
+    #tabCrossReturns .retCross-results-table th:nth-child(7), #tabCrossReturns .retCross-results-table td:nth-child(7){width:260px;}
+    #tabCrossReturns .retCross-results-table th:nth-child(8), #tabCrossReturns .retCross-results-table td:nth-child(8){width:130px; position:sticky; right:0; background:#fff; box-shadow:-8px 0 12px rgba(15,23,42,.06);}
+    #tabCrossReturns .retCross-results-table th:nth-child(8){z-index:12; background:#f1f3f5;}
+    .retCross-badge{display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:5px 9px; font-size:11px; font-weight:900; text-transform:uppercase; border:1px solid #e5e7eb; background:#f8fafc; color:#475569; white-space:nowrap;}
+    .retCross-badge.ok{background:#dcfce7; color:#166534; border-color:#86efac;}
+    .retCross-badge.return{background:#ffedd5; color:#c2410c; border-color:#fdba74;}
+    .retCross-badge.refund{background:#fef3c7; color:#92400e; border-color:#fbbf24;}
+    .retCross-badge.missing{background:#fee2e2; color:#991b1b; border-color:#fecaca;}
+    .retCross-badge.diff{background:#fef2f2; color:#b91c1c; border-color:#fca5a5;}
+    .retCross-badge.match{background:#ecfdf5; color:#166534; border-color:#86efac;}
+    .retCross-badge.neutral{background:#f1f5f9; color:#475569; border-color:#cbd5e1;}
+    .retCrossDiffBox{margin-top:6px; padding:8px 10px; border-radius:10px; background:#fff7ed; border:1px solid #fdba74; color:#9a3412; font-size:12px; line-height:1.35; font-weight:700;}
+    .retCrossDiffBox.ok{background:#f0fff4; border-color:#86efac; color:#166534;}
+    .retCrossDiffBox.neutral{background:#f8fafc; border-color:#cbd5e1; color:#475569;}
+    .retCross-kpi-card{cursor:pointer; user-select:none; transition:transform .15s ease, box-shadow .15s ease, border-bottom-color .15s ease;}
+    .retCross-kpi-card:hover{transform:translateY(-2px); box-shadow:0 10px 20px rgba(0,0,0,.10);}
+    .retCross-kpi-card.active{border-bottom-color:var(--accent); box-shadow:0 0 0 3px rgba(52,152,219,.14), 0 8px 18px rgba(0,0,0,.08);}
+    .retCrossCopyBtn{margin-top:10px; width:100%; border:0; border-radius:9px; padding:7px 9px; background:#334155; color:#fff; cursor:pointer; font-size:11px; font-weight:900; text-transform:uppercase;}
+    .retCrossCopyBtn:hover{background:#0f172a;}
+    .retCrossWarning{display:none; margin-top:10px; background:#fff7ed; border:2px solid #fdba74; color:#9a3412; border-radius:12px; padding:12px 14px; font-size:13px; font-weight:700; line-height:1.45;}
+
+
+    /* ===== Melhorias conservadoras v2: UX, acessibilidade e seguranca ===== */
+    :focus-visible{outline:3px solid rgba(52,152,219,.55); outline-offset:3px;}
+    .btn:focus-visible,.tabBtn:focus-visible,.enviosListBtn:focus-visible,.semPicListBtn:focus-visible,.retCross-kpi-card:focus-visible{outline:3px solid rgba(52,152,219,.55); outline-offset:3px;}
+    .btn[disabled],button[aria-disabled="true"]{filter:saturate(.75); opacity:.65; cursor:not-allowed; transform:none!important;}
+    .tableWrap:focus-within{box-shadow:0 0 0 3px rgba(52,152,219,.10);}
+    #uxSafetyBar{display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin:0 0 18px; padding:10px 14px; border:1px solid #dbeafe; background:#eff6ff; color:#1e3a8a; border-radius:14px; font-size:12px; font-weight:800; box-shadow:0 4px 12px rgba(15,23,42,.04);}
+    #uxSafetyBar .ux-left,#uxSafetyBar .ux-right{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+    .ux-badge{display:inline-flex; align-items:center; gap:6px; border:1px solid #bfdbfe; background:#fff; color:#1d4ed8; padding:6px 10px; border-radius:999px; line-height:1;}
+    .ux-badge.ok{border-color:#86efac; color:#166534; background:#f0fdf4;}
+    .ux-badge.warn{border-color:#fbbf24; color:#92400e; background:#fffbeb;}
+    .ux-badge.bad{border-color:#fecaca; color:#991b1b; background:#fef2f2;}
+    .ux-mini-btn{border:0; border-radius:999px; padding:7px 10px; background:#1d4ed8; color:#fff; font-size:11px; font-weight:900; cursor:pointer; text-transform:uppercase;}
+    .ux-mini-btn.secondary{background:#475569;}
+    .ux-toast{position:fixed; right:18px; bottom:18px; z-index:9999; max-width:min(460px,calc(100vw - 36px)); background:#0f172a; color:#fff; padding:12px 14px; border-radius:14px; box-shadow:0 18px 45px rgba(15,23,42,.32); font-size:13px; line-height:1.35; display:none;}
+    .ux-toast.show{display:block; animation:uxToastIn .18s ease-out;}
+    @keyframes uxToastIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
+    @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important; animation-iteration-count:1!important; scroll-behavior:auto!important; transition-duration:.01ms!important;}}
+    @media print{.topbar,.tabs,.btn,.enviosActions,.enviosListTabs,.semPicListTabs,#uxSafetyBar,.resultsHint{display:none!important;} body{background:#fff;} .wrap{max-width:none; padding:0;} .card{box-shadow:none; border:1px solid #ddd; break-inside:avoid;} .tableWrap{overflow:visible;} table{min-width:0!important; font-size:11px;}}
+
   </style>
 </head>
 <body>
@@ -536,7 +590,7 @@
         <div class="logo"></div>
         <div>
           <h1>WH-MURTEDE LOGISTICS</h1>
-          <p class="sub">Envios em Análise · Crosscheck Transportadoras · Ligação direta Firebase</p>
+          <p class="sub">Envios em Análise · Crosscheck Expedições · Ligação direta Firebase</p>
         </div>
       </div>
       <div class="row">
@@ -551,7 +605,8 @@
     </div>
 
     <div class="tabs" role="tablist" aria-label="Separadores da ferramenta">
-      <button id="tabBtnCrosscheck" class="tabBtn" type="button" onclick="switchTab('crosscheck')">Crosscheck Transportadoras</button>
+      <button id="tabBtnCrosscheck" class="tabBtn" type="button" onclick="switchTab('crosscheck')">Crosscheck Expedições</button>
+      <button id="tabBtnCrossReturns" class="tabBtn" type="button" onclick="switchTab('crossreturns')">Crosscheck Returns</button>
       <button id="tabBtnEnvios" class="tabBtn active" type="button" onclick="switchTab('envios')">Envios em Analise</button>
       <button id="tabBtnSemPic" class="tabBtn" type="button" onclick="switchTab('sempic')">IDs sem picagens da transportadora</button>
     </div>
@@ -752,6 +807,145 @@
       </div>
     </div>
 
+    </div>
+
+    <div id="tabCrossReturns" class="tabPanel">
+      <div class="retCrossGrid">
+        <div class="card">
+          <h2>🔄 Crosscheck Returns</h2>
+          <div class="notice">
+            Cola aqui os IDs de uma listagem externa e o sistema cruza com os IDs que já foram picados em <b>RETURNS</b> ou <b>REFUNDS</b> na Firebase. A pesquisa usa <span class="mono">registos</span> e, se quiseres, também <span class="mono">id_history</span>.
+          </div>
+
+          <label>Nome da lista / origem</label>
+          <input id="retCrossSource" placeholder="Ex: Lista transportadora, Shopify, reclamações...">
+
+          <label>IDs a cruzar</label>
+          <textarea id="retCrossIds" placeholder="16975639&#10;17105131&#10;17209721"></textarea>
+          <div class="mini">Aceita um ID por linha, ou IDs separados por espaços, vírgulas ou ponto-e-vírgula.</div>
+          <div id="retCrossDuplicateWarning" class="retCrossWarning"></div>
+
+          <div class="split" style="margin-top:10px;">
+            <div>
+              <label>Data inicial</label>
+              <input type="date" id="retCrossStartDate">
+            </div>
+            <div>
+              <label>Data final</label>
+              <input type="date" id="retCrossEndDate">
+            </div>
+          </div>
+          <div class="split" style="margin-top:10px;">
+            <div>
+              <label>Procurar</label>
+              <select id="retCrossMode">
+                <option value="BOTH" selected>Returns e Refunds</option>
+                <option value="RETURN">Só Returns</option>
+                <option value="REFUND">Só Refunds</option>
+              </select>
+            </div>
+            <div>
+              <label>Histórico</label>
+              <select id="retCrossHistoryMode">
+                <option value="NO" selected>Não ler id_history</option>
+                <option value="YES">Ler id_history também</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="enviosActions">
+            <div class="row">
+              <button id="btnRetCrossRun" class="btn primary" type="button" onclick="runReturnCrosscheck()">Cruzamento Returns</button>
+              <button class="btn" type="button" onclick="clearReturnCrosscheckInput()">Limpar caixa</button>
+            </div>
+            <span id="retCrossStatus" class="pill">Pronto</span>
+          </div>
+
+          <div class="hr"></div>
+          <h2>Exportação rápida</h2>
+          <div class="row">
+            <button class="btn" type="button" onclick="exportReturnCrosscheckCsv()">Exportar CSV</button>
+            <button class="btn" type="button" onclick="copyReturnCrosscheckIds('ALL')">Copiar todos</button>
+            <button class="btn" type="button" onclick="copyReturnCrosscheckIds('FOUND')">Copiar encontrados</button>
+            <button class="btn" type="button" onclick="copyReturnCrosscheckIds('RETURN')">Copiar returns</button>
+            <button class="btn" type="button" onclick="copyReturnCrosscheckIds('REFUND')">Copiar refunds</button>
+            <button class="btn" type="button" onclick="copyReturnCrosscheckIds('DIFF_PRODUCTS')">Copiar diferenças produtos</button>
+            <button class="btn" type="button" onclick="copyReturnCrosscheckIds('MISSING')">Copiar não encontrados</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>📊 Dashboard Returns</h2>
+          <div class="dash">
+            <div class="kpi retCross-kpi-card active" data-retcross-filter="ALL" onclick="setReturnCrosscheckDashboardFilter('ALL')" title="Ver todos os IDs"><p class="n" id="retCrossKpiTotal">0</p><p class="t">IDs cruzados</p><button class="retCrossCopyBtn" type="button" onclick="event.stopPropagation(); copyReturnCrosscheckIds('ALL')">Copiar IDs</button></div>
+            <div class="kpi retCross-kpi-card" data-retcross-filter="FOUND" onclick="setReturnCrosscheckDashboardFilter('FOUND')" title="Ver IDs encontrados em returns/refunds"><p class="n ok" id="retCrossKpiFound">0</p><p class="t">Encontrados</p><button class="retCrossCopyBtn" type="button" onclick="event.stopPropagation(); copyReturnCrosscheckIds('FOUND')">Copiar IDs</button></div>
+            <div class="kpi retCross-kpi-card" data-retcross-filter="RETURN" onclick="setReturnCrosscheckDashboardFilter('RETURN')" title="Ver IDs com return"><p class="n warn" id="retCrossKpiReturns">0</p><p class="t">Returns</p><button class="retCrossCopyBtn" type="button" onclick="event.stopPropagation(); copyReturnCrosscheckIds('RETURN')">Copiar IDs</button></div>
+            <div class="kpi retCross-kpi-card" data-retcross-filter="REFUND" onclick="setReturnCrosscheckDashboardFilter('REFUND')" title="Ver IDs com refund"><p class="n bad" id="retCrossKpiRefunds">0</p><p class="t">Refunds</p><button class="retCrossCopyBtn" type="button" onclick="event.stopPropagation(); copyReturnCrosscheckIds('REFUND')">Copiar IDs</button></div>
+          </div>
+          <div class="dash" style="margin-top:10px;">
+            <div class="kpi retCross-kpi-card" data-retcross-filter="MISSING" onclick="setReturnCrosscheckDashboardFilter('MISSING')" title="Ver IDs não encontrados"><p class="n bad" id="retCrossKpiMissing">0</p><p class="t">Não encontrados</p><button class="retCrossCopyBtn" type="button" onclick="event.stopPropagation(); copyReturnCrosscheckIds('MISSING')">Copiar IDs</button></div>
+            <div class="kpi retCross-kpi-card" data-retcross-filter="WITH_TRACKING" onclick="setReturnCrosscheckDashboardFilter('WITH_TRACKING')" title="Ver IDs com tracking"><p class="n" id="retCrossKpiWithTracking">0</p><p class="t">Com tracking</p><button class="retCrossCopyBtn" type="button" onclick="event.stopPropagation(); copyReturnCrosscheckIds('WITH_TRACKING')">Copiar IDs</button></div>
+            <div class="kpi retCross-kpi-card" data-retcross-filter="DUPLICATE" onclick="setReturnCrosscheckDashboardFilter('DUPLICATE')" title="Ver IDs duplicados no input"><p class="n" id="retCrossKpiDuplicates">0</p><p class="t">Duplicados input</p><button class="retCrossCopyBtn" type="button" onclick="event.stopPropagation(); copyReturnCrosscheckIds('DUPLICATE')">Copiar IDs</button></div>
+            <div class="kpi retCross-kpi-card" data-retcross-filter="DIFF_PRODUCTS" onclick="setReturnCrosscheckDashboardFilter('DIFF_PRODUCTS')" title="Ver IDs com diferenças entre embalamento e return/refund"><p class="n bad" id="retCrossKpiProductDiff">0</p><p class="t">Diferenças produtos</p><button class="retCrossCopyBtn" type="button" onclick="event.stopPropagation(); copyReturnCrosscheckIds('DIFF_PRODUCTS')">Copiar IDs</button></div>
+            <div class="kpi retCross-kpi-card" data-retcross-filter="ALL" onclick="setReturnCrosscheckDashboardFilter('ALL')" title="Limpar filtro e ver todos"><p class="n" style="font-size:14px; line-height:1.2;" id="retCrossLastRun">—</p><p class="t">Último cruzamento</p><button class="retCrossCopyBtn" type="button" onclick="event.stopPropagation(); copyReturnCrosscheckIds('ALL')">Copiar todos</button></div>
+          </div>
+
+          <div class="hr"></div>
+          <div class="split">
+            <div>
+              <label>Filtrar tabela</label>
+              <input id="retCrossFilterText" placeholder="ex: order_id, tracking, user, SKU..." oninput="renderReturnCrosscheckTable()">
+            </div>
+            <div>
+              <label>Mostrar</label>
+              <select id="retCrossFilterKind" onchange="renderReturnCrosscheckTable()">
+                <option value="ALL">Tudo</option>
+                <option value="FOUND">Só encontrados</option>
+                <option value="RETURN">Só returns</option>
+                <option value="REFUND">Só refunds</option>
+                <option value="MISSING">Só não encontrados</option>
+                <option value="WITH_TRACKING">Só com tracking</option>
+                <option value="DUPLICATE">Só duplicados input</option>
+                <option value="DIFF_PRODUCTS">Só diferenças produtos</option>
+              </select>
+            </div>
+          </div>
+          <div class="row" style="justify-content:space-between; margin-top:10px;">
+            <button class="btn" type="button" onclick="clearReturnCrosscheckFilters()">Limpar filtros</button>
+            <span id="retCrossActiveFilters" class="pill">Sem filtros</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card resultsCard" style="margin-top:14px;">
+        <div class="row" style="justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h2 style="margin-bottom:4px;">📋 Resultados - Crosscheck Returns</h2>
+            <div class="mini">Ordenado pela data da picagem de return/refund, do mais antigo para o mais recente. O sistema compara os produtos do PACKING com os produtos do RETURN/REFUND e ignora Warranty PT / Warranty ES.</div>
+          </div>
+          <span id="retCrossRowsShown" class="pill">0 linhas</span>
+        </div>
+        <div class="hr"></div>
+        <div class="tableWrap">
+          <table class="retCross-results-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Resultado</th>
+                <th>Return / Refund</th>
+                <th>Tracking / Batch</th>
+                <th>Data / User</th>
+                <th>Items</th>
+                <th>Comparação produtos</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="retCrossTbody">
+              <tr><td colspan="8" class="muted" style="padding:16px;">Cola IDs e clica em Cruzamento Returns.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div id="tabEnvios" class="tabPanel active">
@@ -1195,6 +1389,15 @@
     realtimeTimer: null,
     realtimeListening: false
   };
+
+  const retCrossState = {
+    rows: [],
+    lastRunAt: null,
+    running: false,
+    duplicates: [],
+    dashboardFilter: "ALL"
+  };
+
   const SEMPIC_DB_PATH = "ids_sem_picagens_transportadora/items";
   const SEMPIC_META_PATH = "ids_sem_picagens_transportadora/meta";
 
@@ -1393,6 +1596,8 @@
     const today = nowDate();
     $("startDate").value = dateAddDays(today, -1);
     $("endDate").value = today;
+    if($("retCrossStartDate")) $("retCrossStartDate").value = dateAddDays(today, -30);
+    if($("retCrossEndDate")) $("retCrossEndDate").value = today;
   }
   function renderCarrierSelect(){
     // dropdown (editar lista)
@@ -2467,7 +2672,7 @@
       const blob = new Blob([JSON.stringify(obj, null, 2)], {type:"application/json"});
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "crosscheck_listas_transportadoras.json";
+      a.download = "crosscheck_listas_expedicoes.json";
       a.click();
       URL.revokeObjectURL(a.href);
       setStatus("Listas exportadas ✅", "ok");
@@ -2901,23 +3106,515 @@
   // ===== Separadores =====
   function switchTab(tab){
     const crossPanel = $("tabCrosscheck");
+    const retCrossPanel = $("tabCrossReturns");
     const enviosPanel = $("tabEnvios");
     const semPicPanel = $("tabSemPic");
     const crossBtn = $("tabBtnCrosscheck");
+    const retCrossBtn = $("tabBtnCrossReturns");
     const enviosBtn = $("tabBtnEnvios");
     const semPicBtn = $("tabBtnSemPic");
     const showCross = tab === "crosscheck";
+    const showRetCross = tab === "crossreturns";
     const showSemPic = tab === "sempic";
-    const showEnvios = !showCross && !showSemPic;
+    const showEnvios = !showCross && !showRetCross && !showSemPic;
     if(crossPanel) crossPanel.classList.toggle("active", showCross);
+    if(retCrossPanel) retCrossPanel.classList.toggle("active", showRetCross);
     if(enviosPanel) enviosPanel.classList.toggle("active", showEnvios);
     if(semPicPanel) semPicPanel.classList.toggle("active", showSemPic);
     if(crossBtn) crossBtn.classList.toggle("active", showCross);
+    if(retCrossBtn) retCrossBtn.classList.toggle("active", showRetCross);
     if(enviosBtn) enviosBtn.classList.toggle("active", showEnvios);
     if(semPicBtn) semPicBtn.classList.toggle("active", showSemPic);
     if(showSemPic){ try{ renderSemPicCarrierSelect(); renderSemPicTable(); }catch(e){} }
+    if(showRetCross){ try{ renderReturnCrosscheckTable(); }catch(e){} }
   }
   window.switchTab = switchTab;
+
+  // ===== Crosscheck Returns / Refunds =====
+  function retCrossSetStatus(txt, kind=""){
+    const el = $("retCrossStatus");
+    if(!el) return;
+    el.textContent = txt;
+    el.style.borderColor = "";
+    if(kind==="ok") el.style.borderColor = "rgba(40,167,69,.55)";
+    if(kind==="bad") el.style.borderColor = "rgba(231,76,60,.55)";
+    if(kind==="warn") el.style.borderColor = "rgba(245,158,11,.55)";
+  }
+
+  function getReturnCrossIds(){
+    return uniq(parseIds($("retCrossIds") ? $("retCrossIds").value : "").map(normaliseOrderId).filter(Boolean));
+  }
+
+  function getReturnCrossDuplicateInfo(){
+    const all = parseIds($("retCrossIds") ? $("retCrossIds").value : "").map(normaliseOrderId).filter(Boolean);
+    const seen = new Set();
+    const duplicates = [];
+    all.forEach(id=>{
+      if(seen.has(id) && !duplicates.includes(id)) duplicates.push(id);
+      seen.add(id);
+    });
+    return {all, duplicates};
+  }
+
+  function showReturnCrossDuplicateWarning(info){
+    const box = $("retCrossDuplicateWarning");
+    if(!box) return;
+    const dups = info && info.duplicates ? info.duplicates : [];
+    retCrossState.duplicates = dups;
+    if(!dups.length){ box.style.display = "none"; box.innerHTML = ""; return; }
+    box.style.display = "block";
+    box.innerHTML = `⚠️ <b>${dups.length} ID(s) duplicado(s)</b> na caixa: <span class="mono">${escapeHtml(dups.slice(0,30).join(", "))}${dups.length > 30 ? " ..." : ""}</span>. O sistema cruza uma vez por ID.`;
+  }
+
+  function retCrossModeAllowed(record){
+    const mode = String(record && record.mode || "").toUpperCase();
+    const choice = $("retCrossMode") ? $("retCrossMode").value : "BOTH";
+    const isReturn = mode.includes("RETURN");
+    const isRefund = mode.includes("REFUND");
+    if(choice === "RETURN") return isReturn;
+    if(choice === "REFUND") return isRefund;
+    return isReturn || isRefund;
+  }
+
+  function retCrossDateAllowed(record){
+    const dc = fmt(record && record.dateClean || "") || extractDateFromDateTime(record && record.dateTime || "");
+    const start = $("retCrossStartDate") ? $("retCrossStartDate").value : "";
+    const end = $("retCrossEndDate") ? $("retCrossEndDate").value : "";
+    if(start && dc && dc < start) return false;
+    if(end && dc && dc > end) return false;
+    return true;
+  }
+
+  function retCrossLatest(records, predicate){
+    const arr = (records || []).filter(predicate);
+    return arr.length ? arr[arr.length - 1] : null;
+  }
+
+  function retCrossNormalizeItemName(item){
+    let s = String(item || "").trim();
+    if(!s) return "";
+    // remove quantidades finais comuns: " x1", " X 2", "x3"
+    s = s.replace(/\s+[xX]\s*\d+\s*$/g, "").trim();
+    s = s.replace(/\s+/g, " ");
+    return s.toUpperCase();
+  }
+
+  function retCrossIsIgnoredWarranty(item){
+    const n = retCrossNormalizeItemName(item);
+    return /\bWARRANTY\s*(PT|ES)\b/i.test(n);
+  }
+
+  function retCrossItemQtyAndName(item){
+    let raw = String(item || "").trim();
+    let qty = 1;
+    const m = raw.match(/\s+[xX]\s*(\d+)\s*$/);
+    if(m){
+      qty = Math.max(1, parseInt(m[1], 10) || 1);
+      raw = raw.replace(/\s+[xX]\s*\d+\s*$/, "").trim();
+    }
+    return {name: raw, key: retCrossNormalizeItemName(raw), qty};
+  }
+
+  function retCrossParseItemsForCompare(itemsStr){
+    const counts = {};
+    const display = {};
+    const ignored = [];
+    String(itemsStr || "")
+      .split("|")
+      .map(x=>x.trim())
+      .filter(Boolean)
+      .forEach(part=>{
+        if(retCrossIsIgnoredWarranty(part)){ ignored.push(part); return; }
+        const parsed = retCrossItemQtyAndName(part);
+        if(!parsed.key) return;
+        counts[parsed.key] = (counts[parsed.key] || 0) + parsed.qty;
+        if(!display[parsed.key]) display[parsed.key] = parsed.name;
+      });
+    return {counts, display, ignored};
+  }
+
+  function retCrossCompareItems(packingItemsStr, returnItemsStr){
+    const packing = retCrossParseItemsForCompare(packingItemsStr);
+    const returned = retCrossParseItemsForCompare(returnItemsStr);
+    const missing = [];
+    const extra = [];
+    const keys = Array.from(new Set([...Object.keys(packing.counts), ...Object.keys(returned.counts)])).sort();
+    keys.forEach(k=>{
+      const pQty = packing.counts[k] || 0;
+      const rQty = returned.counts[k] || 0;
+      if(pQty > rQty) missing.push({item: packing.display[k] || returned.display[k] || k, qty: pQty - rQty});
+      if(rQty > pQty) extra.push({item: returned.display[k] || packing.display[k] || k, qty: rQty - pQty});
+    });
+    return {
+      missing,
+      extra,
+      hasDiff: missing.length > 0 || extra.length > 0,
+      ignoredWarranty: [...packing.ignored, ...returned.ignored],
+      packingCount: Object.values(packing.counts).reduce((a,b)=>a+b,0),
+      returnCount: Object.values(returned.counts).reduce((a,b)=>a+b,0)
+    };
+  }
+
+  function retCrossDiffListToText(list){
+    return (list || []).map(x=>`${x.item} x${x.qty}`).join(" | ");
+  }
+
+  function retCrossBuildComparison(packingRec, returnRec){
+    if(!returnRec) return {status:"NO_RETURN", hasDiff:false, summary:"Sem return/refund para comparar.", missing:[], extra:[], ignoredWarranty:[]};
+    if(!packingRec) return {status:"NO_PACKING", hasDiff:false, summary:"Sem PACKING para comparar.", missing:[], extra:[], ignoredWarranty:[]};
+    const cmp = retCrossCompareItems(packingRec.items || "", returnRec.items || "");
+    let summary = "Produtos iguais";
+    if(cmp.hasDiff){
+      const parts = [];
+      if(cmp.missing.length) parts.push("Falta no return/refund: " + retCrossDiffListToText(cmp.missing));
+      if(cmp.extra.length) parts.push("Extra no return/refund: " + retCrossDiffListToText(cmp.extra));
+      summary = parts.join(" | ");
+    }
+    if(cmp.ignoredWarranty && cmp.ignoredWarranty.length){
+      summary += " (Warranty PT/ES ignorado)";
+    }
+    return Object.assign({status: cmp.hasDiff ? "DIFF" : "MATCH", summary}, cmp);
+  }
+
+  function retCrossFindPackingRecord(records, returnRec){
+    const packs = (records || []).filter(r=>String(r.mode || "").toUpperCase().includes("PACK"));
+    if(!packs.length) return null;
+    const retDt = returnRec && returnRec.dateTime ? String(returnRec.dateTime) : "";
+    const before = retDt ? packs.filter(p=>!p.dateTime || String(p.dateTime) <= retDt) : packs;
+    const candidates = before.length ? before : packs;
+    return candidates[candidates.length - 1];
+  }
+
+  function buildReturnCrossRow(id, records){
+    const rr = (records || []).filter(r=>retCrossModeAllowed(r) && retCrossDateAllowed(r));
+    const latest = retCrossLatest(rr, r=>true);
+    const ret = retCrossLatest(rr, r=>String(r.mode || "").toUpperCase().includes("RETURN"));
+    const refund = retCrossLatest(rr, r=>String(r.mode || "").toUpperCase().includes("REFUND"));
+    const found = !!latest;
+    const packingRecord = retCrossFindPackingRecord(records || [], latest);
+    const comparison = retCrossBuildComparison(packingRecord, latest);
+    let result = found ? "FOUND" : "MISSING";
+    let label = "Não encontrado";
+    let badgeClass = "missing";
+    if(refund){ label = ret ? "Return + Refund" : "Refund"; badgeClass = "refund"; }
+    else if(ret){ label = "Return"; badgeClass = "return"; }
+    else if(found){ label = "Encontrado"; badgeClass = "ok"; }
+    return {
+      id,
+      source: fmt($("retCrossSource") ? $("retCrossSource").value : ""),
+      found,
+      result,
+      label,
+      badgeClass,
+      hasReturn: !!ret,
+      hasRefund: !!refund,
+      hasProductDiff: !!(comparison && comparison.hasDiff),
+      comparison,
+      packingRecord,
+      comparedReturnRecord: latest,
+      packingItems: fmt(packingRecord && packingRecord.items || ""),
+      returnItems: fmt(latest && latest.items || ""),
+      mode: fmt(latest && latest.mode || ""),
+      tracking: fmt(latest && latest.tracking || ""),
+      carrier: fmt(latest && latest.carrier || ""),
+      batchKey: fmt(latest && latest.batchKey || ""),
+      batchName: fmt(latest && latest.batchName || ""),
+      dateTime: fmt(latest && latest.dateTime || ""),
+      dateClean: fmt(latest && latest.dateClean || ""),
+      user: fmt(latest && latest.user || ""),
+      items: fmt(latest && latest.items || ""),
+      records: records || [],
+      matchedRecords: rr
+    };
+  }
+
+  function sortReturnCrossRows(rows){
+    const maxDate = "9999-99-99 99:99:99";
+    return (rows || []).slice().sort((a,b)=>{
+      const ad = a.dateTime || maxDate;
+      const bd = b.dateTime || maxDate;
+      if(ad !== bd) return ad.localeCompare(bd);
+      return String(a.id || "").localeCompare(String(b.id || ""), undefined, {numeric:true});
+    });
+  }
+
+  async function runReturnCrosscheck(){
+    if(retCrossState.running){ retCrossSetStatus("Cruzamento já em curso..."); return; }
+    if(!auth.currentUser){ retCrossSetStatus("Faz login primeiro.", "bad"); openLogin(); return; }
+    const ids = getReturnCrossIds();
+    const info = getReturnCrossDuplicateInfo();
+    showReturnCrossDuplicateWarning(info);
+    if(!ids.length){ retCrossSetStatus("Cola pelo menos 1 order_id.", "bad"); return; }
+    retCrossState.running = true;
+    const btn = $("btnRetCrossRun"); if(btn) btn.disabled = true;
+    retCrossState.rows = [];
+    renderReturnCrosscheckTable();
+    try{
+      const rows = [];
+      const useHistory = $("retCrossHistoryMode") && $("retCrossHistoryMode").value === "YES";
+      const chunk = 20;
+      for(let i=0; i<ids.length; i+=chunk){
+        retCrossSetStatus(`A cruzar ${Math.min(i + chunk, ids.length)} / ${ids.length}...`);
+        const slice = ids.slice(i, i + chunk);
+        const partial = await Promise.all(slice.map(async id=>{
+          let records = await fetchRegistosForOrderId(id).catch(()=>[]);
+          if(useHistory){
+            const hist = await fetchHistoryFallbackForEnvio(id).catch(()=>[]);
+            records = mergeEnviosRecords(records, hist);
+            records = await enrichEnviosRecordsWithBatchInfo(records);
+          }
+          return buildReturnCrossRow(id, records);
+        }));
+        rows.push(...partial);
+        retCrossState.rows = sortReturnCrossRows(rows);
+        updateReturnCrosscheckKPIs();
+        renderReturnCrosscheckTable();
+      }
+      retCrossState.rows = sortReturnCrossRows(rows);
+      retCrossState.lastRunAt = new Date();
+      updateReturnCrosscheckKPIs();
+      renderReturnCrosscheckTable();
+      retCrossSetStatus("Cruzamento concluído ✅", "ok");
+    }catch(e){
+      console.error(e);
+      retCrossSetStatus("Erro ao cruzar returns/refunds.", "bad");
+    }finally{
+      retCrossState.running = false;
+      if(btn) btn.disabled = false;
+    }
+  }
+  window.runReturnCrosscheck = runReturnCrosscheck;
+
+  function retCrossPassFilters(r){
+    const kind = $("retCrossFilterKind") ? $("retCrossFilterKind").value : "ALL";
+    if(kind === "FOUND" && !r.found) return false;
+    if(kind === "RETURN" && !r.hasReturn) return false;
+    if(kind === "REFUND" && !r.hasRefund) return false;
+    if(kind === "MISSING" && r.found) return false;
+    if(kind === "WITH_TRACKING" && !r.tracking) return false;
+    if(kind === "DUPLICATE" && !(retCrossState.duplicates || []).includes(r.id)) return false;
+    if(kind === "DIFF_PRODUCTS" && !r.hasProductDiff) return false;
+    const q = String($("retCrossFilterText") ? $("retCrossFilterText").value : "").trim().toLowerCase();
+    if(!q) return true;
+    const hay = [r.id, r.source, r.label, r.mode, r.tracking, r.carrier, r.batchKey, r.batchName, r.dateTime, r.user, r.items, r.packingItems, r.returnItems, r.comparison && r.comparison.summary].join(" ").toLowerCase();
+    return hay.includes(q);
+  }
+
+  function updateReturnCrosscheckActiveFilters(){
+    const kind = $("retCrossFilterKind") ? $("retCrossFilterKind").value : "ALL";
+    const q = String($("retCrossFilterText") ? $("retCrossFilterText").value : "").trim();
+    const parts = [];
+    const label = retCrossFilterLabel(kind);
+    if(kind && kind !== "ALL") parts.push("Mostrar: " + label);
+    if(q) parts.push("Texto: " + q);
+    if($("retCrossActiveFilters")) $("retCrossActiveFilters").textContent = parts.length ? ("Filtro ativo → " + parts.join(" | ")) : "Sem filtros";
+    updateReturnCrosscheckKpiActive();
+  }
+
+  function retCrossFilterLabel(kind){
+    const labels = {
+      ALL: "Tudo",
+      FOUND: "Encontrados",
+      RETURN: "Returns",
+      REFUND: "Refunds",
+      MISSING: "Não encontrados",
+      WITH_TRACKING: "Com tracking",
+      DUPLICATE: "Duplicados input",
+      DIFF_PRODUCTS: "Diferenças produtos"
+    };
+    return labels[kind] || kind || "Tudo";
+  }
+
+  function getReturnCrosscheckRowsForKind(kind){
+    let rows = sortReturnCrossRows(retCrossState.rows || []);
+    if(kind === "FOUND") rows = rows.filter(r=>r.found);
+    else if(kind === "RETURN") rows = rows.filter(r=>r.hasReturn);
+    else if(kind === "REFUND") rows = rows.filter(r=>r.hasRefund);
+    else if(kind === "MISSING") rows = rows.filter(r=>!r.found);
+    else if(kind === "WITH_TRACKING") rows = rows.filter(r=>!!r.tracking);
+    else if(kind === "DUPLICATE") rows = rows.filter(r=>(retCrossState.duplicates || []).includes(r.id));
+    else if(kind === "DIFF_PRODUCTS") rows = rows.filter(r=>!!r.hasProductDiff);
+    return rows;
+  }
+
+  function updateReturnCrosscheckKpiActive(){
+    const kind = $("retCrossFilterKind") ? $("retCrossFilterKind").value : "ALL";
+    document.querySelectorAll("#tabCrossReturns .retCross-kpi-card").forEach(card=>{
+      const filter = card.getAttribute("data-retcross-filter") || "ALL";
+      card.classList.toggle("active", filter === kind);
+    });
+  }
+
+  function setReturnCrosscheckDashboardFilter(kind){
+    kind = kind || "ALL";
+    const sel = $("retCrossFilterKind");
+    if(sel){
+      const hasOption = Array.from(sel.options || []).some(o=>o.value === kind);
+      sel.value = hasOption ? kind : "ALL";
+    }
+    retCrossState.dashboardFilter = kind;
+    renderReturnCrosscheckTable();
+    const rows = getReturnCrosscheckRowsForKind(kind);
+    retCrossSetStatus(`${retCrossFilterLabel(kind)}: ${rows.length} ID(s)`, rows.length ? "ok" : "warn");
+  }
+  window.setReturnCrosscheckDashboardFilter = setReturnCrosscheckDashboardFilter;
+
+  function updateReturnCrosscheckKPIs(){
+    const rows = retCrossState.rows || [];
+    const total = rows.length;
+    const found = rows.filter(r=>r.found).length;
+    const returns = rows.filter(r=>r.hasReturn).length;
+    const refunds = rows.filter(r=>r.hasRefund).length;
+    const missing = rows.filter(r=>!r.found).length;
+    const tracking = rows.filter(r=>!!r.tracking).length;
+    const productDiff = rows.filter(r=>!!r.hasProductDiff).length;
+    if($("retCrossKpiTotal")) $("retCrossKpiTotal").textContent = total;
+    if($("retCrossKpiFound")) $("retCrossKpiFound").textContent = found;
+    if($("retCrossKpiReturns")) $("retCrossKpiReturns").textContent = returns;
+    if($("retCrossKpiRefunds")) $("retCrossKpiRefunds").textContent = refunds;
+    if($("retCrossKpiMissing")) $("retCrossKpiMissing").textContent = missing;
+    if($("retCrossKpiWithTracking")) $("retCrossKpiWithTracking").textContent = tracking;
+    if($("retCrossKpiDuplicates")) $("retCrossKpiDuplicates").textContent = (retCrossState.duplicates || []).length;
+    if($("retCrossKpiProductDiff")) $("retCrossKpiProductDiff").textContent = productDiff;
+    if($("retCrossLastRun")) $("retCrossLastRun").textContent = retCrossState.lastRunAt ? retCrossState.lastRunAt.toLocaleString() : "—";
+  }
+
+  function renderReturnCrosscheckTable(){
+    updateReturnCrosscheckActiveFilters();
+    updateReturnCrosscheckKPIs();
+    const tbody = $("retCrossTbody"); if(!tbody) return;
+    const rows = sortReturnCrossRows((retCrossState.rows || []).filter(retCrossPassFilters));
+    if($("retCrossRowsShown")) $("retCrossRowsShown").textContent = rows.length + " linhas";
+    if(!rows.length){
+      tbody.innerHTML = `<tr><td colspan="8" class="muted" style="padding:16px;">Sem linhas para mostrar.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(r=>{
+      const badge = `<span class="retCross-badge ${escapeHtml(r.badgeClass)}">${escapeHtml(r.label)}</span>`;
+      const modeLine = r.mode ? `<b>${escapeHtml(r.mode)}</b>` : `<span class="muted">-</span>`;
+      const track = r.tracking ? `<span class="mono">${escapeHtml(r.tracking)}</span>` : `<span class="muted">-</span>`;
+      const batch = r.batchName || r.batchKey ? `<span class="envio-subline">Batch: ${escapeHtml(r.batchName || r.batchKey)}</span>` : `<span class="envio-subline">Batch: -</span>`;
+      const carrier = r.carrier ? `<span class="envio-subline">Transportadora: ${escapeHtml(r.carrier)}</span>` : `<span class="envio-subline">Transportadora: -</span>`;
+      const dtLine = r.dateTime ? `<span class="mono">${escapeHtml(r.dateTime)}</span>` : `<span class="muted">-</span>`;
+      const user = r.user ? `<span class="envio-subline">User: ${escapeHtml(r.user)}</span>` : `<span class="envio-subline">User: -</span>`;
+      const items = r.items ? `<div class="envio-items-cell">${escapeHtml(r.items)}</div>` : `<span class="envio-items-empty">Sem items</span>`;
+      let cmpClass = "neutral";
+      let cmpBadge = "Sem comparação";
+      let cmpText = r.comparison && r.comparison.summary ? r.comparison.summary : "Sem comparação";
+      if(r.comparison && r.comparison.status === "MATCH"){ cmpClass = "ok"; cmpBadge = "OK"; }
+      if(r.comparison && r.comparison.status === "DIFF"){ cmpClass = "diff"; cmpBadge = "DIFERENÇA"; }
+      if(r.comparison && r.comparison.status === "NO_PACKING"){ cmpClass = "neutral"; cmpBadge = "Sem PACKING"; }
+      if(!r.found){ cmpClass = "neutral"; cmpBadge = "Sem return/refund"; cmpText = "Sem return/refund para comparar."; }
+      const cmpHtml = `<span class="retCross-badge ${cmpClass === "diff" ? "diff" : (cmpClass === "ok" ? "match" : "neutral")}">${cmpBadge}</span><div class="retCrossDiffBox ${cmpClass === "ok" ? "ok" : (cmpClass === "neutral" ? "neutral" : "")}">${escapeHtml(cmpText)}</div>`;
+      return `<tr>
+        <td class="mono"><b>${escapeHtml(r.id)}</b>${r.source ? `<span class="envio-subline">${escapeHtml(r.source)}</span>` : ""}</td>
+        <td>${badge}</td>
+        <td>${modeLine}<span class="envio-subline">Registos: ${(r.matchedRecords || []).length}</span></td>
+        <td>${track}${batch}${carrier}</td>
+        <td>${dtLine}${user}</td>
+        <td>${items}</td>
+        <td>${cmpHtml}</td>
+        <td><div class="btn-row"><button class="btn-mini info" type="button" onclick="openReturnCrosscheckDetail('${escapeJs(r.id)}')">Histórico</button></div></td>
+      </tr>`;
+    }).join("");
+  }
+  window.renderReturnCrosscheckTable = renderReturnCrosscheckTable;
+
+  function clearReturnCrosscheckFilters(){
+    if($("retCrossFilterText")) $("retCrossFilterText").value = "";
+    if($("retCrossFilterKind")) $("retCrossFilterKind").value = "ALL";
+    renderReturnCrosscheckTable();
+  }
+  window.clearReturnCrosscheckFilters = clearReturnCrosscheckFilters;
+
+  function clearReturnCrosscheckInput(){
+    if($("retCrossIds")) $("retCrossIds").value = "";
+    showReturnCrossDuplicateWarning({duplicates:[]});
+    retCrossSetStatus("Caixa limpa.", "ok");
+  }
+  window.clearReturnCrosscheckInput = clearReturnCrosscheckInput;
+
+  async function openReturnCrosscheckDetail(id){
+    id = normaliseOrderId(id);
+    const row = (retCrossState.rows || []).find(r=>r.id===id) || null;
+    $("detailTitle").textContent = `Crosscheck Returns - ${id}`;
+    $("detailBody").innerHTML = `<div class="muted">A carregar histórico completo...</div>`;
+    $("detailModal").style.display = "flex";
+    let records = row && row.records ? row.records : [];
+    try{ records = await fetchAllHistoryForEnvio(id); }catch(e){ console.warn(e); }
+    const filtered = records.filter(r=>retCrossModeAllowed(r));
+    $("detailBody").innerHTML = `
+      <div>
+        <div class="tag"><b>ID:</b> <span class="mono">${escapeHtml(id)}</span></div>
+        ${row ? `<div class="tag"><b>Resultado:</b> ${escapeHtml(row.label)}</div>` : ""}
+        ${row && row.dateTime ? `<div class="tag"><b>Última picagem:</b> <span class="mono">${escapeHtml(row.dateTime)}</span></div>` : ""}
+      </div>
+      <div class="card" style="padding:12px; margin-top:10px;">
+        <h2 style="margin:0 0 8px 0;">Comparação produtos: PACKING vs RETURN/REFUND</h2>
+        ${row ? renderReturnCrosscheckComparisonDetail(row) : '<div class="muted">Sem comparação disponível.</div>'}
+      </div>
+      <div class="card" style="padding:12px; margin-top:10px;">
+        <h2 style="margin:0 0 8px 0;">Picagem PACKING usada na comparação</h2>
+        ${row && row.packingRecord ? renderEnviosRecordsTable([row.packingRecord]) : '<div class="muted">Sem PACKING encontrado para comparar.</div>'}
+      </div>
+      <div class="card" style="padding:12px; margin-top:10px;">
+        <h2 style="margin:0 0 8px 0;">Picagens RETURN / REFUND encontradas</h2>
+        ${renderEnviosRecordsTable(filtered)}
+      </div>
+      <div class="card" style="padding:12px; margin-top:10px;">
+        <h2 style="margin:0 0 8px 0;">Histórico completo do ID</h2>
+        ${renderEnviosRecordsTable(records)}
+      </div>`;
+  }
+  window.openReturnCrosscheckDetail = openReturnCrosscheckDetail;
+
+  function renderReturnCrosscheckComparisonDetail(row){
+    const cmp = row && row.comparison ? row.comparison : null;
+    if(!cmp) return '<div class="muted">Sem comparação disponível.</div>';
+    const cls = cmp.status === "DIFF" ? "diff" : (cmp.status === "MATCH" ? "match" : "neutral");
+    const title = cmp.status === "DIFF" ? "⚠️ Diferenças encontradas" : (cmp.status === "MATCH" ? "✅ Produtos iguais" : "ℹ️ Sem comparação completa");
+    const missing = retCrossDiffListToText(cmp.missing || []);
+    const extra = retCrossDiffListToText(cmp.extra || []);
+    const ignored = (cmp.ignoredWarranty || []).length ? `<div class="mini" style="margin-top:8px;"><b>Ignorado:</b> ${escapeHtml((cmp.ignoredWarranty || []).join(" | "))}</div>` : "";
+    return `
+      <div><span class="retCross-badge ${cls}">${title}</span></div>
+      <div class="retCrossDiffBox ${cmp.status === "MATCH" ? "ok" : (cmp.status !== "DIFF" ? "neutral" : "")}">${escapeHtml(cmp.summary || "")}</div>
+      <div class="enviosDetailGrid">
+        <div class="card" style="padding:10px; margin-top:10px;"><h2 style="margin:0 0 6px 0; font-size:14px;">Produtos PACKING</h2><div class="envio-items-cell">${escapeHtml(row.packingItems || "Sem items")}</div></div>
+        <div class="card" style="padding:10px; margin-top:10px;"><h2 style="margin:0 0 6px 0; font-size:14px;">Produtos RETURN/REFUND</h2><div class="envio-items-cell">${escapeHtml(row.returnItems || "Sem items")}</div></div>
+      </div>
+      ${missing ? `<div class="mini" style="margin-top:8px;"><b>Falta no return/refund:</b> ${escapeHtml(missing)}</div>` : ""}
+      ${extra ? `<div class="mini" style="margin-top:8px;"><b>Extra no return/refund:</b> ${escapeHtml(extra)}</div>` : ""}
+      ${ignored}`;
+  }
+  window.renderReturnCrosscheckComparisonDetail = renderReturnCrosscheckComparisonDetail;
+
+  function exportReturnCrosscheckCsv(){
+    const rows = sortReturnCrossRows(retCrossState.rows || []);
+    if(!rows.length){ retCrossSetStatus("Não há resultados para exportar.", "bad"); return; }
+    const header = ["order_id","origem_lista","resultado","return","refund","diferenca_produtos","resumo_diferencas","falta_no_return_refund","extra_no_return_refund","items_packing","items_return_refund","modo_ultima_picagem","data_picagem","tracking","transportadora","batch","user","items","registos_return_refund"];
+    const delimiter = ";";
+    const lines = [header.map(csvCell).join(delimiter)];
+    rows.forEach(r=>lines.push([r.id,r.source,r.found ? "ENCONTRADO" : "NAO_ENCONTRADO",enviosYesNo(r.hasReturn),enviosYesNo(r.hasRefund),enviosYesNo(r.hasProductDiff),r.comparison && r.comparison.summary || "",retCrossDiffListToText(r.comparison && r.comparison.missing || []),retCrossDiffListToText(r.comparison && r.comparison.extra || []),r.packingItems,r.returnItems,r.mode,r.dateTime,r.tracking,r.carrier,r.batchName || r.batchKey,r.user,r.items,(r.matchedRecords || []).length].map(csvCell).join(delimiter)));
+    const blob = new Blob(["\ufeff" + lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "crosscheck_returns_refunds.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    retCrossSetStatus("CSV exportado ✅", "ok");
+  }
+  window.exportReturnCrosscheckCsv = exportReturnCrosscheckCsv;
+
+  async function copyReturnCrosscheckIds(kind){
+    kind = kind || "ALL";
+    const rows = getReturnCrosscheckRowsForKind(kind);
+    const ids = rows.map(r=>r.id);
+    if(!ids.length){ retCrossSetStatus(`Não há IDs para copiar em ${retCrossFilterLabel(kind)}.`, "bad"); return; }
+    try{ await navigator.clipboard.writeText(ids.join("\n")); retCrossSetStatus(`${ids.length} ID(s) copiados — ${retCrossFilterLabel(kind)} ✅`, "ok"); }
+    catch(e){ const tmp=document.createElement("textarea"); tmp.value=ids.join("\n"); document.body.appendChild(tmp); tmp.select(); document.execCommand("copy"); tmp.remove(); retCrossSetStatus(`${ids.length} ID(s) copiados — ${retCrossFilterLabel(kind)} ✅`, "ok"); }
+  }
+  window.copyReturnCrosscheckIds = copyReturnCrosscheckIds;
 
   // ===== Envios em Análise =====
   function normaliseOrderId(v){
@@ -4833,6 +5530,1113 @@ Queres continuar?`);
     updateSemPicKPIs();
     renderSemPicTable();
   }catch(e){}
+  try{
+    const retEl = $("retCrossIds");
+    if(retEl){
+      retEl.addEventListener("input", ()=>showReturnCrossDuplicateWarning(getReturnCrossDuplicateInfo()));
+      retEl.addEventListener("blur", ()=>showReturnCrossDuplicateWarning(getReturnCrossDuplicateInfo()));
+    }
+    updateReturnCrosscheckKPIs();
+    renderReturnCrosscheckTable();
+  }catch(e){}
+
+
+  // ===== PATCH: Crosscheck Returns persistente por transportadora =====
+  // Este bloco acrescenta:
+  // - seleção de transportadora(s) antes de colar IDs;
+  // - guardado automático em Firebase das listas "returns com diferença de produtos" e "sem returns/refund";
+  // - listagem filtrável por transportadora;
+  // - botão "Marcar como certo" para retirar um ID da lista de diferenças;
+  // - atualização automática quando um ID em falta aparece em RETURNS/REFUNDS.
+  const RETCROSS_DIFF_DB_PATH = "returns_com_diferenca_produtos/items";
+  const RETCROSS_RESOLVED_DB_PATH = "returns_com_diferenca_produtos/resolvidos";
+  const RETCROSS_MISSING_DB_PATH = "sem_returns_refund/items";
+
+  const retMonitorState = {
+    diffItems: {},
+    missingItems: {},
+    resolvedItems: {},
+    listFilter: "DIFF",
+    carrierFilter: "ALL",
+    realtimeTimer: null,
+    monitorListening: false,
+    registosRef: null,
+    registosAddedCb: null,
+    registosChangedCb: null,
+    registosSeen: new Set()
+  };
+
+  function retCrossMonitorKey(id, carrier){
+    return safeKey(carrier || "SEM_TRANSPORTADORA") + "__" + enviosItemKey(id);
+  }
+
+  function retCrossNowIso(){ return new Date().toISOString(); }
+
+  function retCrossSelectedCarriers(){
+    const sel = $("retCrossCarrierMulti");
+    const manual = $("retCrossCarrierManual");
+    let carriers = [];
+    if(sel){ carriers = Array.from(sel.selectedOptions || []).map(o=>String(o.value || "").trim().toUpperCase()).filter(Boolean); }
+    if(manual && String(manual.value || "").trim()) carriers.push(String(manual.value || "").trim().toUpperCase());
+    return Array.from(new Set(carriers)).sort();
+  }
+
+  function retCrossCarrierLabel(carriers){
+    const arr = Array.isArray(carriers) ? carriers : (carriers ? [carriers] : []);
+    return arr.map(x=>String(x||"").trim().toUpperCase()).filter(Boolean).join(" + ");
+  }
+
+  function retCrossDiffSignature(row){
+    const cmp = row && row.comparison ? row.comparison : {};
+    return [
+      retCrossDiffListToText(cmp.missing || []),
+      retCrossDiffListToText(cmp.extra || []),
+      String(row && row.packingItems || ""),
+      String(row && row.returnItems || ""),
+      String(row && row.dateTime || ""),
+      String(row && row.mode || "")
+    ].join("||");
+  }
+
+  function retCrossResolvedStillApplies(key, signature){
+    const item = retMonitorState.resolvedItems && retMonitorState.resolvedItems[key];
+    return !!(item && item.diffSignature && signature && item.diffSignature === signature);
+  }
+
+  function retCrossItemFromSnapshot(key, item, status){
+    item = item || {};
+    return Object.assign({}, item, {
+      _key: key,
+      monitorStatus: status,
+      id: normaliseOrderId(item.id || ""),
+      carrier: String(item.carrier || item.selectedCarrier || "").trim().toUpperCase()
+    });
+  }
+
+  function retCrossAllMonitorItems(){
+    const diff = Object.entries(retMonitorState.diffItems || {}).map(([k,v])=>retCrossItemFromSnapshot(k,v,"DIFF"));
+    const missing = Object.entries(retMonitorState.missingItems || {}).map(([k,v])=>retCrossItemFromSnapshot(k,v,"MISSING"));
+    return [...diff, ...missing].filter(x=>x.id && x.carrier);
+  }
+
+  function retCrossTrackedIds(){
+    return Array.from(new Set(retCrossAllMonitorItems().map(x=>x.id).filter(Boolean)));
+  }
+
+  function retCrossMonitorSort(items){
+    const max = "9999-99-99 99:99:99";
+    return (items || []).slice().sort((a,b)=>{
+      const ac = String(a.carrier || "");
+      const bc = String(b.carrier || "");
+      if(ac !== bc) return ac.localeCompare(bc);
+      const ad = a.dateTime || a.lastReturnRefundDate || a.lastCheckedAt || a.createdAt || max;
+      const bd = b.dateTime || b.lastReturnRefundDate || b.lastCheckedAt || b.createdAt || max;
+      if(ad !== bd) return String(ad).localeCompare(String(bd));
+      return String(a.id || "").localeCompare(String(b.id || ""), undefined, {numeric:true});
+    });
+  }
+
+  function renderReturnCrossCarrierSelect(){
+    const sel = $("retCrossCarrierMulti");
+    if(!sel) return;
+    const previous = new Set(Array.from(sel.selectedOptions || []).map(o=>o.value));
+    const carriers = Array.from(new Set([...(state.carriers || []), ...retCrossAllMonitorItems().map(x=>x.carrier)].filter(Boolean).map(x=>String(x).trim().toUpperCase()))).sort();
+    sel.innerHTML = "";
+    carriers.forEach(c=>{
+      const opt = document.createElement("option");
+      opt.value = c;
+      opt.textContent = c;
+      opt.selected = previous.has(c);
+      sel.appendChild(opt);
+    });
+    retCrossUpdateCarrierPreview();
+    retCrossUpdateCarrierFilters();
+  }
+  window.renderReturnCrossCarrierSelect = renderReturnCrossCarrierSelect;
+
+  function retCrossUpdateCarrierPreview(){
+    const box = $("retCrossCarrierPreview");
+    if(!box) return;
+    const carriers = retCrossSelectedCarriers();
+    box.innerHTML = carriers.length
+      ? `IDs vão ficar ligados a: <b>${escapeHtml(carriers.join(" + "))}</b>`
+      : `<span class="bad">Seleciona pelo menos uma transportadora antes de cruzar.</span>`;
+  }
+  window.retCrossUpdateCarrierPreview = retCrossUpdateCarrierPreview;
+
+  function retCrossSetSelectOptions(selectId, carriers){
+    const el = $(selectId);
+    if(!el) return;
+    const prev = el.value || "ALL";
+    el.innerHTML = `<option value="ALL">Todas as transportadoras</option>` + carriers.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+    el.value = carriers.includes(prev) ? prev : "ALL";
+  }
+
+  function retCrossUpdateCarrierFilters(){
+    const fromRows = (retCrossState.rows || []).flatMap(r=>Array.isArray(r.selectedCarriers) ? r.selectedCarriers : (r.selectedCarrier ? [r.selectedCarrier] : []));
+    const fromMonitor = retCrossAllMonitorItems().map(x=>x.carrier);
+    const carriers = Array.from(new Set([...fromRows, ...fromMonitor, ...(state.carriers || [])].filter(Boolean).map(x=>String(x).trim().toUpperCase()))).sort();
+    retCrossSetSelectOptions("retCrossCarrierFilter", carriers);
+    retCrossSetSelectOptions("retMonitorCarrierFilter", carriers);
+  }
+
+  function injectReturnCrosscheckPersistentUI(){
+    // Bloco transportadoras antes da caixa de IDs
+    const idsBox = $("retCrossIds");
+    if(idsBox && !$("retCrossCarrierBlock")){
+      const block = document.createElement("div");
+      block.id = "retCrossCarrierBlock";
+      block.innerHTML = `
+        <div class="hr"></div>
+        <h2>Transportadora(s) desta lista</h2>
+        <div class="notice" style="background:#f8fafc; border-left:6px solid var(--accent);">
+          Antes de colares os IDs, seleciona a transportadora ou transportadoras a que eles pertencem. Essa informação fica guardada nas listagens automáticas.
+        </div>
+        <label>Selecionar transportadora(s)</label>
+        <select id="retCrossCarrierMulti" multiple size="6" onchange="retCrossUpdateCarrierPreview()"></select>
+        <div class="split" style="margin-top:10px;">
+          <div>
+            <label>Transportadora manual</label>
+            <input id="retCrossCarrierManual" placeholder="Ex: DHL" oninput="retCrossUpdateCarrierPreview()">
+          </div>
+          <div>
+            <label>Ações</label>
+            <div class="row">
+              <button class="btn" type="button" onclick="retCrossSelectAllCarriers()">Selecionar todas</button>
+              <button class="btn" type="button" onclick="retCrossClearCarriers()">Limpar</button>
+            </div>
+          </div>
+        </div>
+        <div id="retCrossCarrierPreview" class="enviosSaveHint"></div>`;
+      const labelIds = idsBox.previousElementSibling;
+      (labelIds && labelIds.parentNode ? labelIds.parentNode : idsBox.parentNode).insertBefore(block, labelIds || idsBox);
+    }
+
+    // Filtro por transportadora no dashboard
+    const filterWrap = $("retCrossFilterKind") && $("retCrossFilterKind").closest(".split");
+    if(filterWrap && !$("retCrossCarrierFilter")){
+      const div = document.createElement("div");
+      div.innerHTML = `
+        <label>Transportadora</label>
+        <select id="retCrossCarrierFilter" onchange="renderReturnCrosscheckTable()">
+          <option value="ALL">Todas as transportadoras</option>
+        </select>`;
+      filterWrap.appendChild(div);
+    }
+
+    // Secção das listagens persistentes
+    const panel = $("tabCrossReturns");
+    if(panel && !$("retMonitorSection")){
+      const sec = document.createElement("div");
+      sec.id = "retMonitorSection";
+      sec.className = "card resultsCard";
+      sec.style.marginTop = "14px";
+      sec.innerHTML = `
+        <div class="row" style="justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h2 style="margin-bottom:4px;">📌 Listagens automáticas Returns</h2>
+            <div class="mini">IDs sem return/refund e IDs com diferenças de produtos ficam guardados automaticamente na Firebase e ligados à transportadora selecionada.</div>
+          </div>
+          <span id="retMonitorRowsShown" class="pill">0 linhas</span>
+        </div>
+        <div class="hr"></div>
+        <div class="semPicListTabs">
+          <button id="retMonitorBtnDIFF" class="semPicListBtn issue active" type="button" onclick="setRetMonitorListFilter('DIFF')">Returns com diferença de produtos <span class="count" id="retMonitorCountDIFF">0</span></button>
+          <button id="retMonitorBtnMISSING" class="semPicListBtn" type="button" onclick="setRetMonitorListFilter('MISSING')">Sem returns/refund <span class="count" id="retMonitorCountMISSING">0</span></button>
+          <button id="retMonitorBtnALL" class="semPicListBtn" type="button" onclick="setRetMonitorListFilter('ALL')">Todos <span class="count" id="retMonitorCountALL">0</span></button>
+        </div>
+        <div class="split" style="margin-bottom:12px;">
+          <div>
+            <label>Filtrar listagem</label>
+            <input id="retMonitorFilterText" placeholder="ID, tracking, nota, transportadora..." oninput="renderReturnMonitorLists()">
+          </div>
+          <div>
+            <label>Transportadora</label>
+            <select id="retMonitorCarrierFilter" onchange="renderReturnMonitorLists()"><option value="ALL">Todas as transportadoras</option></select>
+          </div>
+        </div>
+        <div class="row" style="margin-bottom:12px;">
+          <button class="btn" type="button" onclick="copyRetMonitorIds('DIFF')">Copiar diferenças</button>
+          <button class="btn" type="button" onclick="copyRetMonitorIds('MISSING')">Copiar sem returns/refund</button>
+          <button class="btn danger" type="button" onclick="deleteRetMonitorFiltered()">Eliminar filtrados</button>
+          <button class="btn" type="button" onclick="refreshRetMonitorLists()">Recarregar listagens</button>
+        </div>
+        <div class="tableWrap">
+          <table class="retCross-monitor-table" style="min-width:1180px; table-layout:fixed;">
+            <thead><tr><th style="width:120px;">Order ID</th><th style="width:160px;">Transportadora</th><th style="width:160px;">Listagem</th><th style="width:250px;">Estado / Datas</th><th>Resumo</th><th style="width:190px;">Ações</th></tr></thead>
+            <tbody id="retMonitorTbody"><tr><td colspan="6" class="muted" style="padding:16px;">Sem dados guardados.</td></tr></tbody>
+          </table>
+        </div>`;
+      panel.appendChild(sec);
+    }
+
+    renderReturnCrossCarrierSelect();
+    retCrossUpdateCarrierFilters();
+  }
+
+  function retCrossSelectAllCarriers(){
+    const sel = $("retCrossCarrierMulti");
+    if(!sel) return;
+    Array.from(sel.options).forEach(o=>o.selected = true);
+    retCrossUpdateCarrierPreview();
+  }
+  window.retCrossSelectAllCarriers = retCrossSelectAllCarriers;
+
+  function retCrossClearCarriers(){
+    const sel = $("retCrossCarrierMulti");
+    if(sel) Array.from(sel.options).forEach(o=>o.selected = false);
+    const manual = $("retCrossCarrierManual");
+    if(manual) manual.value = "";
+    retCrossUpdateCarrierPreview();
+  }
+  window.retCrossClearCarriers = retCrossClearCarriers;
+
+  function retCrossRowSnapshot(row, carrier, status){
+    const now = retCrossNowIso();
+    const key = retCrossMonitorKey(row.id, carrier);
+    const existing = (retMonitorState.diffItems && retMonitorState.diffItems[key]) || (retMonitorState.missingItems && retMonitorState.missingItems[key]) || {};
+    const cmp = row.comparison || {};
+    return {
+      id: row.id,
+      carrier: carrier,
+      source: row.source || "",
+      status: status,
+      createdAt: existing.createdAt || now,
+      createdBy: existing.createdBy || enviosCurrentUser(),
+      lastCheckedAt: now,
+      lastCheckedBy: enviosCurrentUser(),
+      found: !!row.found,
+      hasReturn: !!row.hasReturn,
+      hasRefund: !!row.hasRefund,
+      hasProductDiff: !!row.hasProductDiff,
+      diffSignature: retCrossDiffSignature(row),
+      comparisonSummary: cmp.summary || "",
+      missingProducts: retCrossDiffListToText(cmp.missing || []),
+      extraProducts: retCrossDiffListToText(cmp.extra || []),
+      ignoredWarranty: (cmp.ignoredWarranty || []).join(" | "),
+      packingItems: row.packingItems || "",
+      returnItems: row.returnItems || "",
+      mode: row.mode || "",
+      tracking: row.tracking || "",
+      firebaseCarrier: row.carrier || "",
+      batchKey: row.batchKey || "",
+      batchName: row.batchName || "",
+      dateTime: row.dateTime || "",
+      dateClean: row.dateClean || "",
+      user: row.user || "",
+      items: row.items || "",
+      matchedRecordsCount: (row.matchedRecords || []).length
+    };
+  }
+
+  async function syncReturnCrossRowsToFirebase(rows){
+    if(!auth.currentUser || !rows || !rows.length) return;
+    const updates = {};
+    const now = retCrossNowIso();
+    rows.forEach(row=>{
+      const carriers = Array.isArray(row.selectedCarriers) && row.selectedCarriers.length ? row.selectedCarriers : retCrossSelectedCarriers();
+      carriers.forEach(carrier=>{
+        const key = retCrossMonitorKey(row.id, carrier);
+        const diffPath = `${RETCROSS_DIFF_DB_PATH}/${key}`;
+        const missPath = `${RETCROSS_MISSING_DB_PATH}/${key}`;
+        if(row.hasProductDiff){
+          const sig = retCrossDiffSignature(row);
+          updates[missPath] = null;
+          if(retCrossResolvedStillApplies(key, sig)){
+            updates[diffPath] = null;
+          } else {
+            updates[diffPath] = retCrossRowSnapshot(row, carrier, "DIFF_PRODUCTS");
+          }
+        } else if(!row.found){
+          updates[diffPath] = null;
+          updates[missPath] = retCrossRowSnapshot(row, carrier, "MISSING_RETURN_REFUND");
+        } else {
+          updates[diffPath] = null;
+          updates[missPath] = null;
+        }
+      });
+    });
+    updates[`returns_com_diferenca_produtos/meta/lastSyncAt`] = now;
+    updates[`returns_com_diferenca_produtos/meta/lastSyncBy`] = enviosCurrentUser();
+    updates[`sem_returns_refund/meta/lastSyncAt`] = now;
+    updates[`sem_returns_refund/meta/lastSyncBy`] = enviosCurrentUser();
+    await db.ref().update(updates);
+  }
+
+  async function loadRetMonitorLists(){
+    if(!auth.currentUser) return;
+    try{
+      const [diffSnap, missSnap, resolvedSnap] = await Promise.all([
+        db.ref(RETCROSS_DIFF_DB_PATH).once("value"),
+        db.ref(RETCROSS_MISSING_DB_PATH).once("value"),
+        db.ref(RETCROSS_RESOLVED_DB_PATH).once("value")
+      ]);
+      retMonitorState.diffItems = diffSnap.val() || {};
+      retMonitorState.missingItems = missSnap.val() || {};
+      retMonitorState.resolvedItems = resolvedSnap.val() || {};
+      renderReturnCrossCarrierSelect();
+      renderReturnMonitorLists();
+    }catch(e){
+      console.warn("loadRetMonitorLists", e);
+      retCrossSetStatus("Não consegui ler listagens automáticas returns. Verifica permissões.", "warn");
+    }
+  }
+  window.refreshRetMonitorLists = loadRetMonitorLists;
+
+  function retMonitorPassFilters(item){
+    const list = retMonitorState.listFilter || "DIFF";
+    if(list === "DIFF" && item.monitorStatus !== "DIFF") return false;
+    if(list === "MISSING" && item.monitorStatus !== "MISSING") return false;
+    const carrier = $("retMonitorCarrierFilter") ? $("retMonitorCarrierFilter").value : "ALL";
+    if(carrier && carrier !== "ALL" && String(item.carrier || "").toUpperCase() !== carrier) return false;
+    const q = String($("retMonitorFilterText") ? $("retMonitorFilterText").value : "").trim().toLowerCase();
+    if(!q) return true;
+    const hay = [item.id, item.carrier, item.source, item.status, item.comparisonSummary, item.missingProducts, item.extraProducts, item.tracking, item.batchName, item.batchKey, item.user, item.items].join(" ").toLowerCase();
+    return hay.includes(q);
+  }
+
+  function setRetMonitorListFilter(kind){
+    retMonitorState.listFilter = kind || "DIFF";
+    renderReturnMonitorLists();
+  }
+  window.setRetMonitorListFilter = setRetMonitorListFilter;
+
+  function renderReturnMonitorLists(){
+    retCrossUpdateCarrierFilters();
+    const tbody = $("retMonitorTbody");
+    if(!tbody) return;
+    const all = retCrossAllMonitorItems();
+    const diffCount = all.filter(x=>x.monitorStatus === "DIFF").length;
+    const missCount = all.filter(x=>x.monitorStatus === "MISSING").length;
+    if($("retMonitorCountDIFF")) $("retMonitorCountDIFF").textContent = diffCount;
+    if($("retMonitorCountMISSING")) $("retMonitorCountMISSING").textContent = missCount;
+    if($("retMonitorCountALL")) $("retMonitorCountALL").textContent = all.length;
+    ["DIFF","MISSING","ALL"].forEach(k=>{ const b=$("retMonitorBtn"+k); if(b) b.classList.toggle("active", retMonitorState.listFilter === k); });
+    const rows = retCrossMonitorSort(all.filter(retMonitorPassFilters));
+    if($("retMonitorRowsShown")) $("retMonitorRowsShown").textContent = rows.length + " linhas";
+    if(!rows.length){ tbody.innerHTML = `<tr><td colspan="6" class="muted" style="padding:16px;">Sem linhas para mostrar.</td></tr>`; return; }
+    tbody.innerHTML = rows.map(item=>{
+      const isDiff = item.monitorStatus === "DIFF";
+      const badge = isDiff ? `<span class="retCross-badge diff">Diferença produtos</span>` : `<span class="retCross-badge missing">Sem returns/refund</span>`;
+      const dates = [
+        item.dateTime ? `Picagem: <span class="mono">${escapeHtml(item.dateTime)}</span>` : "Picagem: -",
+        item.createdAt ? `Criado: <span class="mono">${escapeHtml(String(item.createdAt).slice(0,19).replace("T"," "))}</span>` : "",
+        item.lastCheckedAt ? `Atualizado: <span class="mono">${escapeHtml(String(item.lastCheckedAt).slice(0,19).replace("T"," "))}</span>` : ""
+      ].filter(Boolean).join("<br>");
+      const summary = isDiff
+        ? `<b>${escapeHtml(item.comparisonSummary || "Diferença de produtos")}</b>${item.missingProducts ? `<span class="envio-subline">Falta: ${escapeHtml(item.missingProducts)}</span>` : ""}${item.extraProducts ? `<span class="envio-subline">Extra: ${escapeHtml(item.extraProducts)}</span>` : ""}${item.ignoredWarranty ? `<span class="envio-subline">Ignorado: ${escapeHtml(item.ignoredWarranty)}</span>` : ""}`
+        : `Ainda não encontrado em RETURNS/REFUNDS.${item.source ? `<span class="envio-subline">Origem: ${escapeHtml(item.source)}</span>` : ""}`;
+      const deleteBtn = `<button class="btn-mini danger" type="button" onclick="deleteRetMonitorItem('${escapeJs(item._key)}','${escapeJs(item.monitorStatus)}')">Eliminar</button>`;
+      const actions = isDiff
+        ? `<button class="btn-mini ok" type="button" onclick="markRetDiffAsCorrect('${escapeJs(item._key)}')">Marcar como certo</button><button class="btn-mini info" type="button" onclick="openReturnCrosscheckDetail('${escapeJs(item.id)}')">Histórico</button>${deleteBtn}`
+        : `<button class="btn-mini info" type="button" onclick="openReturnCrosscheckDetail('${escapeJs(item.id)}')">Histórico</button>${deleteBtn}`;
+      return `<tr>
+        <td class="mono"><b>${escapeHtml(item.id)}</b></td>
+        <td><b>${escapeHtml(item.carrier || "-")}</b></td>
+        <td>${badge}</td>
+        <td>${dates}</td>
+        <td>${summary}</td>
+        <td><div class="btn-row">${actions}</div></td>
+      </tr>`;
+    }).join("");
+  }
+  window.renderReturnMonitorLists = renderReturnMonitorLists;
+
+  async function markRetDiffAsCorrect(key){
+    const item = retMonitorState.diffItems && retMonitorState.diffItems[key];
+    if(!item){ retCrossSetStatus("ID já não está na lista de diferenças.", "warn"); return; }
+    const note = prompt("Nota opcional para marcar como certo:", "Confirmado como certo");
+    if(note === null) return;
+    const resolved = Object.assign({}, item, {
+      resolved: true,
+      resolvedAt: retCrossNowIso(),
+      resolvedBy: enviosCurrentUser(),
+      resolvedNote: String(note || ""),
+      diffSignature: item.diffSignature || ""
+    });
+    try{
+      await db.ref().update({
+        [`${RETCROSS_RESOLVED_DB_PATH}/${key}`]: resolved,
+        [`${RETCROSS_DIFF_DB_PATH}/${key}`]: null
+      });
+      retCrossSetStatus("Marcado como certo e removido da listagem de diferenças ✅", "ok");
+    }catch(e){
+      console.error(e);
+      retCrossSetStatus("Erro ao marcar como certo. Verifica permissões.", "bad");
+    }
+  }
+  window.markRetDiffAsCorrect = markRetDiffAsCorrect;
+
+
+  function retMonitorPathForItem(itemOrStatus, key){
+    const status = typeof itemOrStatus === "string" ? itemOrStatus : (itemOrStatus && itemOrStatus.monitorStatus);
+    if(status === "DIFF") return `${RETCROSS_DIFF_DB_PATH}/${key}`;
+    if(status === "MISSING") return `${RETCROSS_MISSING_DB_PATH}/${key}`;
+    return "";
+  }
+
+  async function deleteRetMonitorItem(key, status){
+    const item = status === "DIFF"
+      ? (retMonitorState.diffItems && retMonitorState.diffItems[key])
+      : (retMonitorState.missingItems && retMonitorState.missingItems[key]);
+    const id = normaliseOrderId(item && item.id || key);
+    const carrier = String(item && item.carrier || "").toUpperCase();
+    const label = status === "DIFF" ? "Returns com diferença de produtos" : "Sem returns/refund";
+    const ok = confirm(`Eliminar o ID ${id}${carrier ? " da transportadora " + carrier : ""} da listagem "${label}"?
+
+Esta ação remove o registo guardado na Firebase desta listagem.`);
+    if(!ok) return;
+    const path = retMonitorPathForItem(status, key);
+    if(!path){ retCrossSetStatus("Não consegui identificar a listagem para eliminar.", "bad"); return; }
+    try{
+      await db.ref(path).remove();
+      if(status === "DIFF" && retMonitorState.diffItems) delete retMonitorState.diffItems[key];
+      if(status === "MISSING" && retMonitorState.missingItems) delete retMonitorState.missingItems[key];
+      renderReturnMonitorLists();
+      retCrossSetStatus(`ID ${id} eliminado da listagem ✅`, "ok");
+    }catch(e){
+      console.error(e);
+      retCrossSetStatus("Erro ao eliminar ID. Verifica permissões Firebase.", "bad");
+    }
+  }
+  window.deleteRetMonitorItem = deleteRetMonitorItem;
+
+  async function deleteRetMonitorFiltered(){
+    const rows = retCrossMonitorSort(retCrossAllMonitorItems().filter(retMonitorPassFilters));
+    if(!rows.length){ retCrossSetStatus("Não há IDs filtrados para eliminar.", "bad"); return; }
+    const sample = rows.slice(0, 12).map(x=>`${x.id}${x.carrier ? " (" + x.carrier + ")" : ""}`).join("\n");
+    const more = rows.length > 12 ? `
+... +${rows.length - 12} ID(s)` : "";
+    const ok = confirm(`Eliminar ${rows.length} ID(s) da listagem filtrada?
+
+${sample}${more}
+
+Esta ação remove estes registos guardados na Firebase.`);
+    if(!ok) return;
+    const ok2 = confirm("Confirma novamente: queres mesmo eliminar estes IDs da listagem filtrada?");
+    if(!ok2) return;
+    const updates = {};
+    rows.forEach(item=>{
+      const path = retMonitorPathForItem(item, item._key);
+      if(path) updates[path] = null;
+    });
+    try{
+      await db.ref().update(updates);
+      rows.forEach(item=>{
+        if(item.monitorStatus === "DIFF" && retMonitorState.diffItems) delete retMonitorState.diffItems[item._key];
+        if(item.monitorStatus === "MISSING" && retMonitorState.missingItems) delete retMonitorState.missingItems[item._key];
+      });
+      renderReturnMonitorLists();
+      retCrossSetStatus(`${rows.length} ID(s) eliminados da listagem filtrada ✅`, "ok");
+    }catch(e){
+      console.error(e);
+      retCrossSetStatus("Erro ao eliminar IDs filtrados. Verifica permissões Firebase.", "bad");
+    }
+  }
+  window.deleteRetMonitorFiltered = deleteRetMonitorFiltered;
+
+  async function copyRetMonitorIds(kind){
+    let rows = retCrossMonitorSort(retCrossAllMonitorItems());
+    if(kind === "DIFF") rows = rows.filter(x=>x.monitorStatus === "DIFF");
+    if(kind === "MISSING") rows = rows.filter(x=>x.monitorStatus === "MISSING");
+    const carrier = $("retMonitorCarrierFilter") ? $("retMonitorCarrierFilter").value : "ALL";
+    if(carrier && carrier !== "ALL") rows = rows.filter(x=>x.carrier === carrier);
+    const ids = Array.from(new Set(rows.map(x=>x.id).filter(Boolean)));
+    if(!ids.length){ retCrossSetStatus("Não há IDs para copiar nesta listagem.", "bad"); return; }
+    try{ await navigator.clipboard.writeText(ids.join("\n")); }
+    catch(e){ const tmp=document.createElement("textarea"); tmp.value=ids.join("\n"); document.body.appendChild(tmp); tmp.select(); document.execCommand("copy"); tmp.remove(); }
+    retCrossSetStatus(`${ids.length} ID(s) copiados da listagem automática ✅`, "ok");
+  }
+  window.copyRetMonitorIds = copyRetMonitorIds;
+
+  function scheduleRetCrossMonitorRefresh(reason, delay){
+    if(retMonitorState.realtimeTimer) clearTimeout(retMonitorState.realtimeTimer);
+    retMonitorState.realtimeTimer = setTimeout(()=>{
+      retMonitorState.realtimeTimer = null;
+      const entries = retCrossAllMonitorItems();
+      if(!entries.length) return;
+      retCrossSetStatus("Atualização automática Crosscheck Returns: " + (reason || "nova picagem") + "...", "warn");
+      runReturnCrosscheck({useMonitor:true, fromRealtime:true});
+    }, typeof delay === "number" ? delay : 1200);
+  }
+
+  async function startRetCrossMonitorRealtime(){
+    if(!auth.currentUser || retMonitorState.monitorListening) return;
+    try{ await loadRetMonitorLists(); }catch(e){}
+    try{
+      db.ref(RETCROSS_DIFF_DB_PATH).on("value", snap=>{ retMonitorState.diffItems = snap.val() || {}; renderReturnCrossCarrierSelect(); renderReturnMonitorLists(); }, err=>console.warn("diff realtime", err));
+      db.ref(RETCROSS_MISSING_DB_PATH).on("value", snap=>{ retMonitorState.missingItems = snap.val() || {}; renderReturnCrossCarrierSelect(); renderReturnMonitorLists(); }, err=>console.warn("missing realtime", err));
+      db.ref(RETCROSS_RESOLVED_DB_PATH).on("value", snap=>{ retMonitorState.resolvedItems = snap.val() || {}; renderReturnMonitorLists(); }, err=>console.warn("resolved realtime", err));
+
+      const start = dateAddDays(nowDate(), -1);
+      retMonitorState.registosRef = db.ref("registos").orderByChild("dateClean").startAt(start);
+      const initial = await retMonitorState.registosRef.once("value").catch(()=>null);
+      retMonitorState.registosSeen = new Set();
+      if(initial) initial.forEach(child=>retMonitorState.registosSeen.add(child.key));
+      retMonitorState.registosAddedCb = snap=>{
+        const key = snap && snap.key ? snap.key : "";
+        if(key && retMonitorState.registosSeen.has(key)) return;
+        if(key) retMonitorState.registosSeen.add(key);
+        const r = snap && snap.val ? snap.val() : null;
+        const id = realtimeRegistoIdFromRecord(r);
+        if(id && retCrossTrackedIds().includes(id) && realtimeRegistoModeRelevant(r)) scheduleRetCrossMonitorRefresh(`nova picagem para ${id}`, 900);
+      };
+      retMonitorState.registosChangedCb = snap=>{
+        const r = snap && snap.val ? snap.val() : null;
+        const id = realtimeRegistoIdFromRecord(r);
+        if(id && retCrossTrackedIds().includes(id) && realtimeRegistoModeRelevant(r)) scheduleRetCrossMonitorRefresh(`alteração de picagem para ${id}`, 900);
+      };
+      retMonitorState.registosRef.on("child_added", retMonitorState.registosAddedCb);
+      retMonitorState.registosRef.on("child_changed", retMonitorState.registosChangedCb);
+      retMonitorState.monitorListening = true;
+    }catch(e){ console.warn("startRetCrossMonitorRealtime", e); }
+  }
+  window.startRetCrossMonitorRealtime = startRetCrossMonitorRealtime;
+
+  function stopRetCrossMonitorRealtime(){
+    try{ db.ref(RETCROSS_DIFF_DB_PATH).off(); }catch(e){}
+    try{ db.ref(RETCROSS_MISSING_DB_PATH).off(); }catch(e){}
+    try{ db.ref(RETCROSS_RESOLVED_DB_PATH).off(); }catch(e){}
+    try{ if(retMonitorState.registosRef && retMonitorState.registosAddedCb) retMonitorState.registosRef.off("child_added", retMonitorState.registosAddedCb); }catch(e){}
+    try{ if(retMonitorState.registosRef && retMonitorState.registosChangedCb) retMonitorState.registosRef.off("child_changed", retMonitorState.registosChangedCb); }catch(e){}
+    retMonitorState.monitorListening = false;
+  }
+  window.stopRetCrossMonitorRealtime = stopRetCrossMonitorRealtime;
+
+  // Wrappers / overrides
+  const __retOrigRenderCarrierSelect = renderCarrierSelect;
+  renderCarrierSelect = function(){
+    const res = __retOrigRenderCarrierSelect.apply(this, arguments);
+    try{ renderReturnCrossCarrierSelect(); }catch(e){}
+    return res;
+  };
+  window.renderCarrierSelect = renderCarrierSelect;
+
+  const __retOrigLoadCarriersFromOFF = loadCarriersFromOFF;
+  loadCarriersFromOFF = async function(){
+    const res = await __retOrigLoadCarriersFromOFF.apply(this, arguments);
+    try{ renderReturnCrossCarrierSelect(); }catch(e){}
+    return res;
+  };
+  window.loadCarriersFromOFF = loadCarriersFromOFF;
+
+  const __retOrigStartRealtimeSync = startRealtimeSync;
+  startRealtimeSync = async function(){
+    const res = await __retOrigStartRealtimeSync.apply(this, arguments);
+    try{ await startRetCrossMonitorRealtime(); }catch(e){ console.warn(e); }
+    return res;
+  };
+  window.startRealtimeSync = startRealtimeSync;
+
+  const __retOrigStopRealtimeSync = stopRealtimeSync;
+  stopRealtimeSync = function(){
+    try{ stopRetCrossMonitorRealtime(); }catch(e){}
+    return __retOrigStopRealtimeSync.apply(this, arguments);
+  };
+  window.stopRealtimeSync = stopRealtimeSync;
+
+  const __retOrigBuildReturnCrossRow = buildReturnCrossRow;
+  buildReturnCrossRow = function(id, records, opts){
+    const row = __retOrigBuildReturnCrossRow.call(this, id, records);
+    opts = opts || {};
+    row.selectedCarriers = Array.isArray(opts.selectedCarriers) ? opts.selectedCarriers.slice() : retCrossSelectedCarriers();
+    row.selectedCarrierLabel = retCrossCarrierLabel(row.selectedCarriers);
+    return row;
+  };
+  window.buildReturnCrossRow = buildReturnCrossRow;
+
+  function retCrossCarrierMatches(row, carrier){
+    if(!carrier || carrier === "ALL") return true;
+    const arr = Array.isArray(row.selectedCarriers) ? row.selectedCarriers : (row.selectedCarrier ? [row.selectedCarrier] : []);
+    return arr.map(x=>String(x||"").trim().toUpperCase()).includes(carrier);
+  }
+
+  retCrossPassFilters = function(r){
+    const kind = $("retCrossFilterKind") ? $("retCrossFilterKind").value : "ALL";
+    if(kind === "FOUND" && !r.found) return false;
+    if(kind === "RETURN" && !r.hasReturn) return false;
+    if(kind === "REFUND" && !r.hasRefund) return false;
+    if(kind === "MISSING" && r.found) return false;
+    if(kind === "WITH_TRACKING" && !r.tracking) return false;
+    if(kind === "DUPLICATE" && !(retCrossState.duplicates || []).includes(r.id)) return false;
+    if(kind === "DIFF_PRODUCTS" && !r.hasProductDiff) return false;
+    const carrier = $("retCrossCarrierFilter") ? $("retCrossCarrierFilter").value : "ALL";
+    if(!retCrossCarrierMatches(r, carrier)) return false;
+    const q = String($("retCrossFilterText") ? $("retCrossFilterText").value : "").trim().toLowerCase();
+    if(!q) return true;
+    const hay = [r.id, r.source, r.selectedCarrierLabel, r.label, r.mode, r.tracking, r.carrier, r.batchKey, r.batchName, r.dateTime, r.user, r.items, r.packingItems, r.returnItems, r.comparison && r.comparison.summary].join(" ").toLowerCase();
+    return hay.includes(q);
+  };
+  window.retCrossPassFilters = retCrossPassFilters;
+
+  const __retOrigUpdateReturnCrosscheckActiveFilters = updateReturnCrosscheckActiveFilters;
+  updateReturnCrosscheckActiveFilters = function(){
+    const kind = $("retCrossFilterKind") ? $("retCrossFilterKind").value : "ALL";
+    const q = String($("retCrossFilterText") ? $("retCrossFilterText").value : "").trim();
+    const carrier = $("retCrossCarrierFilter") ? $("retCrossCarrierFilter").value : "ALL";
+    const parts = [];
+    if(kind && kind !== "ALL") parts.push("Mostrar: " + retCrossFilterLabel(kind));
+    if(carrier && carrier !== "ALL") parts.push("Transportadora: " + carrier);
+    if(q) parts.push("Texto: " + q);
+    if($("retCrossActiveFilters")) $("retCrossActiveFilters").textContent = parts.length ? ("Filtro ativo → " + parts.join(" | ")) : "Sem filtros";
+    updateReturnCrosscheckKpiActive();
+  };
+  window.updateReturnCrosscheckActiveFilters = updateReturnCrosscheckActiveFilters;
+
+  clearReturnCrosscheckFilters = function(){
+    if($("retCrossFilterText")) $("retCrossFilterText").value = "";
+    if($("retCrossFilterKind")) $("retCrossFilterKind").value = "ALL";
+    if($("retCrossCarrierFilter")) $("retCrossCarrierFilter").value = "ALL";
+    renderReturnCrosscheckTable();
+  };
+  window.clearReturnCrosscheckFilters = clearReturnCrosscheckFilters;
+
+  getReturnCrosscheckRowsForKind = function(kind){
+    let rows = sortReturnCrossRows(retCrossState.rows || []);
+    const carrier = $("retCrossCarrierFilter") ? $("retCrossCarrierFilter").value : "ALL";
+    if(carrier && carrier !== "ALL") rows = rows.filter(r=>retCrossCarrierMatches(r, carrier));
+    if(kind === "FOUND") rows = rows.filter(r=>r.found);
+    else if(kind === "RETURN") rows = rows.filter(r=>r.hasReturn);
+    else if(kind === "REFUND") rows = rows.filter(r=>r.hasRefund);
+    else if(kind === "MISSING") rows = rows.filter(r=>!r.found);
+    else if(kind === "WITH_TRACKING") rows = rows.filter(r=>!!r.tracking);
+    else if(kind === "DUPLICATE") rows = rows.filter(r=>(retCrossState.duplicates || []).includes(r.id));
+    else if(kind === "DIFF_PRODUCTS") rows = rows.filter(r=>!!r.hasProductDiff);
+    return rows;
+  };
+  window.getReturnCrosscheckRowsForKind = getReturnCrosscheckRowsForKind;
+
+  const __retOrigRenderReturnCrosscheckTable = renderReturnCrosscheckTable;
+  renderReturnCrosscheckTable = function(){
+    retCrossUpdateCarrierFilters();
+    updateReturnCrosscheckActiveFilters();
+    updateReturnCrosscheckKPIs();
+    const tbody = $("retCrossTbody"); if(!tbody) return;
+    const rows = sortReturnCrossRows((retCrossState.rows || []).filter(retCrossPassFilters));
+    if($("retCrossRowsShown")) $("retCrossRowsShown").textContent = rows.length + " linhas";
+    if(!rows.length){ tbody.innerHTML = `<tr><td colspan="8" class="muted" style="padding:16px;">Sem linhas para mostrar.</td></tr>`; return; }
+    tbody.innerHTML = rows.map(r=>{
+      const badge = `<span class="retCross-badge ${escapeHtml(r.badgeClass)}">${escapeHtml(r.label)}</span>`;
+      const modeLine = r.mode ? `<b>${escapeHtml(r.mode)}</b>` : `<span class="muted">-</span>`;
+      const track = r.tracking ? `<span class="mono">${escapeHtml(r.tracking)}</span>` : `<span class="muted">-</span>`;
+      const batch = r.batchName || r.batchKey ? `<span class="envio-subline">Batch: ${escapeHtml(r.batchName || r.batchKey)}</span>` : `<span class="envio-subline">Batch: -</span>`;
+      const carrier = r.carrier ? `<span class="envio-subline">Transportadora Firebase: ${escapeHtml(r.carrier)}</span>` : `<span class="envio-subline">Transportadora Firebase: -</span>`;
+      const selectedCarrier = r.selectedCarrierLabel ? `<span class="envio-subline"><b>Transportadora lista:</b> ${escapeHtml(r.selectedCarrierLabel)}</span>` : `<span class="envio-subline"><b>Transportadora lista:</b> -</span>`;
+      const dtLine = r.dateTime ? `<span class="mono">${escapeHtml(r.dateTime)}</span>` : `<span class="muted">-</span>`;
+      const user = r.user ? `<span class="envio-subline">User: ${escapeHtml(r.user)}</span>` : `<span class="envio-subline">User: -</span>`;
+      const items = r.items ? `<div class="envio-items-cell">${escapeHtml(r.items)}</div>` : `<span class="envio-items-empty">Sem items</span>`;
+      let cmpClass = "neutral";
+      let cmpBadge = "Sem comparação";
+      let cmpText = r.comparison && r.comparison.summary ? r.comparison.summary : "Sem comparação";
+      if(r.comparison && r.comparison.status === "MATCH"){ cmpClass = "ok"; cmpBadge = "OK"; }
+      if(r.comparison && r.comparison.status === "DIFF"){ cmpClass = "diff"; cmpBadge = "DIFERENÇA"; }
+      if(r.comparison && r.comparison.status === "NO_PACKING"){ cmpClass = "neutral"; cmpBadge = "Sem PACKING"; }
+      if(!r.found){ cmpClass = "neutral"; cmpBadge = "Sem return/refund"; cmpText = "Sem return/refund para comparar."; }
+      const cmpHtml = `<span class="retCross-badge ${cmpClass === "diff" ? "diff" : (cmpClass === "ok" ? "match" : "neutral")}">${cmpBadge}</span><div class="retCrossDiffBox ${cmpClass === "ok" ? "ok" : (cmpClass === "neutral" ? "neutral" : "")}">${escapeHtml(cmpText)}</div>`;
+      return `<tr>
+        <td class="mono"><b>${escapeHtml(r.id)}</b>${r.source ? `<span class="envio-subline">${escapeHtml(r.source)}</span>` : ""}${selectedCarrier}</td>
+        <td>${badge}</td>
+        <td>${modeLine}<span class="envio-subline">Registos: ${(r.matchedRecords || []).length}</span></td>
+        <td>${track}${batch}${carrier}</td>
+        <td>${dtLine}${user}</td>
+        <td>${items}</td>
+        <td>${cmpHtml}</td>
+        <td><div class="btn-row"><button class="btn-mini info" type="button" onclick="openReturnCrosscheckDetail('${escapeJs(r.id)}')">Histórico</button></div></td>
+      </tr>`;
+    }).join("");
+  };
+  window.renderReturnCrosscheckTable = renderReturnCrosscheckTable;
+
+  runReturnCrosscheck = async function(opts){
+    opts = opts || {};
+    if(retCrossState.running){ retCrossSetStatus("Cruzamento já em curso..."); return; }
+    if(!auth.currentUser){ retCrossSetStatus("Faz login primeiro.", "bad"); openLogin(); return; }
+
+    let ids = [];
+    let carrierMap = {};
+    if(opts.useMonitor){
+      const items = retCrossAllMonitorItems();
+      items.forEach(item=>{
+        if(!item.id || !item.carrier) return;
+        ids.push(item.id);
+        if(!carrierMap[item.id]) carrierMap[item.id] = new Set();
+        carrierMap[item.id].add(item.carrier);
+      });
+      ids = Array.from(new Set(ids));
+    } else {
+      const selected = retCrossSelectedCarriers();
+      if(!selected.length){ retCrossSetStatus("Seleciona a transportadora ou transportadoras antes de cruzar.", "bad"); retCrossUpdateCarrierPreview(); return; }
+      ids = getReturnCrossIds();
+      selected.forEach(c=>{});
+      ids.forEach(id=>{ carrierMap[id] = new Set(selected); });
+      const info = getReturnCrossDuplicateInfo();
+      showReturnCrossDuplicateWarning(info);
+      if(!ids.length){ retCrossSetStatus("Cola pelo menos 1 order_id.", "bad"); return; }
+    }
+    if(!ids.length){ retCrossSetStatus("Não há IDs para cruzar.", "bad"); return; }
+
+    retCrossState.running = true;
+    const btn = $("btnRetCrossRun"); if(btn) btn.disabled = true;
+    retCrossState.rows = [];
+    renderReturnCrosscheckTable();
+    try{
+      const rows = [];
+      const useHistory = $("retCrossHistoryMode") && $("retCrossHistoryMode").value === "YES";
+      const chunk = 20;
+      for(let i=0; i<ids.length; i+=chunk){
+        retCrossSetStatus(`A cruzar ${Math.min(i + chunk, ids.length)} / ${ids.length}...`);
+        const slice = ids.slice(i, i + chunk);
+        const partial = await Promise.all(slice.map(async id=>{
+          let records = await fetchRegistosForOrderId(id).catch(()=>[]);
+          if(useHistory){
+            const hist = await fetchHistoryFallbackForEnvio(id).catch(()=>[]);
+            records = mergeEnviosRecords(records, hist);
+          }
+          records = await enrichEnviosRecordsWithBatchInfo(records);
+          const selectedCarriers = Array.from(carrierMap[id] || []);
+          return buildReturnCrossRow(id, records, {selectedCarriers});
+        }));
+        rows.push(...partial);
+        retCrossState.rows = sortReturnCrossRows(rows);
+        updateReturnCrosscheckKPIs();
+        renderReturnCrosscheckTable();
+      }
+      retCrossState.rows = sortReturnCrossRows(rows);
+      retCrossState.lastRunAt = new Date();
+      try{ await syncReturnCrossRowsToFirebase(retCrossState.rows); }
+      catch(saveErr){ console.warn("syncReturnCrossRowsToFirebase", saveErr); retCrossSetStatus("Cruzado, mas não consegui guardar as listagens automáticas. Verifica permissões.", "warn"); }
+      await loadRetMonitorLists().catch(()=>{});
+      updateReturnCrosscheckKPIs();
+      renderReturnCrosscheckTable();
+      retCrossSetStatus("Cruzamento concluído e listagens atualizadas ✅", "ok");
+    }catch(e){
+      console.error(e);
+      retCrossSetStatus("Erro ao cruzar returns/refunds.", "bad");
+    }finally{
+      retCrossState.running = false;
+      if(btn) btn.disabled = false;
+    }
+  };
+  window.runReturnCrosscheck = runReturnCrosscheck;
+
+  // Inicialização do patch
+  try{
+    injectReturnCrosscheckPersistentUI();
+    renderReturnCrossCarrierSelect();
+    retCrossUpdateCarrierFilters();
+    if(auth && auth.currentUser){ startRetCrossMonitorRealtime(); }
+  }catch(e){ console.warn("retCross persistent patch init", e); }
+
+
+  // ===== Melhorias conservadoras v2: nao remove nem substitui funcionalidades core =====
+  (function(){
+    "use strict";
+    const win = window;
+    const doc = document;
+    const SNAPSHOT_KEY = "wh_murtede_safety_snapshot_latest_v2";
+    const SNAPSHOT_LIST_KEY = "wh_murtede_safety_snapshot_index_v2";
+    const DRAFT_KEY = "wh_murtede_textarea_drafts_v2";
+
+    function byId(id){ return doc.getElementById(id); }
+    function toast(msg, kind){
+      try{
+        let el = byId("uxToast");
+        if(!el){
+          el = doc.createElement("div");
+          el.id = "uxToast";
+          el.className = "ux-toast";
+          doc.body.appendChild(el);
+        }
+        el.textContent = msg;
+        el.className = "ux-toast show" + (kind ? " " + kind : "");
+        clearTimeout(el._hideTimer);
+        el._hideTimer = setTimeout(()=>{ el.className = "ux-toast"; }, 4200);
+      }catch(e){}
+    }
+
+    function safeClone(value){
+      try{return JSON.parse(JSON.stringify(value || null));}
+      catch(e){return null;}
+    }
+    function setLiveAttributes(){
+      ["runStatus","enviosStatus","semPicStatus","retCrossStatus","authState","activeFilters","enviosActiveFilters","semPicActiveFilters","retCrossActiveFilters"].forEach(id=>{
+        const el = byId(id);
+        if(el){ el.setAttribute("aria-live","polite"); el.setAttribute("aria-atomic","true"); }
+      });
+      const tabs = [
+        ["tabBtnCrosscheck","tabCrosscheck"],
+        ["tabBtnCrossReturns","tabCrossReturns"],
+        ["tabBtnEnvios","tabEnvios"],
+        ["tabBtnSemPic","tabSemPic"]
+      ];
+      tabs.forEach(([btnId,panelId])=>{
+        const btn = byId(btnId), panel = byId(panelId);
+        if(btn){ btn.setAttribute("role","tab"); btn.setAttribute("aria-controls",panelId); }
+        if(panel){ panel.setAttribute("role","tabpanel"); panel.setAttribute("aria-labelledby",btnId); }
+      });
+      updateTabA11y();
+    }
+    function updateTabA11y(){
+      ["Crosscheck","CrossReturns","Envios","SemPic"].forEach(suffix=>{
+        const btn = byId("tabBtn" + suffix);
+        const panel = byId("tab" + suffix);
+        if(btn){ btn.setAttribute("aria-selected", btn.classList.contains("active") ? "true" : "false"); }
+        if(panel){ panel.hidden = !panel.classList.contains("active"); }
+      });
+    }
+
+    function getTextareaDrafts(){
+      const ids = ["carrierIds","jointIds","enviosIds","semPicIds","retCrossIds","retCrossSource","semPicCarrierManual"];
+      const data = {};
+      ids.forEach(id=>{ const el = byId(id); if(el) data[id] = el.value || ""; });
+      return data;
+    }
+    function getSafetySnapshot(label){
+      return {
+        version: 2,
+        label: label || "manual",
+        createdAt: new Date().toISOString(),
+        location: location.href,
+        user: (typeof auth !== "undefined" && auth.currentUser) ? (auth.currentUser.email || "authenticated") : "not_authenticated",
+        selectedTab: (doc.querySelector(".tabBtn.active") || {}).id || "",
+        drafts: getTextareaDrafts(),
+        localStorageLists: {
+          carriers: localStorage.getItem("crosscheck_off_carriers_v1"),
+          lists: localStorage.getItem("crosscheck_off_carrierLists_v1"),
+          joint: localStorage.getItem("crosscheck_off_jointIds_v1")
+        },
+        state: safeClone(typeof state !== "undefined" ? state : null),
+        enviosState: safeClone(typeof enviosState !== "undefined" ? enviosState : null),
+        semPicState: safeClone(typeof semPicState !== "undefined" ? semPicState : null),
+        retCrossState: safeClone(typeof retCrossState !== "undefined" ? retCrossState : null)
+      };
+    }
+    function persistSafetySnapshot(label){
+      const snapshot = getSafetySnapshot(label);
+      try{
+        localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot));
+        const idx = JSON.parse(localStorage.getItem(SNAPSHOT_LIST_KEY) || "[]");
+        idx.unshift({createdAt:snapshot.createdAt, label:snapshot.label, user:snapshot.user});
+        localStorage.setItem(SNAPSHOT_LIST_KEY, JSON.stringify(idx.slice(0,20)));
+      }catch(e){ console.warn("Safety snapshot failed", e); }
+      updateSafetyBar();
+      return snapshot;
+    }
+    function downloadSafetySnapshot(label){
+      const snapshot = persistSafetySnapshot(label || "download");
+      const blob = new Blob([JSON.stringify(snapshot, null, 2)], {type:"application/json"});
+      const a = doc.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      const stamp = snapshot.createdAt.replace(/[:.]/g,"-");
+      a.download = "wh_murtede_snapshot_" + stamp + ".json";
+      a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 800);
+      toast("Snapshot de seguranca exportado.", "ok");
+    }
+
+    function lastSnapshotInfo(){
+      try{
+        const raw = localStorage.getItem(SNAPSHOT_KEY);
+        if(!raw) return null;
+        return JSON.parse(raw);
+      }catch(e){return null;}
+    }
+    function ensureSafetyBar(){
+      if(byId("uxSafetyBar")) return;
+      const tabs = doc.querySelector(".tabs");
+      if(!tabs || !tabs.parentNode) return;
+      const bar = doc.createElement("div");
+      bar.id = "uxSafetyBar";
+      bar.innerHTML = '<div class="ux-left"><span id="uxNet" class="ux-badge">Estado</span><span id="uxSnapshot" class="ux-badge">Sem snapshot</span><span id="uxAuth" class="ux-badge">Auth</span></div><div class="ux-right"><button id="uxBtnSnapshot" class="ux-mini-btn" type="button">Snapshot seguranca</button><button id="uxBtnDownloadSnapshot" class="ux-mini-btn secondary" type="button">Exportar snapshot</button><button id="uxBtnHelp" class="ux-mini-btn secondary" type="button">Atalhos</button></div>';
+      tabs.insertAdjacentElement("afterend", bar);
+      const b1 = byId("uxBtnSnapshot");
+      const b2 = byId("uxBtnDownloadSnapshot");
+      const b3 = byId("uxBtnHelp");
+      if(b1) b1.addEventListener("click", ()=>{ persistSafetySnapshot("manual"); toast("Snapshot local guardado antes de operacoes criticas.", "ok"); });
+      if(b2) b2.addEventListener("click", ()=>downloadSafetySnapshot("manual_download"));
+      if(b3) b3.addEventListener("click", ()=>{
+        alert("Atalhos adicionados:\n\nCtrl/Cmd + Enter: correr a acao principal da caixa ativa.\nCtrl/Cmd + S: guardar snapshot local.\nEsc: fechar modais abertos.\n\nAntes de acoes destrutivas, a ferramenta tambem guarda um snapshot local automaticamente.");
+      });
+      updateSafetyBar();
+    }
+    function updateSafetyBar(){
+      const net = byId("uxNet"), snap = byId("uxSnapshot"), auth = byId("uxAuth");
+      if(net){
+        const online = navigator.onLine !== false;
+        net.textContent = online ? "Online" : "Offline";
+        net.className = "ux-badge " + (online ? "ok" : "bad");
+      }
+      if(auth){
+        const logged = !!(typeof auth !== "undefined" && auth.currentUser);
+        auth.textContent = logged ? "Firebase autenticado" : "Sem login Firebase";
+        auth.className = "ux-badge " + (logged ? "ok" : "warn");
+      }
+      if(snap){
+        const info = lastSnapshotInfo();
+        if(info && info.createdAt){
+          snap.textContent = "Snapshot: " + new Date(info.createdAt).toLocaleString();
+          snap.className = "ux-badge ok";
+        } else {
+          snap.textContent = "Sem snapshot";
+          snap.className = "ux-badge warn";
+        }
+      }
+    }
+
+    function saveTextareaDrafts(){
+      try{ sessionStorage.setItem(DRAFT_KEY, JSON.stringify({savedAt:new Date().toISOString(), drafts:getTextareaDrafts()})); }
+      catch(e){}
+    }
+    function attachDraftAutosave(){
+      ["carrierIds","jointIds","enviosIds","semPicIds","retCrossIds","retCrossSource","semPicCarrierManual"].forEach(id=>{
+        const el = byId(id);
+        if(el && !el.dataset.uxDraftBound){
+          el.dataset.uxDraftBound = "1";
+          el.addEventListener("input", saveTextareaDrafts, {passive:true});
+        }
+      });
+    }
+
+    function closeModals(){
+      ["loginModal","offListModal","detailModal"].forEach(id=>{ const el = byId(id); if(el) el.style.display = "none"; });
+    }
+    function attachModalEnhancements(){
+      ["loginModal","offListModal","detailModal"].forEach(id=>{
+        const el = byId(id);
+        if(el && !el.dataset.uxModalBound){
+          el.dataset.uxModalBound = "1";
+          el.addEventListener("click", ev=>{ if(ev.target === el) el.style.display = "none"; });
+        }
+      });
+    }
+    function attachShortcuts(){
+      if(doc.documentElement.dataset.uxShortcutsBound) return;
+      doc.documentElement.dataset.uxShortcutsBound = "1";
+      doc.addEventListener("keydown", ev=>{
+        if(ev.key === "Escape"){ closeModals(); return; }
+        const meta = ev.ctrlKey || ev.metaKey;
+        if(!meta) return;
+        if(String(ev.key).toLowerCase() === "s"){
+          ev.preventDefault();
+          persistSafetySnapshot("keyboard");
+          toast("Snapshot local guardado.", "ok");
+          return;
+        }
+        if(ev.key !== "Enter") return;
+        const active = doc.activeElement;
+        if(!active || !active.id) return;
+        const actions = {
+          carrierIds: "saveCarrierPaste",
+          jointIds: "run",
+          enviosIds: "saveEnviosIdsAndRun",
+          semPicIds: "saveSemPicIdsAndRun",
+          retCrossIds: "runReturnCrosscheck"
+        };
+        const fnName = actions[active.id];
+        if(fnName && typeof win[fnName] === "function"){
+          ev.preventDefault();
+          win[fnName]();
+        }
+      });
+    }
+
+    function installSafetyBeforeDestructiveActions(){
+      const dangerousNames = ["deleteEnvioId","deleteAllEnviosIds","deleteSemPicId","deleteAllSemPicIds"];
+      dangerousNames.forEach(name=>{
+        const original = win[name];
+        if(typeof original === "function" && !original._uxWrapped){
+          const wrapped = async function(){
+            persistSafetySnapshot("before_" + name);
+            return await original.apply(this, arguments);
+          };
+          wrapped._uxWrapped = true;
+          win[name] = wrapped;
+          try{ Function("fn", name + " = fn;")(wrapped); }catch(e){}
+        }
+      });
+      if(!doc.documentElement.dataset.uxDangerCaptureBound){
+        doc.documentElement.dataset.uxDangerCaptureBound = "1";
+        doc.addEventListener("click", ev=>{
+          const target = ev.target && ev.target.closest ? ev.target.closest("button,[onclick]") : null;
+          if(!target) return;
+          const text = ((target.getAttribute("onclick") || "") + " " + (target.id || "") + " " + (target.textContent || "")).toLowerCase();
+          if(text.includes("eliminar") || text.includes("apagar") || text.includes("deleteall") || text.includes("deleteenvio") || text.includes("deletesempic") || text.includes("btnclearall")){
+            persistSafetySnapshot("before_destructive_click");
+          }
+        }, true);
+      }
+    }
+
+    function enhanceParseIds(){
+      const original = win.parseIds;
+      if(typeof original !== "function" || original._uxEnhanced) return;
+      const enhanced = function(raw){
+        if(!raw) return [];
+        const cleaned = String(raw)
+          .normalize("NFKC")
+          .replace(/[\u200B-\u200D\uFEFF]/g, "")
+          .replace(/[\u00A0\u202F]/g, " ");
+        return cleaned
+          .split(/[\s,;]+/g)
+          .map(s => s.trim().replace(/^['\"]+|['\"]+$/g, ""))
+          .filter(Boolean);
+      };
+      enhanced._uxEnhanced = true;
+      win.parseIds = enhanced;
+      try{ Function("fn", "parseIds = fn;")(enhanced); }catch(e){}
+    }
+
+    function wrapSwitchTab(){
+      const original = win.switchTab;
+      if(typeof original === "function" && !original._uxWrapped){
+        const wrapped = function(){
+          const result = original.apply(this, arguments);
+          setTimeout(()=>{ updateTabA11y(); attachDraftAutosave(); attachModalEnhancements(); updateSafetyBar(); }, 0);
+          return result;
+        };
+        wrapped._uxWrapped = true;
+        win.switchTab = wrapped;
+        try{ Function("fn", "switchTab = fn;")(wrapped); }catch(e){}
+      }
+    }
+
+    function installGlobalErrorGuards(){
+      if(win._uxErrorGuardsInstalled) return;
+      win._uxErrorGuardsInstalled = true;
+      win.addEventListener("error", ev=>{
+        console.error("Erro capturado pela camada UX:", ev.error || ev.message);
+        toast("Erro inesperado: verifica a consola. A sessao continua ativa.", "bad");
+      });
+      win.addEventListener("unhandledrejection", ev=>{
+        console.error("Promise rejeitada pela camada UX:", ev.reason);
+        toast("Falha numa operacao assyncrona. Verifica permissoes/rede e tenta novamente.", "bad");
+      });
+      win.addEventListener("online", updateSafetyBar);
+      win.addEventListener("offline", updateSafetyBar);
+    }
+
+    function initUxEnhancements(){
+      ensureSafetyBar();
+      setLiveAttributes();
+      attachDraftAutosave();
+      attachShortcuts();
+      attachModalEnhancements();
+      installSafetyBeforeDestructiveActions();
+      enhanceParseIds();
+      wrapSwitchTab();
+      installGlobalErrorGuards();
+      updateSafetyBar();
+    }
+
+    if(doc.readyState === "loading") doc.addEventListener("DOMContentLoaded", initUxEnhancements);
+    else initUxEnhancements();
+    setTimeout(initUxEnhancements, 750);
+    setInterval(updateSafetyBar, 30000);
+
+    win.downloadSafetySnapshot = downloadSafetySnapshot;
+    win.persistSafetySnapshot = persistSafetySnapshot;
+  })();
+
   updateEnviosKPIs();
   renderEnviosTable();
 
