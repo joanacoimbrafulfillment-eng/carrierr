@@ -8028,7 +8028,8 @@ Esta ação remove estes registos guardados na Firebase.`);
       autoFetchTimer: null,
       crosscheckFetchTimer: null,
       inlineEditingKey: "",
-      columnFilters: {}
+      columnFilters: {},
+      realtime: {started:false, refs:[], lastUpdateAt:"", applying:false}
     };
 
     function sortedUnique(arr){
@@ -9181,6 +9182,143 @@ Esta ação remove estes registos guardados na Firebase.`);
     }
     window.loadCaseRecords = loadCaseRecords;
 
+
+    // ===== v20: atualização em tempo real multiutilizador para Broken / Swipe / Lost =====
+    function ensureCasesRealtimeIndicator(){
+      let el = byId("casesRealtimeState");
+      if(el) return el;
+      const status = byId("casesStatus");
+      if(!status || !status.parentNode) return null;
+      el = document.createElement("span");
+      el.id = "casesRealtimeState";
+      el.className = "pill";
+      el.style.marginLeft = "8px";
+      el.textContent = "Realtime: inativo";
+      status.parentNode.appendChild(el);
+      return el;
+    }
+
+    function setCasesRealtimeIndicator(text, kind){
+      const el = ensureCasesRealtimeIndicator();
+      if(!el) return;
+      el.textContent = text || "Realtime: ativo";
+      el.style.borderColor = "";
+      if(kind === "ok") el.style.borderColor = "rgba(40,167,69,.55)";
+      if(kind === "warn") el.style.borderColor = "rgba(245,158,11,.55)";
+      if(kind === "bad") el.style.borderColor = "rgba(231,76,60,.55)";
+    }
+
+    function casesRealtimeTime(){
+      try{ return new Date().toLocaleTimeString(); }catch(e){ return "agora"; }
+    }
+
+    function shouldRenderCasesAfterRealtime(){
+      // Se alguém estiver a editar inline, não destruímos a linha aberta.
+      // O estado interno fica atualizado; a tabela refresca quando guardar/cancelar.
+      return !state.inlineEditingKey;
+    }
+
+    function applyCaseRecordsSnapshot(raw){
+      if(!raw || typeof raw !== "object") raw = {};
+      const records = Object.entries(raw)
+        .map(([key,r])=>Object.assign({}, r || {}, {key:key}))
+        .filter(r=>r && !r.deleted && r.id);
+      records.sort((a,b)=>(b.updatedAt || "").localeCompare(a.updatedAt || ""));
+      state.records = records;
+      state.loaded = true;
+      state.realtime.lastUpdateAt = nowIso();
+      saveLocal();
+      if(shouldRenderCasesAfterRealtime()) renderCasesTable();
+      else setStatus("Atualização recebida de outro utilizador. Guarda ou cancela a edição para atualizar a tabela.", "warn");
+      setCasesRealtimeIndicator("Realtime: atualizado " + casesRealtimeTime(), "ok");
+    }
+
+    function applyCaseOptionsSnapshot(raw){
+      try{
+        state.options = mergeOptions(mergeOptions(DEFAULT_OPTIONS, state.options || {}), raw || {});
+        Object.keys(OPTION_LABELS).forEach(k=>{ state.options[k] = applyDeletedOptions(k, state.options[k] || []); });
+        ensureDatalists();
+        initOptionGroupSelect();
+        renderCasesOptionManager();
+        if(shouldRenderCasesAfterRealtime()) renderCasesTable();
+        saveLocal();
+        setCasesRealtimeIndicator("Realtime: opções atualizadas " + casesRealtimeTime(), "ok");
+      }catch(e){ console.warn("cases realtime options", e); }
+    }
+
+    function applyCaseDeletedOptionsSnapshot(raw){
+      try{
+        state.deletedOptions = mergeDeletedOptions(state.deletedOptions || {}, raw || {});
+        Object.keys(OPTION_LABELS).forEach(k=>{ state.options[k] = applyDeletedOptions(k, state.options[k] || []); });
+        ensureDatalists();
+        renderCasesOptionManager();
+        if(shouldRenderCasesAfterRealtime()) renderCasesTable();
+        saveLocal();
+        setCasesRealtimeIndicator("Realtime: listas atualizadas " + casesRealtimeTime(), "ok");
+      }catch(e){ console.warn("cases realtime deleted options", e); }
+    }
+
+    function applyCaseHistorySnapshot(raw){
+      try{
+        const merged = Object.assign({}, state.history || {});
+        Object.entries(raw || {}).forEach(([recordKey, group])=>{
+          const arr = Object.values(group || {}).filter(Boolean);
+          const existing = merged[recordKey] || [];
+          const byHist = {};
+          existing.concat(arr).forEach(e=>{ if(e){ byHist[e.historyKey || e.changedAt || JSON.stringify(e)] = e; } });
+          merged[recordKey] = Object.values(byHist).sort((a,b)=>(b.changedAt || "").localeCompare(a.changedAt || ""));
+        });
+        state.history = merged;
+        saveLocal();
+        setCasesRealtimeIndicator("Realtime: histórico atualizado " + casesRealtimeTime(), "ok");
+      }catch(e){ console.warn("cases realtime history", e); }
+    }
+
+    function stopCasesRealtime(){
+      try{
+        (state.realtime.refs || []).forEach(item=>{
+          try{ item.ref.off("value", item.cb); }catch(e){}
+        });
+      }catch(e){}
+      state.realtime.refs = [];
+      state.realtime.started = false;
+      setCasesRealtimeIndicator("Realtime: inativo", "warn");
+    }
+    window.stopCasesRealtime = stopCasesRealtime;
+
+    function startCasesRealtime(){
+      if(!hasFirebase()){
+        stopCasesRealtime();
+        setCasesRealtimeIndicator("Realtime: sem login", "warn");
+        return;
+      }
+      if(state.realtime && state.realtime.started){
+        setCasesRealtimeIndicator("Realtime: ativo", "ok");
+        return;
+      }
+      stopCasesRealtime();
+      state.realtime.started = true;
+      const listeners = [
+        {path:CASES_ITEMS_PATH, cb:snap=>applyCaseRecordsSnapshot(snap.val() || {})},
+        {path:CASES_OPTIONS_PATH, cb:snap=>applyCaseOptionsSnapshot(snap.val() || {})},
+        {path:CASES_DELETED_OPTIONS_PATH, cb:snap=>applyCaseDeletedOptionsSnapshot(snap.val() || {})},
+        {path:CASES_HISTORY_PATH, cb:snap=>applyCaseHistorySnapshot(snap.val() || {})}
+      ];
+      listeners.forEach(item=>{
+        try{
+          const ref = db.ref(item.path);
+          ref.on("value", item.cb, err=>{
+            console.warn("cases realtime permission", item.path, err);
+            setCasesRealtimeIndicator("Realtime: sem permissão", "bad");
+            setStatus("Sem permissão realtime em " + item.path + ".", "warn");
+          });
+          state.realtime.refs.push({ref, cb:item.cb, path:item.path});
+        }catch(e){ console.warn("cases realtime start", item.path, e); }
+      });
+      setCasesRealtimeIndicator("Realtime: ativo", "ok");
+    }
+    window.startCasesRealtime = startCasesRealtime;
+
     function extendSwitchTab(){
       if(window.switchTab && window.switchTab._casesWrapped) return;
       const previous = window.switchTab;
@@ -9205,6 +9343,8 @@ Esta ação remove estes registos guardados na Firebase.`);
       extendSwitchTab();
       await loadCaseOptions();
       await loadCaseRecords();
+      if(hasFirebase()) startCasesRealtime();
+      else setCasesRealtimeIndicator("Realtime: sem login", "warn");
       const idEl = byId("casesId");
       if(idEl && !idEl.dataset.autoFirebaseReady){
         idEl.dataset.autoFirebaseReady = "1";
@@ -9215,7 +9355,8 @@ Esta ação remove estes registos guardados na Firebase.`);
       }
       if(typeof auth !== "undefined" && auth && auth.onAuthStateChanged){
         auth.onAuthStateChanged(async user=>{
-          if(user){ await loadCaseOptions(); await loadCaseRecords(); }
+          if(user){ await loadCaseOptions(); await loadCaseRecords(); startCasesRealtime(); }
+          else { stopCasesRealtime(); }
         });
       }
     }
