@@ -496,7 +496,20 @@
     }
 
 
-    /* ===== IDs sem picagens da transportadora ===== */
+    .cgGroupCard{
+      border:1px solid var(--line); border-radius:12px; padding:10px 12px;
+      background:rgba(0,0,0,.18); display:flex; flex-direction:column; gap:6px;
+    }
+    .cgGroupCard .cgName{ font-weight:900; font-size:13px; color:var(--warn); }
+    .cgGroupCard .cgVars{ display:flex; flex-wrap:wrap; gap:4px; }
+    .cgGroupCard .cgVar{ padding:3px 8px; border-radius:999px; background:rgba(255,176,32,.12); border:1px solid rgba(255,176,32,.3); font-size:11px; font-weight:800; }
+    .cgGroupCard .cgActions{ display:flex; gap:6px; margin-top:4px; }
+    .cgGroupCard .cgActions button{ padding:4px 10px; font-size:11px; border-radius:8px; }
+    .cgPreviewRow{ display:flex; gap:10px; align-items:center; padding:6px 0; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+    .cgPreviewRow:last-child{ border-bottom:none; }
+    .cgArrow{ color:var(--muted); font-size:12px; }
+    .cgGroupLabel{ font-weight:900; color:var(--warn); min-width:100px; }
+  
     .semPicGrid{display:grid; grid-template-columns:minmax(340px,.82fr) minmax(520px,1.18fr); gap:25px; margin-top:0; align-items:start;}
     @media(max-width:980px){.semPicGrid{grid-template-columns:1fr;}}
     #tabSemPic .semPic-results-table{min-width:1180px; table-layout:fixed;}
@@ -709,6 +722,7 @@
       <button id="tabBtnCases" class="tabBtn" type="button" onclick="switchTab('cases')">Broken / Swipe / Lost</button>
       <button id="tabBtnEnvios" class="tabBtn active" type="button" onclick="switchTab('envios')">Envios em Analise</button>
       <button id="tabBtnSemPic" class="tabBtn" type="button" onclick="switchTab('sempic')">IDs sem picagens da transportadora</button>
+      <button id="tabBtnCarrierGroups" class="tabBtn" type="button" onclick="switchTab('carriergroups')" style="border-color:rgba(255,176,32,.35);color:#ffb020;">⚙ Grupos Transportadoras</button>
     </div>
 
     <div id="tabCrosscheck" class="tabPanel">
@@ -1477,6 +1491,9 @@
           <label>Order IDs</label>
           <textarea id="semPicIds" placeholder="17989202&#10;17990211&#10;..."></textarea>
           <div class="mini">Aceita um ID por linha ou IDs separados por espacos, virgulas ou ponto-e-virgula.</div>
+          <div class="notice" style="margin-top:12px; background:#f8fafc; border-left:6px solid var(--refunds);">
+            <b>Data de inserção automática:</b> cada ID fica com a data do dia em que foi introduzido. Essa data fica preservada nas próximas pesquisas e atualizações.
+          </div>
           <div id="semPicDuplicateWarning" class="semPicWarning"></div>
 
           <div class="enviosActions">
@@ -1630,6 +1647,51 @@
       </div>
       <div class="hr"></div>
       <div id="offListBody"></div>
+    </div>
+  </div>
+
+  <!-- CARRIER GROUPS TAB -->
+  <div id="tabCarrierGroups" class="tabPanel">
+    <div style="max-width:820px; margin:18px auto; display:flex; flex-direction:column; gap:16px;">
+      <div class="card" style="border-top:3px solid var(--warn);">
+        <h2 style="margin-bottom:4px;">⚙ Grupos de Transportadoras</h2>
+        <p class="mini" style="margin:0 0 14px;">Define aqui que transportadoras da base de dados pertencem ao mesmo grupo. Quando selecionas um grupo no Crosscheck Expedições, o sistema inclui automaticamente todas as variantes associadas.</p>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+          <!-- Criar/editar grupo -->
+          <div>
+            <label>Nome do grupo (ex: CORREOS, CTT)</label>
+            <input id="cgGroupName" placeholder="Ex: CORREOS" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+            <label style="margin-top:10px;">Variantes da base de dados (uma por linha)</label>
+            <textarea id="cgVariants" placeholder="CORREOS PT&#10;CORREOS ES&#10;CORREOS" style="min-height:130px; font-family:monospace;"></textarea>
+            <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+              <button class="btn primary" type="button" onclick="cgSaveGroup()">💾 Guardar grupo</button>
+              <button class="btn" type="button" onclick="cgClearForm()">✕ Limpar</button>
+            </div>
+            <div id="cgFormMsg" class="mini" style="margin-top:8px; min-height:16px;"></div>
+          </div>
+
+          <!-- Lista de grupos existentes -->
+          <div>
+            <label>Grupos configurados</label>
+            <div id="cgGroupList" style="display:flex; flex-direction:column; gap:8px; max-height:340px; overflow-y:auto; padding-right:4px;">
+              <div class="mini" style="color:var(--muted);">Nenhum grupo ainda.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div class="card">
+        <h2 style="margin-bottom:8px;">📋 Mapeamento activo</h2>
+        <p class="mini" style="margin:0 0 10px;">Quando o Crosscheck Expedições detecta uma transportadora do OFF, verifica aqui se pertence a algum grupo e usa o nome do grupo para o cruzamento.</p>
+        <div id="cgPreviewTable" class="mini">Nenhum grupo configurado.</div>
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn" type="button" onclick="cgExportJson()">⬇ Exportar JSON</button>
+          <label class="btn" style="cursor:pointer;">⬆ Importar JSON<input type="file" accept=".json" style="display:none;" onchange="cgImportJson(this)"></label>
+          <button class="btn danger" type="button" onclick="cgResetAll()">🗑 Limpar tudo</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -3431,20 +3493,26 @@
     const retCrossBtn = $("tabBtnCrossReturns");
     const enviosBtn = $("tabBtnEnvios");
     const semPicBtn = $("tabBtnSemPic");
+    const cgPanel = $("tabCarrierGroups");
+    const cgBtn = $("tabBtnCarrierGroups");
     const showCross = tab === "crosscheck";
     const showRetCross = tab === "crossreturns";
     const showSemPic = tab === "sempic";
-    const showEnvios = !showCross && !showRetCross && !showSemPic;
+    const showCg = tab === "carriergroups";
+    const showEnvios = !showCross && !showRetCross && !showSemPic && !showCg;
     if(crossPanel) crossPanel.classList.toggle("active", showCross);
     if(retCrossPanel) retCrossPanel.classList.toggle("active", showRetCross);
     if(enviosPanel) enviosPanel.classList.toggle("active", showEnvios);
     if(semPicPanel) semPicPanel.classList.toggle("active", showSemPic);
+    if(cgPanel) cgPanel.classList.toggle("active", showCg);
     if(crossBtn) crossBtn.classList.toggle("active", showCross);
     if(retCrossBtn) retCrossBtn.classList.toggle("active", showRetCross);
     if(enviosBtn) enviosBtn.classList.toggle("active", showEnvios);
     if(semPicBtn) semPicBtn.classList.toggle("active", showSemPic);
+    if(cgBtn) cgBtn.classList.toggle("active", showCg);
     if(showSemPic){ try{ renderSemPicCarrierSelect(); renderSemPicTable(); }catch(e){} }
     if(showRetCross){ try{ renderReturnCrosscheckTable(); }catch(e){} }
+    if(showCg){ try{ cgRender(); }catch(e){} }
   }
   window.switchTab = switchTab;
 
@@ -5298,6 +5366,16 @@
     const hasPickupFinal = manualPicked;
     const noRecord = !(records && records.length);
     const diffCarrier = !!(packing && packingCarrier && !carrierEqual(packingCarrier, carrier));
+    // Data de inserção preservada. Se uma versão antiga já tiver apagado a data,
+    // usa fallbacks para a tabela nunca voltar a aparecer com "-".
+    const insertedDate = fmt(
+      saved.insertedDate ||
+      saved.createdDate ||
+      (saved.createdAt ? String(saved.createdAt).slice(0,10) : "") ||
+      (saved.updatedAt ? String(saved.updatedAt).slice(0,10) : "") ||
+      (saved.lastCheckedAt ? String(saved.lastCheckedAt).slice(0,10) : "") ||
+      ""
+    );
     let status = "Sem picagem da transportadora";
     let statusClass = "ENVIO_WARN";
     if(otherResolution){ status = "Outra resolução" + (resolutionNote ? " — " + resolutionNote : ""); statusClass = "ENVIO_INFO"; }
@@ -5309,7 +5387,7 @@
     return {
       id,
       expectedCarrier: carrier,
-      insertedDate: fmt(saved.insertedDate || (saved.createdAt ? String(saved.createdAt).slice(0,10) : "")),
+      insertedDate,
       createdAt: fmt(saved.createdAt || ""),
       createdBy: fmt(saved.createdBy || ""),
       manualCarrierPickup: manualPicked,
@@ -5420,9 +5498,26 @@
     const updates = {};
     rows.forEach(r=>{
       const key = semPicKey(r.id, r.expectedCarrier);
-      updates[`${SEMPIC_DB_PATH}/${key}`] = {
+      const existing = semPicState.savedItems[key] || {};
+      const insertedDate = fmt(
+        existing.insertedDate ||
+        r.insertedDate ||
+        existing.createdDate ||
+        (existing.createdAt ? String(existing.createdAt).slice(0,10) : "") ||
+        (r.createdAt ? String(r.createdAt).slice(0,10) : "") ||
+        now.slice(0,10)
+      );
+      const createdAt = fmt(existing.createdAt || r.createdAt || now);
+      const createdBy = fmt(existing.createdBy || r.createdBy || by);
+      const patch = {
         id:r.id,
         expectedCarrier:r.expectedCarrier,
+        deleted:false,
+        insertedDate,
+        createdAt,
+        createdBy,
+        updatedAt: fmt(existing.updatedAt || r.updatedAt || now),
+        updatedBy: fmt(existing.updatedBy || by),
         lastCheckedAt:now,
         lastCheckedBy:by,
         lastStatus: semPicList(r),
@@ -5442,6 +5537,10 @@
         status: fmt(r.status || ""),
         lastRecords: (r.records || []).slice(-80).map(sanitizeEnvioRecord)
       };
+      semPicState.savedItems[key] = Object.assign({}, existing, patch);
+      Object.entries(patch).forEach(([field, value])=>{
+        updates[`${SEMPIC_DB_PATH}/${key}/${field}`] = value;
+      });
     });
     updates[SEMPIC_META_PATH] = {lastAnalysisAt:now, lastAnalysisBy:by};
     await db.ref("/").update(updates);
@@ -7220,6 +7319,258 @@ Esta ação remove estes registos guardados na Firebase.`);
     if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", retCrossInitMultiCarrierFilter);
     else retCrossInitMultiCarrierFilter();
   })();
+
+
+// ===== CARRIER GROUPS MODULE =====
+(function(){
+  const CG_LS_KEY = "wh_carrier_groups_v1";
+
+  function cgLoad(){
+    try{
+      const raw = localStorage.getItem(CG_LS_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }catch(e){ return {}; }
+  }
+
+  function cgSave(groups){
+    try{ localStorage.setItem(CG_LS_KEY, JSON.stringify(groups)); }catch(e){}
+  }
+
+  // Returns { "CORREOS": ["CORREOS PT","CORREOS ES"], "CTT": ["CTT","CTT ILHAS","CTT ES"], ... }
+  function cgGetGroups(){ return cgLoad(); }
+
+  // Returns a map: variantUpperCase -> groupName
+  // e.g. { "CORREOS PT": "CORREOS", "CORREOS ES": "CORREOS", "CTT ILHAS": "CTT" }
+  function cgGetVariantMap(){
+    const groups = cgLoad();
+    const map = {};
+    Object.entries(groups).forEach(([groupName, variants])=>{
+      (variants || []).forEach(v=>{
+        if(v) map[v.trim().toUpperCase()] = groupName.trim().toUpperCase();
+      });
+    });
+    return map;
+  }
+
+  // Given a raw carrier string from the DB, returns the group name if mapped, else returns the original
+  function cgResolveCarrier(rawCarrier){
+    if(!rawCarrier) return rawCarrier;
+    const map = cgGetVariantMap();
+    return map[rawCarrier.trim().toUpperCase()] || rawCarrier;
+  }
+
+  // Expose globally
+  window.cgGetGroups = cgGetGroups;
+  window.cgGetVariantMap = cgGetVariantMap;
+  window.cgResolveCarrier = cgResolveCarrier;
+
+  // ===== UI functions =====
+  function cgRender(){
+    const groups = cgLoad();
+    const list = document.getElementById("cgGroupList");
+    const preview = document.getElementById("cgPreviewTable");
+    if(!list || !preview) return;
+
+    const names = Object.keys(groups).sort();
+    if(!names.length){
+      list.innerHTML = '<div class="mini" style="color:var(--muted);">Nenhum grupo ainda.</div>';
+      preview.innerHTML = '<div class="mini" style="color:var(--muted);">Nenhum grupo configurado.</div>';
+      return;
+    }
+
+    list.innerHTML = names.map(name=>{
+      const variants = (groups[name] || []).filter(Boolean);
+      const varChips = variants.map(v=>`<span class="cgVar">${escapeHtml(v)}</span>`).join("");
+      return `<div class="cgGroupCard">
+        <div class="cgName">${escapeHtml(name)}</div>
+        <div class="cgVars">${varChips || '<span class="mini muted">Sem variantes</span>'}</div>
+        <div class="cgActions">
+          <button class="btn" type="button" onclick="cgEditGroup(${JSON.stringify(name)})">✏ Editar</button>
+          <button class="btn danger" type="button" onclick="cgDeleteGroup(${JSON.stringify(name)})">🗑</button>
+        </div>
+      </div>`;
+    }).join("");
+
+    // Preview table
+    preview.innerHTML = '<div style="display:flex; flex-direction:column;">' +
+      names.map(name=>{
+        const variants = (groups[name] || []).filter(Boolean);
+        return `<div class="cgPreviewRow">
+          <span class="cgGroupLabel">${escapeHtml(name)}</span>
+          <span class="cgArrow">←</span>
+          <span style="display:flex; flex-wrap:wrap; gap:4px;">${variants.map(v=>`<span class="cgVar">${escapeHtml(v)}</span>`).join("") || '<span class="mini muted">nenhuma</span>'}</span>
+        </div>`;
+      }).join("") +
+    '</div>';
+  }
+  window.cgRender = cgRender;
+
+  function cgSaveGroup(){
+    const nameEl = document.getElementById("cgGroupName");
+    const varEl = document.getElementById("cgVariants");
+    const msgEl = document.getElementById("cgFormMsg");
+    if(!nameEl || !varEl) return;
+    const name = (nameEl.value || "").trim().toUpperCase();
+    if(!name){ if(msgEl) msgEl.textContent = "⚠ Insere um nome para o grupo."; return; }
+    const variants = (varEl.value || "").split(/[\n,;]+/).map(s=>s.trim().toUpperCase()).filter(Boolean);
+    const groups = cgLoad();
+    groups[name] = variants;
+    cgSave(groups);
+    if(msgEl){ msgEl.style.color = "var(--ok)"; msgEl.textContent = `✓ Grupo "${name}" guardado com ${variants.length} variante(s).`; setTimeout(()=>{ if(msgEl) msgEl.textContent=""; }, 3000); }
+    cgRender();
+    // Update carrier multi-select to show the group
+    try{ renderCarrierSelect(); }catch(e){}
+  }
+  window.cgSaveGroup = cgSaveGroup;
+
+  function cgClearForm(){
+    const n = document.getElementById("cgGroupName");
+    const v = document.getElementById("cgVariants");
+    const m = document.getElementById("cgFormMsg");
+    if(n) n.value = "";
+    if(v) v.value = "";
+    if(m) m.textContent = "";
+  }
+  window.cgClearForm = cgClearForm;
+
+  function cgEditGroup(name){
+    const groups = cgLoad();
+    const n = document.getElementById("cgGroupName");
+    const v = document.getElementById("cgVariants");
+    if(n) n.value = name;
+    if(v) v.value = (groups[name] || []).join("\n");
+    // Scroll form into view
+    if(n) n.scrollIntoView({behavior:"smooth", block:"center"});
+  }
+  window.cgEditGroup = cgEditGroup;
+
+  function cgDeleteGroup(name){
+    if(!confirm(`Apagar o grupo "${name}"?`)) return;
+    const groups = cgLoad();
+    delete groups[name];
+    cgSave(groups);
+    cgRender();
+    try{ renderCarrierSelect(); }catch(e){}
+  }
+  window.cgDeleteGroup = cgDeleteGroup;
+
+  function cgExportJson(){
+    const groups = cgLoad();
+    const blob = new Blob([JSON.stringify(groups, null, 2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "carrier_groups.json";
+    a.click();
+  }
+  window.cgExportJson = cgExportJson;
+
+  function cgImportJson(input){
+    const file = input.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = e=>{
+      try{
+        const data = JSON.parse(e.target.result);
+        if(typeof data !== "object" || Array.isArray(data)) throw new Error("Formato inválido");
+        cgSave(data);
+        cgRender();
+        alert("Grupos importados com sucesso.");
+        try{ renderCarrierSelect(); }catch(e2){}
+      }catch(err){ alert("Erro ao importar: " + err.message); }
+    };
+    reader.readAsText(file);
+    input.value = "";
+  }
+  window.cgImportJson = cgImportJson;
+
+  function cgResetAll(){
+    if(!confirm("Apagar TODOS os grupos de transportadoras?")) return;
+    localStorage.removeItem(CG_LS_KEY);
+    cgRender();
+    try{ renderCarrierSelect(); }catch(e){}
+  }
+  window.cgResetAll = cgResetAll;
+
+  // ===== HOOK INTO CROSSCHECK =====
+  // We patch getSelectedCarriers so that when a carrier is selected,
+  // we expand it to include all its variants AND add the variants to state.carriers if needed.
+  // The key integration: in renderCarrierSelect, we show GROUP names in the multi-select.
+  // When the crosscheck runs, if a group is selected, we use the variants as the "allowed" set.
+
+  // Patch: after state and renderCarrierSelect are defined, wrap the function to inject groups
+  const _origRenderCarrierSelect = typeof renderCarrierSelect === "function" ? renderCarrierSelect : null;
+
+  function patchRenderCarrierSelectWithGroups(){
+    const orig = window.renderCarrierSelect;
+    if(!orig || orig._cgPatched) return;
+    window.renderCarrierSelect = function(){
+      orig();
+      // Inject group options into carrierMulti
+      const ms = document.getElementById("carrierMulti");
+      const groups = cgLoad();
+      const groupNames = Object.keys(groups).sort();
+      if(!ms || !groupNames.length) return;
+      const existing = new Set(Array.from(ms.options).map(o=>o.value.toUpperCase()));
+      groupNames.forEach(gName=>{
+        const key = "GROUP:" + gName;
+        if(!existing.has(key.toUpperCase())){
+          const opt = document.createElement("option");
+          opt.value = key;
+          opt.textContent = "▸ " + gName + " (grupo)";
+          opt.style.color = "#ffb020";
+          opt.style.fontWeight = "900";
+          ms.insertBefore(opt, ms.firstChild);
+        }
+      });
+    };
+    window.renderCarrierSelect._cgPatched = true;
+  }
+
+  // Also patch getSelectedCarriers to expand GROUP: prefix
+  const _origGetSelectedCarriers = typeof getSelectedCarriers === "function" ? getSelectedCarriers : null;
+  if(_origGetSelectedCarriers){
+    window.getSelectedCarriers = function(){
+      const raw = _origGetSelectedCarriers();
+      const groups = cgLoad();
+      const variantMap = cgGetVariantMap();
+      const expanded = [];
+      raw.forEach(c=>{
+        if(c.startsWith("GROUP:")){
+          const gName = c.slice(6);
+          const variants = groups[gName] || [];
+          variants.forEach(v=>{ if(v && !expanded.includes(v)) expanded.push(v); });
+        } else {
+          if(!expanded.includes(c)) expanded.push(c);
+        }
+      });
+      return expanded.length ? expanded : raw;
+    };
+  }
+
+  // Patch safeKey-based comparison in crosscheck to resolve carrier groups
+  // We expose a helper: cgExpandCarriersForCrosscheck
+  window.cgExpandCarriersForCrosscheck = function(carriers){
+    const groups = cgLoad();
+    const out = [];
+    carriers.forEach(c=>{
+      if(c.startsWith("GROUP:")){
+        const gName = c.slice(6);
+        (groups[gName] || []).forEach(v=>{ if(v && !out.includes(v)) out.push(v); });
+      } else {
+        if(!out.includes(c)) out.push(c);
+      }
+    });
+    return out.length ? out : carriers;
+  };
+
+  // Run initial render if tab is active, otherwise defer
+  document.addEventListener("DOMContentLoaded", ()=>{
+    setTimeout(()=>{ try{ patchRenderCarrierSelectWithGroups(); }catch(e){} }, 200);
+    setTimeout(()=>{ try{ if(window.renderCarrierSelect) renderCarrierSelect(); }catch(e){} }, 400);
+  });
+
+})();
+// ===== END CARRIER GROUPS MODULE =====
 
 </script>
 
