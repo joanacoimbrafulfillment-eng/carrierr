@@ -612,11 +612,18 @@
     .casesTypeBadge.BROKEN{background:#dc2626;}
     .casesTypeBadge.SWIPE{background:#7c3aed;}
     .casesTypeBadge.LOST{background:#f59e0b; color:#111827;}
+    .casesStatusBadge{display:inline-block; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:900; text-transform:uppercase; white-space:normal; word-break:break-word;}
+    .casesStatusBadge.denied{background:#fee2e2; color:#991b1b; border:1px solid #fecaca;}
+    .casesStatusBadge.pending{background:#fef3c7; color:#92400e; border:1px solid #fcd34d;}
+    .casesStatusBadge.paid{background:#dcfce7; color:#166534; border:1px solid #86efac;}
+    .casesStatusBadge.neutral{background:#f1f5f9; color:#475569; border:1px solid #e2e8f0;}
     .casesTable{min-width:1280px; table-layout:fixed;}
     .casesTable th,.casesTable td{white-space:normal; overflow-wrap:anywhere; word-break:break-word; vertical-align:top;}
     .casesTable th:nth-child(1),.casesTable td:nth-child(1){width:92px;}
     .casesTable th:nth-child(2),.casesTable td:nth-child(2){width:115px;}
     .casesTable th:nth-child(3),.casesTable td:nth-child(3){width:150px;}
+    .casesTable th:nth-child(4),.casesTable td:nth-child(4){width:130px;}
+    .casesTable th:nth-child(5),.casesTable td:nth-child(5){width:110px;}
     .casesTable th:last-child,.casesTable td:last-child{position:sticky; right:0; background:#fff; z-index:4; box-shadow:-8px 0 12px rgba(15,23,42,.06); width:175px;}
     .casesTable th:last-child{z-index:12; background:#f1f3f5;}
     .casesMiniGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px;}
@@ -664,7 +671,7 @@
     .casesCrossGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:8px; margin-top:8px;}
     .casesCrossItem{background:#fff; border:1px solid #fed7aa; border-radius:10px; padding:9px; font-size:12px; line-height:1.35;}
     .casesCrossItem b{display:block; color:#334155; font-size:11px; text-transform:uppercase; margin-bottom:3px;}
-    .casesCrossBadge{display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:5px 9px; font-size:11px; font-weight:900; text-transform:uppercase; border:1px solid #e5e7eb; white-space:nowrap; margin:3px 4px 3px 0;}
+    .casesCrossBadge{display:inline-flex; align-items:center; gap:4px; border-radius:999px; padding:3px 7px; font-size:10px; font-weight:900; text-transform:uppercase; border:1px solid #e5e7eb; white-space:normal; word-break:break-word; margin:2px 2px 2px 0; max-width:100%;}
     .casesCrossBadge.none{background:#f8fafc; color:#64748b; border-color:#cbd5e1;}
     .casesCrossBadge.warn{background:#ffedd5; color:#c2410c; border-color:#fdba74;}
     .casesCrossBadge.bad{background:#fee2e2; color:#991b1b; border-color:#fecaca;}
@@ -8769,7 +8776,42 @@ Esta ação remove estes registos guardados na Firebase.`);
       }).join("");
       Object.entries(current).forEach(([k,v])=>setVal("caseField_" + k, v));
       const dw = byId("caseField_dateWarehouse");
-      if(dw && state.currentAutoData && state.currentAutoData.dateWarehouse && !dw.value) dw.value = state.currentAutoData.dateWarehouse;
+      if(dw && state.currentAutoData){
+        if(state.currentAutoData.dateWarehouse && !dw.value){
+          dw.value = state.currentAutoData.dateWarehouse;
+          dw.dataset.autoFilled = "1";
+          dw.style.borderColor = "#28a745";
+          dw.style.background  = "#f0fff4";
+          // Recriar badge depois do re-render do form
+          setTimeout(()=>{
+            const dwEl = byId("caseField_dateWarehouse");
+            if(!dwEl) return;
+            let badge = byId("dwAutoFillBadge");
+            if(!badge){
+              badge = document.createElement("div");
+              badge.id = "dwAutoFillBadge";
+              badge.style.cssText = "font-size:12px; font-weight:800; margin-top:4px; padding:5px 10px; border-radius:8px; display:inline-block;";
+              if(dwEl.parentNode) dwEl.parentNode.appendChild(badge);
+            }
+            badge.style.background = "#d1fae5";
+            badge.style.color      = "#065f46";
+            badge.style.border     = "1px solid #6ee7b7";
+            const ad = state.currentAutoData;
+            badge.textContent = "✅ Preenchido automaticamente (" + (ad.returnRefundMode || "RETURN/REFUND") + " · " + (ad.returnRefundDateTime || ad.dateWarehouse) + ")";
+            if(!dwEl.dataset.manualClearReady){
+              dwEl.dataset.manualClearReady = "1";
+              dwEl.addEventListener("input", function(){
+                dwEl.style.borderColor = ""; dwEl.style.background = ""; dwEl.dataset.autoFilled = "";
+                const b = byId("dwAutoFillBadge");
+                if(b){ b.textContent="✏ Data editada manualmente"; b.style.background="#f8fafc"; b.style.color="#475569"; b.style.border="1px solid #e2e8f0"; }
+              });
+            }
+          }, 0);
+        } else if(!state.currentAutoData.dateWarehouse && !dw.value){
+          dw.style.borderColor = "#f59e0b";
+          dw.style.background  = "#fffbeb";
+        }
+      }
     }
     window.renderCasesFormFields = renderCasesFormFields;
 
@@ -8886,10 +8928,65 @@ Esta ação remove estes registos guardados na Firebase.`);
         };
         state.currentAutoData = data;
         renderCasesAutoData(data);
+
         const dw = byId("caseField_dateWarehouse");
-        if(dw && data.dateWarehouse && !dw.value) dw.value = data.dateWarehouse;
-        if(data.dateWarehouse && !opts.silent) setStatus("Dados Firebase encontrados e DATE WAREHOUSE preenchida ✅", "ok");
-        else if(!opts.silent) setStatus("Pesquisa feita. Sem RETURN/REFUND para preencher DATE WAREHOUSE; mantém manual.", "warn");
+        if(dw){
+          if(data.dateWarehouse){
+            // Preenche sempre com o valor da Firebase (return/refund encontrado)
+            dw.value = data.dateWarehouse;
+            dw.dataset.autoFilled = "1";
+            dw.readOnly = false;
+            dw.title = "Data preenchida automaticamente via Firebase (RETURN/REFUND). Podes editar manualmente se necessário.";
+            dw.style.borderColor = "#28a745";
+            dw.style.background  = "#f0fff4";
+            let badge = byId("dwAutoFillBadge");
+            if(!badge){
+              badge = document.createElement("div");
+              badge.id = "dwAutoFillBadge";
+              badge.style.cssText = "font-size:12px; font-weight:800; margin-top:4px; padding:5px 10px; border-radius:8px; display:inline-block;";
+              if(dw.parentNode) dw.parentNode.appendChild(badge);
+            }
+            badge.style.background = "#d1fae5";
+            badge.style.color      = "#065f46";
+            badge.style.border     = "1px solid #6ee7b7";
+            badge.textContent      = "✅ Preenchido automaticamente (" + (data.returnRefundMode || "RETURN/REFUND") + " · " + (data.returnRefundDateTime || data.dateWarehouse) + ")";
+          } else {
+            // Não encontrou — limpa valor se foi preenchido automaticamente antes, deixa editável
+            if(dw.dataset.autoFilled === "1"){
+              dw.value = "";
+              dw.dataset.autoFilled = "";
+            }
+            dw.readOnly = false;
+            dw.title = "Não foi encontrado RETURN/REFUND na Firebase. Insere a data manualmente.";
+            dw.style.borderColor = "#f59e0b";
+            dw.style.background  = "#fffbeb";
+            let badge = byId("dwAutoFillBadge");
+            if(!badge){
+              badge = document.createElement("div");
+              badge.id = "dwAutoFillBadge";
+              badge.style.cssText = "font-size:12px; font-weight:800; margin-top:4px; padding:5px 10px; border-radius:8px; display:inline-block;";
+              if(dw.parentNode) dw.parentNode.appendChild(badge);
+            }
+            badge.style.background = "#fef3c7";
+            badge.style.color      = "#92400e";
+            badge.style.border     = "1px solid #fcd34d";
+            badge.textContent      = "⚠ Sem RETURN/REFUND — insere a data manualmente";
+          }
+          // Ao editar manualmente, remove o highlight automático
+          if(!dw.dataset.manualClearReady){
+            dw.dataset.manualClearReady = "1";
+            dw.addEventListener("input", function(){
+              dw.style.borderColor = "";
+              dw.style.background  = "";
+              dw.dataset.autoFilled = "";
+              const b = byId("dwAutoFillBadge");
+              if(b){ b.textContent = "✏ Data editada manualmente"; b.style.background="#f8fafc"; b.style.color="#475569"; b.style.border="1px solid #e2e8f0"; }
+            });
+          }
+        }
+
+        if(data.dateWarehouse && !opts.silent) setStatus("DATE WAREHOUSE preenchida automaticamente via Firebase ✅", "ok");
+        else if(!opts.silent) setStatus("Sem RETURN/REFUND encontrado — preenche a DATE WAREHOUSE manualmente.", "warn");
         return data;
       }catch(e){
         console.error(e);
@@ -9345,6 +9442,11 @@ Esta ação remove estes registos guardados na Firebase.`);
       renderCasesAutoData(null);
       renderCasesCrosscheckData(null);
       const hint = byId("casesEditingHint"); if(hint) hint.textContent = "";
+      // Limpar estado visual do campo dateWarehouse
+      const dw = byId("caseField_dateWarehouse");
+      if(dw){ dw.style.borderColor=""; dw.style.background=""; dw.dataset.autoFilled=""; dw.dataset.manualClearReady=""; }
+      const badge = byId("dwAutoFillBadge");
+      if(badge) badge.remove();
       renderCasesFormFields();
     }
     window.clearCaseForm = clearCaseForm;
@@ -9603,6 +9705,21 @@ Esta ação remove estes registos guardados na Firebase.`);
       return Array.from(keys.values()).slice(0, 9);
     }
 
+    function caseStatusClass(value){
+      const v = String(value || "").toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+      if(!v) return "neutral";
+      if(v.includes("DENIED") || v.includes("RECUSADO") || v.includes("DENY") || v.includes("REJECTED") || v.includes("NAO PAGO") || v.includes("NO")) return "denied";
+      if(v.includes("PAID") || v.includes("PAGO") || v.includes("PAGA") || v.includes("SIM") || v.includes("YES") || v.includes("ACEITE") || v.includes("ACCEPTED") || v.includes("LIQUIDADO")) return "paid";
+      if(v.includes("PENDING") || v.includes("PENDENTE") || v.includes("AGUARDA") || v.includes("ABERTO") || v.includes("OPEN") || v.includes("WAIT")) return "pending";
+      return "neutral";
+    }
+    function caseFieldCellHtml(f, value){
+      const v = value || "";
+      const isStatus = f.key === "status";
+      if(isStatus && v) return `<span class="casesStatusBadge ${caseStatusClass(v)}">${esc(v)}</span>`;
+      return esc(v);
+    }
+
     function renderCasesTable(){
       const thead = byId("casesThead"), tbody = byId("casesTbody");
       if(!thead || !tbody) return;
@@ -9630,7 +9747,7 @@ Esta ação remove estes registos guardados na Firebase.`);
           <td><b>${esc(r.carrier)}</b></td>
           <td><span class="mini">${esc(fb)}</span>${fd.packingItems ? '<span class="casesDbBadge">PACKING DB</span>' : ''}</td>
           <td>${crosscheckBadgeHtml(r.crosscheckData || {})}<div class="mini">${esc(crosscheckSummaryText(r.crosscheckData || {}))}</div></td>
-          ${fields.map(f=>`<td>${esc((r.fields || {})[f.key] || "")}</td>`).join("")}
+          ${fields.map(f=>`<td>${caseFieldCellHtml(f, (r.fields || {})[f.key] || "")}</td>`).join("")}
           <td><div class="casesActions"><button class="btn-mini info" type="button" onclick="startInlineEditCaseRecord('${esc(r.key)}')">${isInlineEditing ? 'A editar' : 'Editar'}</button><button class="btn-mini warn" type="button" onclick="openCaseHistory('${esc(r.key)}')">Histórico</button><button class="btn-mini mutedBtn" type="button" onclick="openCaseIdHistory('${esc(r.id)}','${esc(r.key)}')">Hist. ID</button><button class="btn-mini ok" type="button" onclick="openCaseCrosscheck('${esc(r.id)}','${esc(r.key)}')">Coincid.</button><button class="btn-mini danger" type="button" onclick="deleteCaseRecord('${esc(r.key)}')">Eliminar</button></div></td>
         </tr>`;
           return mainRow + (isInlineEditing ? renderCaseInlineEditorRow(r, 6 + fields.length) : "");
