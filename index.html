@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WH-MURTEDE - Envios em Análise</title>
+  <title>WH-MURTEDE - Envios em Análise v30</title>
 
   <!-- Firebase (compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -722,7 +722,7 @@
       <button id="tabBtnCases" class="tabBtn" type="button" onclick="switchTab('cases')">Broken / Swipe / Lost</button>
       <button id="tabBtnEnvios" class="tabBtn active" type="button" onclick="switchTab('envios')">Envios em Analise</button>
       <button id="tabBtnSemPic" class="tabBtn" type="button" onclick="switchTab('sempic')">IDs sem picagens da transportadora</button>
-      <button id="tabBtnCarrierGroups" class="tabBtn" type="button" onclick="switchTab('carriergroups')" style="border-color:rgba(255,176,32,.35);color:#ffb020;">⚙ Grupos Transportadoras</button>
+      <button id="tabBtnCarrierGroups" class="tabBtn" type="button" onclick="switchTab('carriergroups')" style="border-color:rgba(255,176,32,.35);color:#ffb020;">⚙ Grupos Transportadoras 🔗</button>
     </div>
 
     <div id="tabCrosscheck" class="tabPanel">
@@ -1654,7 +1654,13 @@
   <div id="tabCarrierGroups" class="tabPanel">
     <div style="max-width:820px; margin:18px auto; display:flex; flex-direction:column; gap:16px;">
       <div class="card" style="border-top:3px solid var(--warn);">
-        <h2 style="margin-bottom:4px;">⚙ Grupos de Transportadoras</h2>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; margin-bottom:4px;">
+          <h2 style="margin:0;">⚙ Grupos de Transportadoras</h2>
+          <span id="cgSyncBadge" style="font-size:12px; font-weight:800; color:#7f8c8d; padding:6px 10px; border-radius:999px; background:#f8fafc; border:1px solid #e5e7eb;">⏳ A carregar...</span>
+        </div>
+        <div class="notice" style="margin-bottom:14px; background:#eff6ff; border-left:5px solid #3498db; color:#1e3a8a;">
+          <b>🔗 Dados partilhados via Firebase.</b> Qualquer grupo criado, editado ou apagado aqui fica <b>imediatamente visível para todos os utilizadores</b> (em tempo real). É necessário fazer login para guardar alterações.
+        </div>
         <p class="mini" style="margin:0 0 14px;">Define aqui que transportadoras da base de dados pertencem ao mesmo grupo. Quando selecionas um grupo no Crosscheck Expedições, o sistema inclui automaticamente todas as variantes associadas.</p>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
@@ -7321,26 +7327,108 @@ Esta ação remove estes registos guardados na Firebase.`);
   })();
 
 
-// ===== CARRIER GROUPS MODULE =====
+// ===== CARRIER GROUPS MODULE (v30 — Firebase partilhado por todos os utilizadores) =====
 (function(){
-  const CG_LS_KEY = "wh_carrier_groups_v1";
+  // ── Firebase path ──────────────────────────────────────────────────────────
+  const CG_FB_PATH   = "carrier_groups_shared/groups";   // nó na Firebase (partilhado)
+  const CG_LS_KEY    = "wh_carrier_groups_v1";           // localStorage como cache local
 
-  function cgLoad(){
+  // Estado em memória (cache) para leituras síncronas dentro da sessão
+  let _cgMemCache    = null;   // null = ainda não carregado
+  let _cgRealtimeRef = null;
+  let _cgRealtimeCb  = null;
+
+  // ── helpers Firebase ────────────────────────────────────────────────────────
+  function cgHasFirebase(){
+    try{ return typeof db !== "undefined" && db && typeof auth !== "undefined" && auth && auth.currentUser; }
+    catch(e){ return false; }
+  }
+
+  // ── cache em memória + localStorage (fallback offline) ─────────────────────
+  function cgLoadLocal(){
     try{
       const raw = localStorage.getItem(CG_LS_KEY);
       return raw ? JSON.parse(raw) : {};
     }catch(e){ return {}; }
   }
-
-  function cgSave(groups){
+  function cgSaveLocal(groups){
     try{ localStorage.setItem(CG_LS_KEY, JSON.stringify(groups)); }catch(e){}
   }
 
-  // Returns { "CORREOS": ["CORREOS PT","CORREOS ES"], "CTT": ["CTT","CTT ILHAS","CTT ES"], ... }
+  // Leitura síncrona — usa cache em memória se disponível, senão localStorage
+  function cgLoad(){
+    if(_cgMemCache !== null) return _cgMemCache;
+    return cgLoadLocal();
+  }
+
+  // Escrita: atualiza memória + localStorage + Firebase (se autenticado)
+  async function cgSave(groups){
+    _cgMemCache = groups;
+    cgSaveLocal(groups);
+    if(cgHasFirebase()){
+      try{ await db.ref(CG_FB_PATH).set(groups); }
+      catch(e){ console.warn("cgSave Firebase", e); }
+    }
+  }
+
+  // Carrega da Firebase uma vez; atualiza cache e localStorage
+  async function cgLoadFromFirebase(){
+    if(!cgHasFirebase()) return;
+    try{
+      const snap = await db.ref(CG_FB_PATH).once("value");
+      const data = snap.val() || {};
+      _cgMemCache = data;
+      cgSaveLocal(data);
+      cgRender();
+      try{ if(window.renderCarrierSelect) renderCarrierSelect(); }catch(e){}
+    }catch(e){ console.warn("cgLoadFromFirebase", e); }
+  }
+
+  // Listener em tempo real — todos os browsers recebem alterações instantaneamente
+  function cgStartRealtime(){
+    if(!cgHasFirebase()) return;
+    if(_cgRealtimeRef) return; // já iniciado
+    try{
+      _cgRealtimeRef = db.ref(CG_FB_PATH);
+      _cgRealtimeCb = function(snap){
+        const data = snap.val() || {};
+        _cgMemCache = data;
+        cgSaveLocal(data);
+        cgRender();
+        try{ if(window.renderCarrierSelect) renderCarrierSelect(); }catch(e){}
+        // mostra badge de sincronização
+        const badge = document.getElementById("cgSyncBadge");
+        if(badge){ badge.textContent = "🔄 Sincronizado " + new Date().toLocaleTimeString("pt-PT"); badge.style.color = "var(--ok)"; }
+      };
+      _cgRealtimeRef.on("value", _cgRealtimeCb, err=>{ console.warn("cgRealtime", err); });
+    }catch(e){ console.warn("cgStartRealtime", e); }
+  }
+
+  function cgStopRealtime(){
+    try{ if(_cgRealtimeRef && _cgRealtimeCb) _cgRealtimeRef.off("value", _cgRealtimeCb); }catch(e){}
+    _cgRealtimeRef = null;
+    _cgRealtimeCb  = null;
+  }
+
+  // Arranca quando o utilizador faz login / para no logout
+  if(typeof auth !== "undefined" && auth && auth.onAuthStateChanged){
+    auth.onAuthStateChanged(user=>{
+      if(user){
+        setTimeout(()=>{
+          cgLoadFromFirebase().then(()=>{ cgStartRealtime(); });
+        }, 600);
+      } else {
+        cgStopRealtime();
+        // Quando sem login carrega do localStorage (cache offline)
+        _cgMemCache = cgLoadLocal();
+        cgRender();
+      }
+    });
+  }
+
+  // ── API pública síncrona (usada pelo crosscheck) ────────────────────────────
   function cgGetGroups(){ return cgLoad(); }
 
-  // Returns a map: variantUpperCase -> groupName
-  // e.g. { "CORREOS PT": "CORREOS", "CORREOS ES": "CORREOS", "CTT ILHAS": "CTT" }
   function cgGetVariantMap(){
     const groups = cgLoad();
     const map = {};
@@ -7352,28 +7440,26 @@ Esta ação remove estes registos guardados na Firebase.`);
     return map;
   }
 
-  // Given a raw carrier string from the DB, returns the group name if mapped, else returns the original
   function cgResolveCarrier(rawCarrier){
     if(!rawCarrier) return rawCarrier;
     const map = cgGetVariantMap();
     return map[rawCarrier.trim().toUpperCase()] || rawCarrier;
   }
 
-  // Expose globally
-  window.cgGetGroups = cgGetGroups;
-  window.cgGetVariantMap = cgGetVariantMap;
+  window.cgGetGroups      = cgGetGroups;
+  window.cgGetVariantMap  = cgGetVariantMap;
   window.cgResolveCarrier = cgResolveCarrier;
 
-  // ===== UI functions =====
+  // ── UI ─────────────────────────────────────────────────────────────────────
   function cgRender(){
     const groups = cgLoad();
-    const list = document.getElementById("cgGroupList");
+    const list    = document.getElementById("cgGroupList");
     const preview = document.getElementById("cgPreviewTable");
     if(!list || !preview) return;
 
     const names = Object.keys(groups).sort();
     if(!names.length){
-      list.innerHTML = '<div class="mini" style="color:var(--muted);">Nenhum grupo ainda.</div>';
+      list.innerHTML    = '<div class="mini" style="color:var(--muted);">Nenhum grupo ainda.</div>';
       preview.innerHTML = '<div class="mini" style="color:var(--muted);">Nenhum grupo configurado.</div>';
       return;
     }
@@ -7391,7 +7477,6 @@ Esta ação remove estes registos guardados na Firebase.`);
       </div>`;
     }).join("");
 
-    // Preview table
     preview.innerHTML = '<div style="display:flex; flex-direction:column;">' +
       names.map(name=>{
         const variants = (groups[name] || []).filter(Boolean);
@@ -7405,20 +7490,20 @@ Esta ação remove estes registos guardados na Firebase.`);
   }
   window.cgRender = cgRender;
 
-  function cgSaveGroup(){
+  async function cgSaveGroup(){
     const nameEl = document.getElementById("cgGroupName");
-    const varEl = document.getElementById("cgVariants");
-    const msgEl = document.getElementById("cgFormMsg");
+    const varEl  = document.getElementById("cgVariants");
+    const msgEl  = document.getElementById("cgFormMsg");
     if(!nameEl || !varEl) return;
     const name = (nameEl.value || "").trim().toUpperCase();
     if(!name){ if(msgEl) msgEl.textContent = "⚠ Insere um nome para o grupo."; return; }
     const variants = (varEl.value || "").split(/[\n,;]+/).map(s=>s.trim().toUpperCase()).filter(Boolean);
     const groups = cgLoad();
     groups[name] = variants;
-    cgSave(groups);
-    if(msgEl){ msgEl.style.color = "var(--ok)"; msgEl.textContent = `✓ Grupo "${name}" guardado com ${variants.length} variante(s).`; setTimeout(()=>{ if(msgEl) msgEl.textContent=""; }, 3000); }
+    if(msgEl){ msgEl.style.color = "#888"; msgEl.textContent = "A guardar…"; }
+    await cgSave(groups);
+    if(msgEl){ msgEl.style.color = "var(--ok)"; msgEl.textContent = `✓ Grupo "${name}" guardado com ${variants.length} variante(s) — visível para todos os utilizadores.`; setTimeout(()=>{ if(msgEl) msgEl.textContent=""; }, 4000); }
     cgRender();
-    // Update carrier multi-select to show the group
     try{ renderCarrierSelect(); }catch(e){}
   }
   window.cgSaveGroup = cgSaveGroup;
@@ -7439,16 +7524,15 @@ Esta ação remove estes registos guardados na Firebase.`);
     const v = document.getElementById("cgVariants");
     if(n) n.value = name;
     if(v) v.value = (groups[name] || []).join("\n");
-    // Scroll form into view
     if(n) n.scrollIntoView({behavior:"smooth", block:"center"});
   }
   window.cgEditGroup = cgEditGroup;
 
-  function cgDeleteGroup(name){
+  async function cgDeleteGroup(name){
     if(!confirm(`Apagar o grupo "${name}"?`)) return;
     const groups = cgLoad();
     delete groups[name];
-    cgSave(groups);
+    await cgSave(groups);
     cgRender();
     try{ renderCarrierSelect(); }catch(e){}
   }
@@ -7464,17 +7548,17 @@ Esta ação remove estes registos guardados na Firebase.`);
   }
   window.cgExportJson = cgExportJson;
 
-  function cgImportJson(input){
+  async function cgImportJson(input){
     const file = input.files[0];
     if(!file) return;
     const reader = new FileReader();
-    reader.onload = e=>{
+    reader.onload = async e=>{
       try{
         const data = JSON.parse(e.target.result);
         if(typeof data !== "object" || Array.isArray(data)) throw new Error("Formato inválido");
-        cgSave(data);
+        await cgSave(data);
         cgRender();
-        alert("Grupos importados com sucesso.");
+        alert("Grupos importados com sucesso — todos os utilizadores verão as alterações.");
         try{ renderCarrierSelect(); }catch(e2){}
       }catch(err){ alert("Erro ao importar: " + err.message); }
     };
@@ -7483,9 +7567,11 @@ Esta ação remove estes registos guardados na Firebase.`);
   }
   window.cgImportJson = cgImportJson;
 
-  function cgResetAll(){
-    if(!confirm("Apagar TODOS os grupos de transportadoras?")) return;
+  async function cgResetAll(){
+    if(!confirm("Apagar TODOS os grupos de transportadoras? Esta ação afeta todos os utilizadores.")) return;
+    await cgSave({});
     localStorage.removeItem(CG_LS_KEY);
+    _cgMemCache = {};
     cgRender();
     try{ renderCarrierSelect(); }catch(e){}
   }
