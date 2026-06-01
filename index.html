@@ -1287,7 +1287,7 @@
         <div class="card">
           <h2>📦 Envios em Análise</h2>
           <div class="notice">
-            Cola aqui os IDs em dúvida. Ao guardar, cada ID fica com <b>data de inserção do dia</b>, fica persistido na Firebase em <span class="mono">envios_analise/items</span> e o sistema verifica logo se foi <b>PACKING</b>, <b>RETURN</b> ou <b>REFUND</b>. IDs com return/refund passam automaticamente para a lista própria; depois podes marcar como visto para irem para <b>Verificados</b>.
+            Cola aqui os IDs em dúvida. Ao guardar, cada ID fica com <b>data de inserção do dia</b>, fica persistido na Firebase em <span class="mono">envios_analise/items</span> e o sistema verifica logo se foi <b>PACKING</b>, <b>RETURN</b> ou <b>REFUND</b>. IDs com return/refund passam automaticamente para a lista própria; quando marcas como <b>Já vi</b>, <b>Entregue</b> ou <b>Entregue/Paid</b>, ficam <b>encerrados</b> e permanecem só na respetiva listagem final.
           </div>
 
           <label>Order IDs</label>
@@ -2173,7 +2173,15 @@
       if(!item || item.deleted) return;
       const id = normaliseOrderId(item.id || key);
       if(!id) return;
-      saved[id] = Object.assign({}, item, {id});
+      const incomingItem = Object.assign({}, item, {id});
+      const previousItem = (enviosState.savedItems && enviosState.savedItems[id]) || {};
+      // Proteção contra snapshots antigos do realtime: se este browser acabou de encerrar
+      // um ID e chega um snapshot anterior sem esse estado, preserva o estado terminal local.
+      if(isEnvioTerminal(previousItem) && !isEnvioTerminal(incomingItem) && enviosIncomingLooksOlder(previousItem, incomingItem)){
+        saved[id] = Object.assign({}, incomingItem, pickEnvioTerminalFields(previousItem), {id});
+      } else {
+        saved[id] = incomingItem;
+      }
       ids.push(id);
     });
     ids.sort((a,b)=>a.localeCompare(b, undefined, {numeric:true}));
@@ -2231,12 +2239,20 @@
   }
 
   function refreshEnviosRowsFromSaved(){
-    if(!enviosState.rows || !enviosState.rows.length){ updateEnviosKPIs(); renderEnviosTable(); return; }
-    enviosState.rows = sortEnviosByPackingDateAsc(enviosState.rows.map(r=>{
-      // Rows terminais mantêm-se como estão — não reconstruir a partir do savedItems
-      // para evitar perda de estado em caso de race condition com o listener do Firebase.
-      if(r.seen || r.entregue || r.entregue_paid) return r;
-      return buildEnviosRow(r.id, r.records || []);
+    const currentRows = enviosState.rows || [];
+    if(!currentRows.length){
+      enviosState.rows = sortEnviosByPackingDateAsc(Object.values(enviosState.savedItems || {})
+        .filter(item => item && !item.deleted)
+        .map(item => buildEnviosRow(item.id, item.lastRecords || [])));
+      updateEnviosKPIs();
+      renderEnviosTable();
+      return;
+    }
+    enviosState.rows = sortEnviosByPackingDateAsc(currentRows.map(r=>{
+      const saved = savedEnvio(r.id);
+      // IDs encerrados ficam congelados na listagem final; não reconstruir a partir de RETURN/REFUND.
+      if(isEnvioTerminal(r) || isEnvioTerminal(saved)) return buildEnviosRow(r.id, (r.records && r.records.length ? r.records : (saved.lastRecords || [])));
+      return buildEnviosRow(r.id, r.records || saved.lastRecords || []);
     }));
     updateEnviosKPIs();
     renderEnviosTable();
@@ -4310,10 +4326,64 @@
     return !!String(manual || "").trim();
   }
 
+  function envioTerminalList(rowOrItem){
+    if(!rowOrItem) return "";
+    const lastStatus = String(rowOrItem.lastStatus || rowOrItem.closedReason || "").toUpperCase();
+    // Ordem intencional: Entregue/Paid > Entregue > Já vi.
+    if(rowOrItem.entregue_paid || lastStatus === "ENTREGUE_PAID") return "ENTREGUE_PAID";
+    if(rowOrItem.entregue || lastStatus === "ENTREGUE") return "ENTREGUE";
+    if(rowOrItem.seen || rowOrItem.seenAt || lastStatus === "VERIFIED") return "VERIFIED";
+    return "";
+  }
+
+  function isEnvioTerminal(rowOrItem){
+    return !!envioTerminalList(rowOrItem);
+  }
+
+  function pickEnvioTerminalFields(rowOrItem){
+    const o = rowOrItem || {};
+    const out = {};
+    ["seen","seenAt","seenBy","entregue","entregue_paid","entregueAt","entregueBy","entregue_paidAt","entregue_paidBy","closed","closedAt","closedBy","closedReason","lastStatus"].forEach(k=>{
+      if(o[k] !== undefined) out[k] = o[k];
+    });
+    return out;
+  }
+
+  function enviosDateValueForCompare(v){
+    const t = Date.parse(String(v || ""));
+    return Number.isFinite(t) ? t : 0;
+  }
+
+  function enviosItemUpdatedMs(item){
+    return Math.max(
+      enviosDateValueForCompare(item && item.updatedAt),
+      enviosDateValueForCompare(item && item.closedAt),
+      enviosDateValueForCompare(item && item.seenAt),
+      enviosDateValueForCompare(item && item.entregue_paidAt),
+      enviosDateValueForCompare(item && item.entregueAt),
+      enviosDateValueForCompare(item && item.lastCheckedAt)
+    );
+  }
+
+  function enviosIncomingLooksOlder(previousItem, incomingItem){
+    const previousMs = enviosItemUpdatedMs(previousItem);
+    const incomingMs = enviosItemUpdatedMs(incomingItem);
+    if(!incomingMs && previousMs) return true;
+    if(previousMs && incomingMs && incomingMs < previousMs) return true;
+    return false;
+  }
+
+  function envioOpenReturnOrRefund(row){
+    return !!(row && !isEnvioTerminal(row) && (row.return || row.refund));
+  }
+
+  function envioOpenNoRecord(row){
+    return !!(row && !isEnvioTerminal(row) && (!row.records || !row.records.length));
+  }
+
   function envioList(row){
-    if(row && row.entregue_paid) return "ENTREGUE_PAID";
-    if(row && row.entregue) return "ENTREGUE";
-    if(row && row.seen) return "VERIFIED";
+    const terminal = envioTerminalList(row);
+    if(terminal) return terminal;
     if(row && (row.return || row.refund)) return "RETURN_OR_REFUND";
     if(row && (!row.records || !row.records.length)) return "NO_RECORD";
     return "ACTIVE";
@@ -4350,8 +4420,9 @@
     const insertedDate = fmt(saved.insertedDate || (saved.createdAt ? String(saved.createdAt).slice(0,10) : ""));
     const createdBy = fmt(saved.createdBy || "");
     const observacoes = fmt(saved.observacoes || "");
-    const entregue = !!saved.entregue;
-    const entregue_paid = !!saved.entregue_paid;
+    const savedTerminal = envioTerminalList(saved);
+    const entregue_paid = !!saved.entregue_paid || savedTerminal === "ENTREGUE_PAID";
+    const entregue = !!saved.entregue || savedTerminal === "ENTREGUE" || entregue_paid;
 
     // Carrier is taken from the latest PACKING record first. This handles IDs that were packed,
     // cancelled/recreated and then packed again under a different carrier. If the registo has no
@@ -4362,7 +4433,7 @@
     const items = fmt((packing && packing.items) || (issue && issue.items) || (latest && latest.items) || saved.items || "");
     const user = fmt((packing && packing.user) || (issue && issue.user) || (latest && latest.user) || saved.user || "");
     const returnRefundDate = fmt((issue && issue.dateTime) || "");
-    const seen = !!saved.seen;
+    const seen = !!saved.seen || savedTerminal === "VERIFIED";
     const packedEffective = !!packing || !!manualSaiu;
 
     let verificacao = "";
@@ -4385,6 +4456,18 @@
     } else {
       verificacao = "Sem registo de entrada na base de dados";
       statusClass = "ENVIO_BAD";
+    }
+
+    const terminalNow = envioTerminalList({seen, entregue, entregue_paid});
+    if(terminalNow === "ENTREGUE_PAID"){
+      verificacao = "Encerrado — Entregue/Paid. Não volta para análise nem para returns/refunds.";
+      statusClass = "ENVIO_OK";
+    } else if(terminalNow === "ENTREGUE"){
+      verificacao = "Encerrado — Entregue. Não volta para análise nem para returns/refunds.";
+      statusClass = "ENVIO_OK";
+    } else if(terminalNow === "VERIFIED"){
+      verificacao = "Encerrado — Já visto/verificado. Não volta para análise nem para returns/refunds.";
+      statusClass = "ENVIO_OK";
     }
 
     return {
@@ -4449,7 +4532,7 @@
           legacyDeletedKeys.push(key);
           return;
         }
-        saved[id] = item;
+        saved[id] = Object.assign({}, item, {id});
         ids.push(id);
       });
       if(legacyDeletedKeys.length){
@@ -4505,8 +4588,7 @@
       // IDs terminais (Verificados/Entregue/Entregue+Paid) nao precisam de persistencia
       // adicional - ja estao guardados e nao devem ser tocados para nao correr risco
       // de apagar campos como seen/entregue mesmo com escrita campo a campo.
-      const isTerminal = existing.seen || existing.entregue || existing.entregue_paid
-                      || existing.lastStatus === "VERIFIED" || existing.lastStatus === "ENTREGUE" || existing.lastStatus === "ENTREGUE_PAID";
+      const isTerminal = isEnvioTerminal(existing);
       if(isTerminal) return;
       const insertedDate = existing.insertedDate || (existing.createdAt ? String(existing.createdAt).slice(0,10) : today);
       const key = enviosItemKey(id);
@@ -4539,9 +4621,7 @@
     rows.forEach(r=>{
       // Não tocar em rows terminais
       const savedR = savedEnvio(r.id);
-      const isTerminal = r.seen || r.entregue || r.entregue_paid
-                      || savedR.seen || savedR.entregue || savedR.entregue_paid
-                      || savedR.lastStatus === "VERIFIED" || savedR.lastStatus === "ENTREGUE" || savedR.lastStatus === "ENTREGUE_PAID";
+      const isTerminal = isEnvioTerminal(r) || isEnvioTerminal(savedR);
       if(isTerminal) return;
       const key = enviosItemKey(r.id);
       const snapshotFields = {
@@ -4665,12 +4745,12 @@
           const saved = savedAtStart(id);
           const existingRow = previousRows.find(r=>r.id === id);
           const alreadyInRows = rows.find(r=>r.id === id);
-          const isTerminalSaved = !!(saved.seen || saved.entregue || saved.entregue_paid
-                        || saved.lastStatus === "VERIFIED" || saved.lastStatus === "ENTREGUE" || saved.lastStatus === "ENTREGUE_PAID");
-          const isTerminalRow = !!(existingRow && (existingRow.seen || existingRow.entregue || existingRow.entregue_paid))
-                              || !!(alreadyInRows && (alreadyInRows.seen || alreadyInRows.entregue || alreadyInRows.entregue_paid));
+          const isTerminalSaved = isEnvioTerminal(saved);
+          const isTerminalRow = isEnvioTerminal(existingRow) || isEnvioTerminal(alreadyInRows);
           if(isTerminalSaved || isTerminalRow){
-            return existingRow || alreadyInRows || buildEnviosRow(id, []);
+            const preservedRow = existingRow || alreadyInRows;
+            const preservedRecords = (preservedRow && preservedRow.records) || saved.lastRecords || [];
+            return preservedRow || buildEnviosRow(id, preservedRecords);
           }
           let records = await fetchRegistosForOrderId(id);
           if(useHistory && (!records || !records.length)){
@@ -4741,7 +4821,6 @@
     rows.forEach(r=>{
       const list = envioList(r);
       if(counts[list] !== undefined) counts[list] += 1;
-      if((!r.records || !r.records.length) && !r.seen && !r.entregue && !r.entregue_paid) counts.NO_RECORD += (list === "NO_RECORD" ? 0 : 1);
     });
     Object.entries(counts).forEach(([k,v])=>{
       const el = $("enviosListCount" + k);
@@ -4759,9 +4838,9 @@
 
   function updateEnviosKPIs(){
     const rows = enviosState.rows || [];
-    // KPIs operacionais: IDs marcados como "Já vi" saem destes cartões
-    // e passam a contar apenas em "Verificados".
-    const openRows = rows.filter(r=>!r.seen);
+    // KPIs operacionais: IDs encerrados (Já vi / Entregue / Entregue+Paid)
+    // saem destes cartões e contam apenas nas respetivas listagens finais.
+    const openRows = rows.filter(r=>!isEnvioTerminal(r));
     const total = openRows.length;
     const packed = openRows.filter(r=>r.packedEffective).length;
     const returns = openRows.filter(r=>r.return).length;
@@ -4826,22 +4905,20 @@
 
   function enviosPassFilters(r){
     const list = enviosState.listFilter || "ACTIVE";
-    if(list === "ACTIVE" && envioList(r) !== "ACTIVE") return false;
-    if(list === "RETURN_OR_REFUND" && envioList(r) !== "RETURN_OR_REFUND") return false;
-    if(list === "VERIFIED" && envioList(r) !== "VERIFIED") return false;
-    if(list === "ENTREGUE" && envioList(r) !== "ENTREGUE") return false;
-    if(list === "ENTREGUE_PAID" && envioList(r) !== "ENTREGUE_PAID") return false;
-    if(list === "NO_RECORD" && (r.records && r.records.length)) return false;
+    const rowList = envioList(r);
+    if(list !== "ALL" && rowList !== list) return false;
 
     const kind = $("enviosFilterKind") ? $("enviosFilterKind").value : "ALL";
-    if(kind === "PACKED" && !r.packedEffective) return false;
-    if(kind === "NOT_PACKED" && r.packedEffective) return false;
-    if(kind === "RETURN" && !r.return) return false;
-    if(kind === "REFUND" && !r.refund) return false;
-    if(kind === "RETURN_OR_REFUND" && !r.return && !r.refund) return false;
-    if(kind === "NO_RECORD" && r.records && r.records.length) return false;
-    if(kind === "VERIFIED" && !r.seen) return false;
-    if(kind === "MANUAL_SAIU" && !hasManualSaiu(r)) return false;
+    const terminal = isEnvioTerminal(r);
+    // Filtros operacionais nunca devem puxar IDs já encerrados para análise/returns/refunds.
+    if(kind === "PACKED" && (terminal || !r.packedEffective)) return false;
+    if(kind === "NOT_PACKED" && (terminal || r.packedEffective)) return false;
+    if(kind === "RETURN" && (terminal || !r.return)) return false;
+    if(kind === "REFUND" && (terminal || !r.refund)) return false;
+    if(kind === "RETURN_OR_REFUND" && (terminal || (!r.return && !r.refund))) return false;
+    if(kind === "NO_RECORD" && rowList !== "NO_RECORD") return false;
+    if(kind === "VERIFIED" && rowList !== "VERIFIED") return false;
+    if(kind === "MANUAL_SAIU" && (terminal || !hasManualSaiu(r))) return false;
 
     const carrierFilter = $("enviosCarrierFilter") ? $("enviosCarrierFilter").value : "ALL";
     if(carrierFilter && carrierFilter !== "ALL" && normCarrierForFilter(r.carrier || "Sem transportadora") !== carrierFilter) return false;
@@ -4909,7 +4986,8 @@
     }
 
     tbody.innerHTML = rows.map(r=>{
-      const rowClass = r.entregue_paid ? "envio-row-entregue-paid" : (r.entregue ? "envio-row-entregue" : (r.seen ? "envio-row-verified" : ((r.return || r.refund) ? "envio-row-issue" : "")));
+      const rowList = envioList(r);
+      const rowClass = rowList === "ENTREGUE_PAID" ? "envio-row-entregue-paid" : (rowList === "ENTREGUE" ? "envio-row-entregue" : (rowList === "VERIFIED" ? "envio-row-verified" : (rowList === "RETURN_OR_REFUND" ? "envio-row-issue" : "")));
       const manual = escapeHtml(r.manualSaiu || "");
       const obs = escapeHtml(r.observacoes || "");
       const insertedDate = escapeHtml(r.insertedDate || (r.createdAt ? String(r.createdAt).slice(0,10) : "-"));
@@ -4918,7 +4996,7 @@
       const manualAction = hasManualSaiu(r)
         ? `<button class="btn-mini warn" type="button" onclick="promptManualSaiu('${escapeJs(r.id)}', '${escapeJs(r.manualSaiu || "")}')">Editar saiu</button>`
         : `<button class="btn-mini warn" type="button" onclick="promptManualSaiu('${escapeJs(r.id)}', '')">Saiu manual</button>`;
-      const actions = r.seen
+      const actions = rowList === "VERIFIED"
         ? `${manualAction}<button class="btn-mini mutedBtn" type="button" onclick="markEnvioSeen('${escapeJs(r.id)}', false)">Reabrir</button>`
         : `${manualAction}<button class="btn-mini ok" type="button" onclick="markEnvioSeen('${escapeJs(r.id)}', true)">Já vi</button>`;
       const entregueBtn = r.entregue_paid
@@ -4954,6 +5032,7 @@
           <td>
             <span class="envio-status-line">Return: <b class="${r.return ? "warn" : "muted"}">${enviosYesNo(r.return)}</b></span>
             <span class="envio-status-line">Refund: <b class="${r.refund ? "bad" : "muted"}">${enviosYesNo(r.refund)}</b></span>
+            ${isEnvioTerminal(r) && (r.return || r.refund) ? `<span class="envio-subline"><b>Encerrado:</b> não entra na lista Returns/Refunds.</span>` : ""}
           </td>
           <td>
             <span class="status ${escapeHtml(r.statusClass)}">${escapeHtml(r.verificacao)}</span>
@@ -5049,7 +5128,9 @@
     const now = new Date().toISOString();
     const by = enviosCurrentUser();
     const old = savedEnvio(id);
-    const patch = seen ? {seen:true, seenAt:now, seenBy:by} : {seen:false, seenAt:null, seenBy:null};
+    const patch = seen
+      ? {seen:true, seenAt:now, seenBy:by, closed:true, closedAt:now, closedBy:by, closedReason:"VERIFIED", lastStatus:"VERIFIED"}
+      : {seen:false, seenAt:null, seenBy:null, closed: !!(old.entregue || old.entregue_paid), closedReason: old.entregue_paid ? "ENTREGUE_PAID" : (old.entregue ? "ENTREGUE" : null), lastStatus: old.entregue_paid ? "ENTREGUE_PAID" : (old.entregue ? "ENTREGUE" : null)};
     enviosState.savedItems[id] = Object.assign({}, old, {id}, patch, {updatedAt: now, updatedBy: by});
     const idx = (enviosState.rows || []).findIndex(r=>r.id === id);
     if(idx >= 0) enviosState.rows[idx] = buildEnviosRow(id, enviosState.rows[idx].records || []);
@@ -5074,11 +5155,21 @@
     const old = savedEnvio(id);
     let patch = {};
     if(mode === null){
-      patch = {entregue: false, entregue_paid: false, entregueAt: null, entregueBy: null};
+      patch = {
+        entregue: false,
+        entregue_paid: false,
+        entregueAt: null,
+        entregueBy: null,
+        entregue_paidAt: null,
+        entregue_paidBy: null,
+        closed: !!old.seen,
+        closedReason: old.seen ? "VERIFIED" : null,
+        lastStatus: old.seen ? "VERIFIED" : null
+      };
     } else if(mode === "PAID"){
-      patch = {entregue: true, entregue_paid: true, entregueAt: old.entregueAt || now, entregueBy: old.entregueBy || by, entregue_paidAt: now, entregue_paidBy: by};
+      patch = {entregue: true, entregue_paid: true, entregueAt: old.entregueAt || now, entregueBy: old.entregueBy || by, entregue_paidAt: now, entregue_paidBy: by, closed:true, closedAt:now, closedBy:by, closedReason:"ENTREGUE_PAID", lastStatus:"ENTREGUE_PAID"};
     } else {
-      patch = {entregue: true, entregue_paid: false, entregueAt: now, entregueBy: by};
+      patch = {entregue: true, entregue_paid: false, entregueAt: now, entregueBy: by, closed:true, closedAt:now, closedBy:by, closedReason:"ENTREGUE", lastStatus:"ENTREGUE"};
     }
     enviosState.savedItems[id] = Object.assign({}, old, {id}, patch, {updatedAt: now, updatedBy: by});
     const idx = (enviosState.rows || []).findIndex(r=>r.id === id);
@@ -5271,9 +5362,11 @@
   async function copyEnviosIds(kind){
     const rows = sortEnviosByPackingDateAsc(enviosState.rows || []);
     let ids = [];
-    if(kind === "NO_RECORD") ids = rows.filter(r=>!r.records || !r.records.length).map(r=>r.id);
-    else if(kind === "RETURN_OR_REFUND") ids = rows.filter(r=>r.return || r.refund).map(r=>r.id);
-    else if(kind === "VERIFIED") ids = rows.filter(r=>r.seen).map(r=>r.id);
+    if(kind === "NO_RECORD") ids = rows.filter(r=>envioList(r) === "NO_RECORD").map(r=>r.id);
+    else if(kind === "RETURN_OR_REFUND") ids = rows.filter(r=>envioList(r) === "RETURN_OR_REFUND").map(r=>r.id);
+    else if(kind === "VERIFIED") ids = rows.filter(r=>envioList(r) === "VERIFIED").map(r=>r.id);
+    else if(kind === "ENTREGUE") ids = rows.filter(r=>envioList(r) === "ENTREGUE").map(r=>r.id);
+    else if(kind === "ENTREGUE_PAID") ids = rows.filter(r=>envioList(r) === "ENTREGUE_PAID").map(r=>r.id);
     else ids = rows.map(r=>r.id);
     if(!ids.length){ enviosSetStatus("Não há IDs para copiar.", "bad"); return; }
     try{
