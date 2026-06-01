@@ -406,11 +406,15 @@
     .btn-mini.danger{background:#e74c3c;}
     .envio-row-verified{background:#f0fff4;}
     .envio-row-issue{background:#fff7ed;}
+    .envio-row-entregue{background:#eff6ff;}
+    .envio-row-entregue-paid{background:#f0fdf4;}
     .envio-badge{display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:5px 9px; font-size:11px; font-weight:900; text-transform:uppercase; border:1px solid #e5e7eb; background:#f8fafc; color:#475569; white-space:nowrap;}
     .envio-badge.issue{background:#ffedd5; color:#c2410c; border-color:#fdba74;}
     .envio-badge.verified{background:#dcfce7; color:#166534; border-color:#86efac;}
     .envio-badge.active{background:#dbeafe; color:#1d4ed8; border-color:#93c5fd;}
     .envio-badge.manual{background:#fef3c7; color:#92400e; border-color:#fbbf24;}
+    .envio-badge.entregue{background:#dbeafe; color:#1e40af; border-color:#93c5fd;}
+    .envio-badge.entregue-paid{background:#bbf7d0; color:#14532d; border-color:#4ade80;}
     .enviosSaveHint{font-size:12px; color:#64748b; margin-top:8px; line-height:1.4;}
     .enviosDuplicateWarning{display:none; margin-top:10px; padding:12px 14px; border-radius:12px; border:2px solid #fbbf24; background:#fffbeb; color:#92400e; font-size:13px; line-height:1.45; font-weight:700;}
     .enviosDuplicateWarning b{color:#78350f;}
@@ -441,7 +445,7 @@
     }
     #tabEnvios .envios-results-table{
       width:100%;
-      min-width:1180px;
+      min-width:1702px;
       table-layout:fixed;
     }
     #tabEnvios .envios-results-table th,
@@ -469,7 +473,9 @@
     #tabEnvios .envios-results-table th:nth-child(8),
     #tabEnvios .envios-results-table td:nth-child(8){width:200px;}
     #tabEnvios .envios-results-table th:nth-child(9),
-    #tabEnvios .envios-results-table td:nth-child(9){width:160px;}
+    #tabEnvios .envios-results-table td:nth-child(9){width:200px;}
+    #tabEnvios .envios-results-table th:nth-child(10),
+    #tabEnvios .envios-results-table td:nth-child(10){width:160px;}
     #tabEnvios .envios-results-table th:last-child,
     #tabEnvios .envios-results-table td:last-child{
       position:sticky;
@@ -481,6 +487,8 @@
     #tabEnvios .envios-results-table th:last-child{z-index:12; background:#f1f3f5;}
     #tabEnvios tr.envio-row-verified td:last-child{background:#f0fff4;}
     #tabEnvios tr.envio-row-issue td:last-child{background:#fff7ed;}
+    #tabEnvios tr.envio-row-entregue td:last-child{background:#eff6ff;}
+    #tabEnvios tr.envio-row-entregue-paid td:last-child{background:#f0fdf4;}
     .envio-subline{display:block; margin-top:4px; color:#64748b; font-size:11px; font-weight:700;}
     .envio-status-line{display:block; margin-bottom:6px;}
     .envio-items-cell{max-height:88px; overflow:auto; padding-right:4px; font-size:12px; color:#334155;}
@@ -488,7 +496,7 @@
     .manual-saiu-input{width:100%; min-width:0;}
     .btn-row{min-width:135px;}
     @media(max-width:900px){
-      #tabEnvios .envios-results-table{min-width:980px; font-size:12px;}
+      #tabEnvios .envios-results-table{min-width:1400px; font-size:12px;}
       #tabEnvios .envios-results-table th,
       #tabEnvios .envios-results-table td{padding:9px 8px;}
       #tabEnvios .envios-results-table th:nth-child(7),
@@ -1285,6 +1293,10 @@
           <label>Order IDs</label>
           <textarea id="enviosIds" placeholder="16975639&#10;17105131&#10;17209721"></textarea>
           <div class="mini">Aceita um ID por linha, ou IDs separados por espaços, vírgulas ou ponto-e-vírgula. Depois de guardar e verificar, esta caixa fica limpa automaticamente.</div>
+
+          <label style="margin-top:14px;">Observações <span style="font-weight:500;color:#94a3b8;text-transform:none;letter-spacing:0;">(aplicadas a todos os IDs inseridos acima)</span></label>
+          <textarea id="enviosObs" placeholder="Ex: IDs com problema na expedição de ontem / aguardar confirmação do transportador..." style="min-height:80px; font-size:14px; border:2px solid #cbd5e1; border-radius:12px;"></textarea>
+          <div class="mini">Esta nota fica guardada na Firebase associada a cada ID deste lote. Podes editar individualmente depois na coluna da tabela.</div>
           <div id="enviosDuplicateWarning" class="enviosDuplicateWarning"></div>
 
           <div class="notice" style="margin-top:12px; background:#f8fafc; border-left:6px solid var(--packing);">
@@ -1452,6 +1464,8 @@
         <div class="enviosListTabs">
           <button id="enviosListBtnACTIVE" class="enviosListBtn active" type="button" onclick="setEnviosListFilter('ACTIVE')">Em análise <span class="count" id="enviosListCountACTIVE">0</span></button>
           <button id="enviosListBtnRETURN_OR_REFUND" class="enviosListBtn issue" type="button" onclick="setEnviosListFilter('RETURN_OR_REFUND')">Returns/Refunds <span class="count" id="enviosListCountRETURN_OR_REFUND">0</span></button>
+          <button id="enviosListBtnENTREGUE" class="enviosListBtn" style="border-color:#93c5fd; color:#1d4ed8;" type="button" onclick="setEnviosListFilter('ENTREGUE')">Entregue <span class="count" id="enviosListCountENTREGUE">0</span></button>
+          <button id="enviosListBtnENTREGUE_PAID" class="enviosListBtn" style="border-color:#4ade80; color:#14532d;" type="button" onclick="setEnviosListFilter('ENTREGUE_PAID')">Entregue/Paid <span class="count" id="enviosListCountENTREGUE_PAID">0</span></button>
           <button id="enviosListBtnVERIFIED" class="enviosListBtn verified" type="button" onclick="setEnviosListFilter('VERIFIED')">Verificados <span class="count" id="enviosListCountVERIFIED">0</span></button>
           <button id="enviosListBtnNO_RECORD" class="enviosListBtn" type="button" onclick="setEnviosListFilter('NO_RECORD')">Sem registo <span class="count" id="enviosListCountNO_RECORD">0</span></button>
           <button id="enviosListBtnALL" class="enviosListBtn" type="button" onclick="setEnviosListFilter('ALL')">Todos <span class="count" id="enviosListCountALL">0</span></button>
@@ -1467,12 +1481,13 @@
                 <th>Saiu manual / nota</th>
                 <th>Return / Refund</th>
                 <th>Verificação / Datas</th>
+                <th>Observações</th>
                 <th>Items / User</th>
                 <th>Ações</th>
               </tr>
             </thead>
             <tbody id="enviosTbody">
-              <tr><td colspan="9" class="muted" style="padding:16px;">Cola IDs: a data de inserção fica registada automaticamente no dia em que guardas.</td></tr>
+              <tr><td colspan="10" class="muted" style="padding:16px;">Cola IDs: a data de inserção fica registada automaticamente no dia em que guardas.</td></tr>
             </tbody>
           </table>
         </div>
@@ -4291,6 +4306,8 @@
   }
 
   function envioList(row){
+    if(row && row.entregue_paid) return "ENTREGUE_PAID";
+    if(row && row.entregue) return "ENTREGUE";
     if(row && row.seen) return "VERIFIED";
     if(row && (row.return || row.refund)) return "RETURN_OR_REFUND";
     if(row && (!row.records || !row.records.length)) return "NO_RECORD";
@@ -4299,6 +4316,8 @@
 
   function envioListLabel(row){
     const list = envioList(row);
+    if(list === "ENTREGUE_PAID") return "Entregue/Paid";
+    if(list === "ENTREGUE") return "Entregue";
     if(list === "VERIFIED") return "Verificado";
     if(list === "RETURN_OR_REFUND") return row.refund ? "Refund" : "Return";
     if(list === "NO_RECORD") return "Sem registo";
@@ -4307,6 +4326,8 @@
 
   function envioListClass(row){
     const list = envioList(row);
+    if(list === "ENTREGUE_PAID") return "entregue-paid";
+    if(list === "ENTREGUE") return "entregue";
     if(list === "VERIFIED") return "verified";
     if(list === "RETURN_OR_REFUND") return "issue";
     if(hasManualSaiu(row)) return "manual";
@@ -4323,6 +4344,9 @@
     const manualSaiu = fmt(saved.manualSaiu || "");
     const insertedDate = fmt(saved.insertedDate || (saved.createdAt ? String(saved.createdAt).slice(0,10) : ""));
     const createdBy = fmt(saved.createdBy || "");
+    const observacoes = fmt(saved.observacoes || "");
+    const entregue = !!saved.entregue;
+    const entregue_paid = !!saved.entregue_paid;
 
     // Carrier is taken from the latest PACKING record first. This handles IDs that were packed,
     // cancelled/recreated and then packed again under a different carrier. If the registo has no
@@ -4365,6 +4389,9 @@
       packed: !!packing,
       packedEffective,
       manualSaiu,
+      observacoes,
+      entregue,
+      entregue_paid,
       return: !!ret,
       refund: !!refund,
       seen,
@@ -4452,7 +4479,7 @@
     await db.ref("/").update(updates);
   }
 
-  async function persistEnviosIds(ids){
+  async function persistEnviosIds(ids, observacoes){
     const uniqueIds = uniq((ids || []).map(normaliseOrderId).filter(Boolean));
     if(!uniqueIds.length) return;
     try{ localStorage.setItem("crosscheck_off_enviosIds_v1", uniqueIds.join("\n")); }catch(e){}
@@ -4460,6 +4487,7 @@
     const now = new Date().toISOString();
     const today = now.slice(0,10);
     const by = enviosCurrentUser();
+    const obs = String(observacoes || "").trim();
     const patches = {};
     uniqueIds.forEach(id=>{
       const existing = savedEnvio(id);
@@ -4474,6 +4502,7 @@
       if(!existing.insertedDate) patch.insertedDate = insertedDate;
       if(!existing.createdAt) patch.createdAt = now;
       if(!existing.createdBy) patch.createdBy = by;
+      if(obs) patch.observacoes = obs;
       patches[key] = patch;
       enviosState.savedItems[id] = Object.assign({}, existing, patch, {id, insertedDate, createdAt: existing.createdAt || now, createdBy: existing.createdBy || by});
     });
@@ -4503,6 +4532,9 @@
         verificacao: fmt(r.verificacao || ""),
         user: fmt(r.user || ""),
         items: fmt(r.items || ""),
+        ...(r.observacoes !== undefined ? {observacoes: fmt(r.observacoes || "")} : {}),
+        ...(r.entregue !== undefined ? {entregue: !!r.entregue} : {}),
+        ...(r.entregue_paid !== undefined ? {entregue_paid: !!r.entregue_paid} : {}),
         lastRecords: (r.records || []).slice(-80).map(sanitizeEnvioRecord)
       };
     });
@@ -4528,7 +4560,9 @@
     enviosState.saving = true;
     try{
       enviosSetStatus(analysis.existingIds.length ? "A guardar apenas alterações necessárias..." : "A guardar IDs...", analysis.existingIds.length ? "warn" : "");
-      await persistEnviosIds(ids);
+      const obs = String(($("enviosObs") && $("enviosObs").value) || "").trim();
+      await persistEnviosIds(ids, obs);
+      if($("enviosObs")) $("enviosObs").value = "";
       enviosSetStatus(analysis.existingIds.length ? "IDs processados com aviso de duplicados. A verificar..." : "IDs guardados. A verificar...", analysis.existingIds.length ? "warn" : "ok");
       await runEnviosAnalise({skipPersist:true, useSaved:false, clearInputAfter:true});
     }catch(e){
@@ -4642,11 +4676,11 @@
 
   function updateEnviosListTabs(){
     const rows = enviosState.rows || [];
-    const counts = {ALL: rows.length, ACTIVE:0, RETURN_OR_REFUND:0, VERIFIED:0, NO_RECORD:0};
+    const counts = {ALL: rows.length, ACTIVE:0, RETURN_OR_REFUND:0, VERIFIED:0, NO_RECORD:0, ENTREGUE:0, ENTREGUE_PAID:0};
     rows.forEach(r=>{
       const list = envioList(r);
       if(counts[list] !== undefined) counts[list] += 1;
-      if((!r.records || !r.records.length) && !r.seen) counts.NO_RECORD += (list === "NO_RECORD" ? 0 : 1);
+      if((!r.records || !r.records.length) && !r.seen && !r.entregue && !r.entregue_paid) counts.NO_RECORD += (list === "NO_RECORD" ? 0 : 1);
     });
     Object.entries(counts).forEach(([k,v])=>{
       const el = $("enviosListCount" + k);
@@ -4734,6 +4768,8 @@
     if(list === "ACTIVE" && envioList(r) !== "ACTIVE") return false;
     if(list === "RETURN_OR_REFUND" && envioList(r) !== "RETURN_OR_REFUND") return false;
     if(list === "VERIFIED" && envioList(r) !== "VERIFIED") return false;
+    if(list === "ENTREGUE" && envioList(r) !== "ENTREGUE") return false;
+    if(list === "ENTREGUE_PAID" && envioList(r) !== "ENTREGUE_PAID") return false;
     if(list === "NO_RECORD" && (r.records && r.records.length)) return false;
 
     const kind = $("enviosFilterKind") ? $("enviosFilterKind").value : "ALL";
@@ -4751,7 +4787,7 @@
 
     const q = ($("enviosFilterText") ? $("enviosFilterText").value : "").trim().toLowerCase();
     if(!q) return true;
-    const hay = [r.id, r.tracking, r.carrier, r.verificacao, r.packingDate, r.returnRefundDate, r.user, r.items, r.manualSaiu, r.seenBy]
+    const hay = [r.id, r.tracking, r.carrier, r.verificacao, r.packingDate, r.returnRefundDate, r.user, r.items, r.manualSaiu, r.seenBy, r.observacoes]
       .join(" ").toLowerCase();
     return hay.includes(q);
   }
@@ -4806,14 +4842,15 @@
     }
 
     if(!rows.length){
-      tbody.innerHTML = `<tr><td colspan="9" class="muted" style="padding:16px;">Sem linhas para mostrar.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" class="muted" style="padding:16px;">Sem linhas para mostrar.</td></tr>`;
       updateEnviosKPIs();
       return;
     }
 
     tbody.innerHTML = rows.map(r=>{
-      const rowClass = r.seen ? "envio-row-verified" : ((r.return || r.refund) ? "envio-row-issue" : "");
+      const rowClass = r.entregue_paid ? "envio-row-entregue-paid" : (r.entregue ? "envio-row-entregue" : (r.seen ? "envio-row-verified" : ((r.return || r.refund) ? "envio-row-issue" : "")));
       const manual = escapeHtml(r.manualSaiu || "");
+      const obs = escapeHtml(r.observacoes || "");
       const insertedDate = escapeHtml(r.insertedDate || (r.createdAt ? String(r.createdAt).slice(0,10) : "-"));
       const createdBy = r.createdBy ? `<span class="envio-subline">${escapeHtml(r.createdBy)}</span>` : "";
       const packedText = r.packed ? "SIM" : (hasManualSaiu(r) ? "SIM (manual)" : "NÃO");
@@ -4823,6 +4860,11 @@
       const actions = r.seen
         ? `${manualAction}<button class="btn-mini mutedBtn" type="button" onclick="markEnvioSeen('${escapeJs(r.id)}', false)">Reabrir</button>`
         : `${manualAction}<button class="btn-mini ok" type="button" onclick="markEnvioSeen('${escapeJs(r.id)}', true)">Já vi</button>`;
+      const entregueBtn = r.entregue_paid
+        ? `<button class="btn-mini mutedBtn" type="button" onclick="markEnvioEntregue('${escapeJs(r.id)}', null)">Rem. entregue</button>`
+        : (r.entregue
+            ? `<button class="btn-mini" style="background:#1d4ed8;" type="button" onclick="markEnvioEntregue('${escapeJs(r.id)}', 'PAID')">+ Paid</button><button class="btn-mini mutedBtn" type="button" onclick="markEnvioEntregue('${escapeJs(r.id)}', null)">Rem. entregue</button>`
+            : `<button class="btn-mini" style="background:#1d4ed8;" type="button" onclick="markEnvioEntregue('${escapeJs(r.id)}', 'ENTREGUE')">Entregue</button><button class="btn-mini" style="background:#14532d;" type="button" onclick="markEnvioEntregue('${escapeJs(r.id)}', 'PAID')">Entregue/Paid</button>`);
       const seenText = r.seen
         ? `Visto por ${escapeHtml(r.seenBy || "-")}${r.seenAt ? `<span class="envio-subline">${escapeHtml(r.seenAt.replace("T"," ").slice(0,16))}</span>` : ""}`
         : `Ainda não visto`;
@@ -4856,8 +4898,9 @@
             <span class="status ${escapeHtml(r.statusClass)}">${escapeHtml(r.verificacao)}</span>
             ${dateLines.map(x=>`<span class="envio-subline">${x}</span>`).join("")}
           </td>
+          <td><input class="manual-saiu-input" value="${obs}" placeholder="Observação..." onblur="saveEnvioObs('${escapeJs(r.id)}', this.value)" onkeydown="if(event.key==='Enter'){this.blur();}"></td>
           <td>${itemsHtml}${userHtml}</td>
-          <td><div class="btn-row"><button class="btn-mini info" type="button" onclick="openEnviosDetail('${escapeJs(r.id)}')">Histórico</button>${actions}<button class="btn-mini danger" type="button" onclick="deleteEnvioId('${escapeJs(r.id)}')">Eliminar</button></div></td>
+          <td><div class="btn-row"><button class="btn-mini info" type="button" onclick="openEnviosDetail('${escapeJs(r.id)}')">Histórico</button>${actions}${entregueBtn}<button class="btn-mini danger" type="button" onclick="deleteEnvioId('${escapeJs(r.id)}')">Eliminar</button></div></td>
         </tr>`;
     }).join("");
 
@@ -4876,6 +4919,7 @@
 
   function clearEnviosAnalise(){
     if($("enviosIds")) $("enviosIds").value = "";
+    if($("enviosObs")) $("enviosObs").value = "";
     enviosState.rows = [];
     enviosState.lastRunAt = null;
     try{ localStorage.removeItem("crosscheck_off_enviosIds_v1"); }catch(e){}
@@ -4906,6 +4950,28 @@
     }
   }
   window.saveManualSaiu = saveManualSaiu;
+
+  async function saveEnvioObs(id, value){
+    id = normaliseOrderId(id);
+    const val = String(value || "").trim();
+    const now = new Date().toISOString();
+    const by = enviosCurrentUser();
+    const old = savedEnvio(id);
+    enviosState.savedItems[id] = Object.assign({}, old, {id, observacoes: val, updatedAt: now, updatedBy: by});
+    const idx = (enviosState.rows || []).findIndex(r=>r.id === id);
+    if(idx >= 0) enviosState.rows[idx] = Object.assign({}, enviosState.rows[idx], {observacoes: val});
+    renderEnviosTable();
+    try{
+      if(auth.currentUser){
+        await db.ref(`${ENVIOS_DB_PATH}/${enviosItemKey(id)}`).update({id, observacoes: val, updatedAt: now, updatedBy: by, deleted:false});
+      }
+      enviosSetStatus(val ? `Observação guardada para ${id}` : `Observação removida de ${id}`, "ok");
+    }catch(e){
+      console.error(e);
+      enviosSetStatus("Não consegui guardar a observação na Firebase.", "bad");
+    }
+  }
+  window.saveEnvioObs = saveEnvioObs;
 
   async function promptManualSaiu(id, currentValue){
     id = normaliseOrderId(id);
@@ -4938,6 +5004,37 @@
     }
   }
   window.markEnvioSeen = markEnvioSeen;
+
+  async function markEnvioEntregue(id, mode){
+    // mode: 'ENTREGUE' | 'PAID' | null (remove)
+    id = normaliseOrderId(id);
+    const now = new Date().toISOString();
+    const by = enviosCurrentUser();
+    const old = savedEnvio(id);
+    let patch = {};
+    if(mode === null){
+      patch = {entregue: false, entregue_paid: false, entregueAt: null, entregueBy: null};
+    } else if(mode === "PAID"){
+      patch = {entregue: true, entregue_paid: true, entregueAt: old.entregueAt || now, entregueBy: old.entregueBy || by, entregue_paidAt: now, entregue_paidBy: by};
+    } else {
+      patch = {entregue: true, entregue_paid: false, entregueAt: now, entregueBy: by};
+    }
+    enviosState.savedItems[id] = Object.assign({}, old, {id}, patch, {updatedAt: now, updatedBy: by});
+    const idx = (enviosState.rows || []).findIndex(r=>r.id === id);
+    if(idx >= 0) enviosState.rows[idx] = buildEnviosRow(id, enviosState.rows[idx].records || []);
+    renderEnviosTable();
+    try{
+      if(auth.currentUser){
+        await db.ref(`${ENVIOS_DB_PATH}/${enviosItemKey(id)}`).update(Object.assign({id, updatedAt:now, updatedBy:by, deleted:false}, patch));
+      }
+      const msg = mode === null ? `${id} removido de Entregue` : (mode === "PAID" ? `${id} marcado como Entregue/Paid ✅` : `${id} marcado como Entregue ✅`);
+      enviosSetStatus(msg, mode === null ? "" : "ok");
+    }catch(e){
+      console.error(e);
+      enviosSetStatus("Não consegui guardar o estado na Firebase.", "bad");
+    }
+  }
+  window.markEnvioEntregue = markEnvioEntregue;
 
   async function deleteEnvioId(id){
     id = normaliseOrderId(id);
@@ -5090,13 +5187,13 @@
   function exportEnviosCsv(){
     const rows = sortEnviosByPackingDateAsc(enviosState.rows || []);
     if(!rows.length){ enviosSetStatus("Não há resultados para exportar.", "bad"); return; }
-    const header = ["order_id","data_insercao","inserido_por","lista","tracking","transportadora","embalado_sistema","saiu_manual","embalado_final","return","refund","visto","visto_por","visto_em","verificacao","data_packing","data_return_refund","user","items"];
+    const header = ["order_id","data_insercao","inserido_por","lista","tracking","transportadora","embalado_sistema","saiu_manual","embalado_final","return","refund","visto","visto_por","visto_em","verificacao","data_packing","data_return_refund","user","items","observacoes"];
     const delimiter = ";";
     const lines = [header.map(csvCell).join(delimiter)];
     rows.forEach(r=>{
       lines.push([
         r.id, r.insertedDate, r.createdBy, envioListLabel(r), r.tracking, r.carrier, enviosYesNo(r.packed), r.manualSaiu, enviosYesNo(r.packedEffective), enviosYesNo(r.return), enviosYesNo(r.refund),
-        enviosYesNo(r.seen), r.seenBy, r.seenAt, r.verificacao, r.packingDate, r.returnRefundDate, r.user, r.items
+        enviosYesNo(r.seen), r.seenBy, r.seenAt, r.verificacao, r.packingDate, r.returnRefundDate, r.user, r.items, r.observacoes || ""
       ].map(csvCell).join(delimiter));
     });
     // BOM UTF-8 + separador ; para abrir corretamente em Excel PT/EU, uma informação por célula.
@@ -5200,9 +5297,17 @@
           <h2 style="margin:0 0 8px 0;">Ações</h2>
           <label>Saiu manual / nota</label>
           <input id="envioDetailManualSaiu" value="${escapeHtml(updatedRow.manualSaiu || "")}" placeholder="ex: Saiu antes do sistema / confirmado por ficheiro antigo">
+          <label style="margin-top:12px;">Observações</label>
+          <textarea id="envioDetailObs" style="min-height:72px; font-size:14px;" placeholder="Nota livre sobre este ID...">${escapeHtml(updatedRow.observacoes || "")}</textarea>
           <div class="row" style="margin-top:8px;">
             <button class="btn" type="button" onclick="saveManualSaiu('${escapeJs(id)}', document.getElementById('envioDetailManualSaiu').value)">Guardar saiu</button>
+            <button class="btn" type="button" onclick="saveEnvioObs('${escapeJs(id)}', document.getElementById('envioDetailObs').value)">Guardar obs.</button>
             ${updatedRow.seen ? `<button class="btn" type="button" onclick="markEnvioSeen('${escapeJs(id)}', false)">Reabrir</button>` : `<button class="btn primary" type="button" onclick="markEnvioSeen('${escapeJs(id)}', true)">Marcar como já vi</button>`}
+            ${updatedRow.entregue_paid
+              ? `<button class="btn" type="button" onclick="markEnvioEntregue('${escapeJs(id)}', null)">Remover Entregue</button>`
+              : (updatedRow.entregue
+                  ? `<button class="btn primary" type="button" onclick="markEnvioEntregue('${escapeJs(id)}', 'PAID')">Marcar Paid</button><button class="btn" type="button" onclick="markEnvioEntregue('${escapeJs(id)}', null)">Remover Entregue</button>`
+                  : `<button class="btn" style="background:#1d4ed8;color:#fff;" type="button" onclick="markEnvioEntregue('${escapeJs(id)}', 'ENTREGUE')">Entregue</button><button class="btn" style="background:#14532d;color:#fff;" type="button" onclick="markEnvioEntregue('${escapeJs(id)}', 'PAID')">Entregue/Paid</button>`)}
           </div>
         </div>
       </div>
