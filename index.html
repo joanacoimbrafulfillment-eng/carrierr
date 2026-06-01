@@ -9057,12 +9057,14 @@ Esta ação remove estes registos guardados na Firebase.`);
       return sortedUnique(keys.flatMap(k => applyDeletedOptions(k, state.options[k] || [])));
     }
 
-    function renderCasesFormFields(){
+    function renderCasesFormFields(preserveValues=true){
       const type = getCurrentType();
       const box = byId("casesDynamicFields");
       if(!box) return;
       const current = {};
-      getFields("BROKEN").concat(getFields("SWIPE"), getFields("LOST")).forEach(f=>{ const el = byId("caseField_" + f.key); if(el && el.value) current[f.key] = el.value; });
+      if(preserveValues){
+        getFields("BROKEN").concat(getFields("SWIPE"), getFields("LOST")).forEach(f=>{ const el = byId("caseField_" + f.key); if(el && el.value) current[f.key] = el.value; });
+      }
       box.innerHTML = getFields(type).map(f=>{
         const listAttr = f.selectable ? ` list="${esc(datalistIdForOption(f.optionKey))}"` : "";
         const cls = f.full ? "casesFieldFull" : "";
@@ -9724,6 +9726,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       const hint = byId("casesEditingHint"); if(hint) hint.textContent = "";
       clearCaseForm(false);
       renderCasesTable();
+      setTimeout(()=>{ const idInput = byId("casesId"); if(idInput && idInput.focus) idInput.focus(); }, 80);
     }
     window.saveCaseRecord = saveCaseRecord;
 
@@ -9742,7 +9745,18 @@ Esta ação remove estes registos guardados na Firebase.`);
       if(dw){ dw.style.borderColor=""; dw.style.background=""; dw.dataset.autoFilled=""; dw.dataset.manualClearReady=""; }
       const badge = byId("dwAutoFillBadge");
       if(badge) badge.remove();
-      renderCasesFormFields();
+      renderCasesFormFields(false);
+      // Garantir que nenhum campo do formulário fica preenchido por valores do registo anterior.
+      const fieldsBox = byId("casesDynamicFields");
+      if(fieldsBox){
+        fieldsBox.querySelectorAll("input, select, textarea").forEach(el=>{
+          if(el.type === "checkbox" || el.type === "radio") el.checked = false;
+          else el.value = "";
+          if(el.dataset){ el.dataset.autoFilled = ""; el.dataset.manualClearReady = ""; }
+          el.style.borderColor = "";
+          el.style.background = "";
+        });
+      }
     }
     window.clearCaseForm = clearCaseForm;
 
