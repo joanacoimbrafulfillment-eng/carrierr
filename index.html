@@ -395,6 +395,14 @@
     .enviosListBtn.issue.active{background:#ffedd5; border-color:#f97316; color:#c2410c;}
     .enviosListBtn.verified.active{background:#dcfce7; border-color:#22c55e; color:#166534;}
     .enviosListBtn .count{background:#fff; border:1px solid #e5e7eb; padding:2px 8px; border-radius:999px; font-size:11px; color:#111827;}
+    .enviosCopyTabs{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:-6px 0 14px; padding:10px 12px; border:1px dashed #cbd5e1; border-radius:12px; background:#f8fafc;}
+    .enviosCopyTabs .mini-label{font-size:11px; font-weight:900; color:#475569; text-transform:uppercase; letter-spacing:.25px; margin-right:2px;}
+    .enviosCopyBtn{border:0; background:#334155; color:#fff; padding:8px 10px; border-radius:999px; cursor:pointer; font-size:11px; font-weight:900; text-transform:uppercase; display:inline-flex; align-items:center; gap:6px;}
+    .enviosCopyBtn:hover{background:#0f172a; transform:translateY(-1px);}
+    .enviosCopyBtn.issue{background:#f97316;}
+    .enviosCopyBtn.done{background:#16a34a;}
+    .enviosCopyBtn.info{background:#2563eb;}
+
     .manual-saiu-input{min-width:190px; font-size:12px; padding:8px 10px; margin:0; border-radius:8px; border:1px solid #cbd5e1; background:#fff;}
     .manual-saiu-input:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(52,152,219,.12);}
     .btn-row{display:flex; gap:6px; flex-wrap:wrap; align-items:center;}
@@ -1469,6 +1477,16 @@
           <button id="enviosListBtnVERIFIED" class="enviosListBtn verified" type="button" onclick="setEnviosListFilter('VERIFIED')">Verificados <span class="count" id="enviosListCountVERIFIED">0</span></button>
           <button id="enviosListBtnNO_RECORD" class="enviosListBtn" type="button" onclick="setEnviosListFilter('NO_RECORD')">Sem registo <span class="count" id="enviosListCountNO_RECORD">0</span></button>
           <button id="enviosListBtnALL" class="enviosListBtn" type="button" onclick="setEnviosListFilter('ALL')">Todos <span class="count" id="enviosListCountALL">0</span></button>
+        </div>
+        <div class="enviosCopyTabs" aria-label="Copiar IDs por tópico dos resultados">
+          <span class="mini-label">Copiar IDs:</span>
+          <button class="enviosCopyBtn info" type="button" onclick="copyEnviosIds('ACTIVE')">Em análise</button>
+          <button class="enviosCopyBtn issue" type="button" onclick="copyEnviosIds('RETURN_OR_REFUND')">Returns/Refunds</button>
+          <button class="enviosCopyBtn info" type="button" onclick="copyEnviosIds('ENTREGUE')">Entregue</button>
+          <button class="enviosCopyBtn done" type="button" onclick="copyEnviosIds('ENTREGUE_PAID')">Entregue/Paid</button>
+          <button class="enviosCopyBtn done" type="button" onclick="copyEnviosIds('VERIFIED')">Verificados</button>
+          <button class="enviosCopyBtn" type="button" onclick="copyEnviosIds('NO_RECORD')">Sem registo</button>
+          <button class="enviosCopyBtn" type="button" onclick="copyEnviosIds('ALL')">Todos</button>
         </div>
         <div class="tableWrap">
           <table class="envios-results-table">
@@ -5359,19 +5377,37 @@
   }
   window.exportEnviosCsv = exportEnviosCsv;
 
+  function enviosCopyLabel(kind){
+    const map = {
+      ACTIVE: "Em análise",
+      RETURN_OR_REFUND: "Returns/Refunds",
+      VERIFIED: "Verificados",
+      ENTREGUE: "Entregue",
+      ENTREGUE_PAID: "Entregue/Paid",
+      NO_RECORD: "Sem registo",
+      ALL: "Todos"
+    };
+    return map[kind] || "Selecionados";
+  }
+
   async function copyEnviosIds(kind){
     const rows = sortEnviosByPackingDateAsc(enviosState.rows || []);
+    const wanted = String(kind || "ALL").toUpperCase();
     let ids = [];
-    if(kind === "NO_RECORD") ids = rows.filter(r=>envioList(r) === "NO_RECORD").map(r=>r.id);
-    else if(kind === "RETURN_OR_REFUND") ids = rows.filter(r=>envioList(r) === "RETURN_OR_REFUND").map(r=>r.id);
-    else if(kind === "VERIFIED") ids = rows.filter(r=>envioList(r) === "VERIFIED").map(r=>r.id);
-    else if(kind === "ENTREGUE") ids = rows.filter(r=>envioList(r) === "ENTREGUE").map(r=>r.id);
-    else if(kind === "ENTREGUE_PAID") ids = rows.filter(r=>envioList(r) === "ENTREGUE_PAID").map(r=>r.id);
-    else ids = rows.map(r=>r.id);
-    if(!ids.length){ enviosSetStatus("Não há IDs para copiar.", "bad"); return; }
+
+    if(wanted === "ALL") ids = rows.map(r=>r.id);
+    else if(["ACTIVE","RETURN_OR_REFUND","VERIFIED","ENTREGUE","ENTREGUE_PAID","NO_RECORD"].includes(wanted)){
+      ids = rows.filter(r=>envioList(r) === wanted).map(r=>r.id);
+    } else {
+      ids = rows.map(r=>r.id);
+    }
+
+    ids = uniq(ids.map(normaliseOrderId).filter(Boolean));
+    const label = enviosCopyLabel(wanted);
+    if(!ids.length){ enviosSetStatus(`Não há IDs em ${label} para copiar.`, "bad"); return; }
     try{
       await navigator.clipboard.writeText(ids.join("\n"));
-      enviosSetStatus("IDs copiados ✅", "ok");
+      enviosSetStatus(`IDs copiados de ${label}: ${ids.length} ✅`, "ok");
     }catch(e){
       const tmp = document.createElement("textarea");
       tmp.value = ids.join("\n");
@@ -5379,7 +5415,7 @@
       tmp.select();
       document.execCommand("copy");
       tmp.remove();
-      enviosSetStatus("IDs copiados ✅", "ok");
+      enviosSetStatus(`IDs copiados de ${label}: ${ids.length} ✅`, "ok");
     }
   }
   window.copyEnviosIds = copyEnviosIds;
