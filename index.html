@@ -633,7 +633,7 @@
     .casesStatusBadge.pending{background:#fef3c7; color:#92400e; border:1px solid #fcd34d;}
     .casesStatusBadge.paid{background:#dcfce7; color:#166534; border:1px solid #86efac;}
     .casesStatusBadge.neutral{background:#f1f5f9; color:#475569; border:1px solid #e2e8f0;}
-    .casesTable{min-width:1280px; table-layout:fixed;}
+    .casesTable{min-width:1500px; table-layout:fixed;}
     .casesTable th,.casesTable td{white-space:normal; overflow-wrap:anywhere; word-break:break-word; vertical-align:top;}
     .casesTable th:nth-child(1),.casesTable td:nth-child(1){width:92px;}
     .casesTable th:nth-child(2),.casesTable td:nth-child(2){width:115px;}
@@ -8810,6 +8810,7 @@ Esta ação remove estes registos guardados na Firebase.`);
         {key:"trackingTroca", label:"TRACKING TROCA"},
         {key:"status", label:"STATUS", selectable:true, optionKey:"lostStatus"},
         {key:"paid", label:"PAID"},
+        {key:"paymentDate", label:"PAYMENT DATE", type:"date"},
         {key:"paymentDoc", label:"PAYMENT DOC"},
         {key:"product", label:"PRODUCT", full:true},
         {key:"price", label:"PRICE"},
@@ -10010,8 +10011,13 @@ Esta ação remove estes registos guardados na Firebase.`);
       const type = val("casesFilterType") || "ALL";
       if(type !== "ALL") return getFields(type);
       const keys = new Map();
-      records.forEach(r=>getFields(r.type).forEach(f=>{ if((r.fields || {})[f.key] || ["trackingId","status","amspedStatus","product","price"].includes(f.key)) keys.set(f.key, f); }));
-      return Array.from(keys.values()).slice(0, 9);
+      const alwaysVisibleKeys = ["trackingId","status","paid","paymentDate","paymentDoc","amspedStatus","product","price"];
+      records.forEach(r=>getFields(r.type).forEach(f=>{
+        const hasValue = !!((r.fields || {})[f.key]);
+        const shouldAlwaysShow = alwaysVisibleKeys.includes(f.key);
+        if(hasValue || shouldAlwaysShow) keys.set(f.key, f);
+      }));
+      return Array.from(keys.values()).slice(0, 12);
     }
 
     function caseStatusClass(value){
