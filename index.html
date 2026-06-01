@@ -1327,7 +1327,7 @@
           <div class="enviosActions">
             <div class="row">
               <button id="btnEnviosRun" class="btn primary" type="button" onclick="saveEnviosIdsAndRun()">Guardar IDs e verificar</button>
-              <button class="btn" type="button" onclick="runEnviosAnalise()">Atualizar agora</button>
+              <button class="btn" type="button" onclick="runEnviosAnalise({skipPersist:true, useSaved:true})">Atualizar agora</button>
               <button class="btn" type="button" onclick="reloadSavedEnvios()">Recarregar guardados</button>
               <button class="btn" type="button" onclick="clearEnviosAnalise()">Limpar caixa</button>
             </div>
@@ -1440,7 +1440,7 @@
             <div>
               <label>Transportadora</label>
               <select id="enviosCarrierFilter" onchange="renderEnviosTable()">
-                <option value="ALL">Todas as transportadoras</option>
+                <option value="ALL"></option>
               </select>
             </div>
           </div>
@@ -2232,7 +2232,12 @@
 
   function refreshEnviosRowsFromSaved(){
     if(!enviosState.rows || !enviosState.rows.length){ updateEnviosKPIs(); renderEnviosTable(); return; }
-    enviosState.rows = sortEnviosByPackingDateAsc(enviosState.rows.map(r=>buildEnviosRow(r.id, r.records || [])));
+    enviosState.rows = sortEnviosByPackingDateAsc(enviosState.rows.map(r=>{
+      // Rows terminais mantêm-se como estão — não reconstruir a partir do savedItems
+      // para evitar perda de estado em caso de race condition com o listener do Firebase.
+      if(r.seen || r.entregue || r.entregue_paid) return r;
+      return buildEnviosRow(r.id, r.records || []);
+    }));
     updateEnviosKPIs();
     renderEnviosTable();
   }
@@ -4460,7 +4465,7 @@
       ids.sort((a,b)=>a.localeCompare(b, undefined, {numeric:true}));
       clearEnviosInputBox();
       enviosSetStatus(ids.length ? `Guardados carregados: ${ids.length} IDs` : "Sem IDs guardados ainda.", "ok");
-      if(ids.length) runEnviosAnalise({useSaved:true});
+      if(ids.length) runEnviosAnalise({useSaved:true, skipPersist:true});
     }catch(e){
       console.error("loadSavedEnviosFromFirebase", e);
       enviosSetStatus("Não consegui ler guardados da Firebase (uso cópia local se existir).", "warn");
@@ -4630,13 +4635,20 @@
     const btn = $("btnEnviosRun");
     if(btn) btn.disabled = true;
     const previousRows = (enviosState.rows || []).slice();
+    // Snapshot imutável do savedItems no início da análise.
+    // Garante que atualizações do realtime listener a meio do loop
+    // não afetam a deteção de terminais (seen/entregue/entregue_paid).
+    const savedSnapshot = Object.assign({}, enviosState.savedItems || {});
+    const savedAtStart = id => savedSnapshot[normaliseOrderId(id)] || {};
     if(!opts.fromRealtime){
       enviosState.rows = [];
       renderEnviosTable();
     }
 
     try{
-      if(!opts.skipPersist){
+      // Nunca persistir quando se usa o savedFallback (useSaved:true) — não há IDs novos.
+      // Persistir só faz sentido em saveEnviosIdsAndRun que passa skipPersist:false explicitamente.
+      if(!opts.skipPersist && opts.useSaved !== true){
         enviosSetStatus("A guardar IDs...", "");
         await persistEnviosIds(ids);
       }
@@ -4647,17 +4659,18 @@
         enviosSetStatus(`A verificar ${Math.min(i + chunk, ids.length)} / ${ids.length}...`);
         const slice = ids.slice(i, i + chunk);
         const partial = await Promise.all(slice.map(async id=>{
-          // IDs já fechados (Verificados / Entregue / Entregue+Paid) são terminais:
-          // não voltam a ser consultados nem re-verificados, independentemente de refreshes.
-          const saved = savedEnvio(id);
+          // IDs terminais (Verificados / Entregue / Entregue+Paid) nunca são re-verificados.
+          // Usa savedAtStart (snapshot tirado antes do loop) para evitar race conditions
+          // com o realtime listener que pode substituir savedItems a meio da análise.
+          const saved = savedAtStart(id);
           const existingRow = previousRows.find(r=>r.id === id);
-          const terminalLastStatus = saved.lastStatus === "VERIFIED" || saved.lastStatus === "ENTREGUE" || saved.lastStatus === "ENTREGUE_PAID";
-          const isClosed = saved.seen || saved.entregue || saved.entregue_paid
-                        || terminalLastStatus
-                        || (existingRow && (existingRow.seen || existingRow.entregue || existingRow.entregue_paid));
-          if(isClosed){
-            // Devolve o row existente em memória; se não houver, reconstrói a partir dos dados guardados (sem nova consulta)
-            return existingRow || buildEnviosRow(id, []);
+          const alreadyInRows = rows.find(r=>r.id === id);
+          const isTerminalSaved = !!(saved.seen || saved.entregue || saved.entregue_paid
+                        || saved.lastStatus === "VERIFIED" || saved.lastStatus === "ENTREGUE" || saved.lastStatus === "ENTREGUE_PAID");
+          const isTerminalRow = !!(existingRow && (existingRow.seen || existingRow.entregue || existingRow.entregue_paid))
+                              || !!(alreadyInRows && (alreadyInRows.seen || alreadyInRows.entregue || alreadyInRows.entregue_paid));
+          if(isTerminalSaved || isTerminalRow){
+            return existingRow || alreadyInRows || buildEnviosRow(id, []);
           }
           let records = await fetchRegistosForOrderId(id);
           if(useHistory && (!records || !records.length)){
@@ -4804,7 +4817,7 @@
   }
 
   function updateEnviosCarrierFilterOptions(){
-    refreshCarrierFilterOptions("enviosCarrierFilter", enviosState.rows || [], r => r && r.carrier, "Todas as transportadoras");
+    refreshCarrierFilterOptions("enviosCarrierFilter", enviosState.rows || [], r => r && r.carrier, "");
   }
 
   function updateSemPicCarrierFilterOptions(){
