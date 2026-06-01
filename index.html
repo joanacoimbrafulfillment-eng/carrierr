@@ -4472,9 +4472,15 @@
     const entries = Object.entries(patches || {}).filter(([key, patch])=>key && patch && typeof patch === "object");
     if(!entries.length && (!metaPatch || !Object.keys(metaPatch).length)) return;
     const updates = {};
-    entries.forEach(([key, patch]) => { updates[`${ENVIOS_DB_PATH}/${key}`] = patch; });
+    // CRITICO: escrever campo a campo para nao apagar campos como seen/seenAt/seenBy/entregue
+    // que sao geridos de forma independente. Passar o objeto inteiro faz SET e destroi esses campos.
+    entries.forEach(([key, patch]) => {
+      Object.entries(patch).forEach(([field, value]) => {
+        updates[ENVIOS_DB_PATH + "/" + key + "/" + field] = value;
+      });
+    });
     if(metaPatch && Object.keys(metaPatch).length){
-      Object.entries(metaPatch).forEach(([k,v]) => { updates[`${ENVIOS_META_PATH}/${k}`] = v; });
+      Object.entries(metaPatch).forEach(([k,v]) => { updates[ENVIOS_META_PATH + "/" + k] = v; });
     }
     await db.ref("/").update(updates);
   }
@@ -4491,6 +4497,12 @@
     const patches = {};
     uniqueIds.forEach(id=>{
       const existing = savedEnvio(id);
+      // IDs terminais (Verificados/Entregue/Entregue+Paid) nao precisam de persistencia
+      // adicional - ja estao guardados e nao devem ser tocados para nao correr risco
+      // de apagar campos como seen/entregue mesmo com escrita campo a campo.
+      const isTerminal = existing.seen || existing.entregue || existing.entregue_paid
+                      || existing.lastStatus === "VERIFIED" || existing.lastStatus === "ENTREGUE" || existing.lastStatus === "ENTREGUE_PAID";
+      if(isTerminal) return;
       const insertedDate = existing.insertedDate || (existing.createdAt ? String(existing.createdAt).slice(0,10) : today);
       const key = enviosItemKey(id);
       const patch = {
@@ -4513,10 +4525,21 @@
     if(!auth.currentUser || !rows || !rows.length) return;
     const now = new Date().toISOString();
     const by = enviosCurrentUser();
-    const patches = {};
+    // Use individual .update() calls per item so we only write the snapshot fields
+    // without overwriting fields like seen/seenAt/seenBy/manualSaiu/observacoes/entregue
+    // that are managed independently.
+    // Rows que já são terminais (Verificados / Entregue / Entregue+Paid) não são
+    // actualizados pelo snapshot — ficam inalterados no Firebase.
+    const updates = {};
     rows.forEach(r=>{
+      // Não tocar em rows terminais
+      const savedR = savedEnvio(r.id);
+      const isTerminal = r.seen || r.entregue || r.entregue_paid
+                      || savedR.seen || savedR.entregue || savedR.entregue_paid
+                      || savedR.lastStatus === "VERIFIED" || savedR.lastStatus === "ENTREGUE" || savedR.lastStatus === "ENTREGUE_PAID";
+      if(isTerminal) return;
       const key = enviosItemKey(r.id);
-      patches[key] = {
+      const snapshotFields = {
         id: r.id,
         lastCheckedAt: now,
         lastCheckedBy: by,
@@ -4532,13 +4555,22 @@
         verificacao: fmt(r.verificacao || ""),
         user: fmt(r.user || ""),
         items: fmt(r.items || ""),
-        ...(r.observacoes !== undefined ? {observacoes: fmt(r.observacoes || "")} : {}),
-        ...(r.entregue !== undefined ? {entregue: !!r.entregue} : {}),
-        ...(r.entregue_paid !== undefined ? {entregue_paid: !!r.entregue_paid} : {}),
         lastRecords: (r.records || []).slice(-80).map(sanitizeEnvioRecord)
       };
+      // Only include manual/user fields if present, to avoid overwriting with empty values
+      if(r.observacoes !== undefined) snapshotFields.observacoes = fmt(r.observacoes || "");
+      if(r.entregue !== undefined) snapshotFields.entregue = !!r.entregue;
+      if(r.entregue_paid !== undefined) snapshotFields.entregue_paid = !!r.entregue_paid;
+      // Spread snapshot fields as individual Firebase paths so it's a true merge
+      Object.entries(snapshotFields).forEach(([field, value]) => {
+        updates[`${ENVIOS_DB_PATH}/${key}/${field}`] = value;
+      });
     });
-    await enviosUpdateItemPatches(patches, {lastAnalysisAt: now, lastAnalysisBy: by});
+    if(Object.keys(updates).length){
+      updates[`${ENVIOS_META_PATH}/lastAnalysisAt`] = now;
+      updates[`${ENVIOS_META_PATH}/lastAnalysisBy`] = by;
+      await db.ref("/").update(updates);
+    }
   }
 
 
@@ -4594,6 +4626,7 @@
     enviosState.running = true;
     const btn = $("btnEnviosRun");
     if(btn) btn.disabled = true;
+    const previousRows = (enviosState.rows || []).slice();
     if(!opts.fromRealtime){
       enviosState.rows = [];
       renderEnviosTable();
@@ -4611,6 +4644,18 @@
         enviosSetStatus(`A verificar ${Math.min(i + chunk, ids.length)} / ${ids.length}...`);
         const slice = ids.slice(i, i + chunk);
         const partial = await Promise.all(slice.map(async id=>{
+          // IDs já fechados (Verificados / Entregue / Entregue+Paid) são terminais:
+          // não voltam a ser consultados nem re-verificados, independentemente de refreshes.
+          const saved = savedEnvio(id);
+          const existingRow = previousRows.find(r=>r.id === id);
+          const terminalLastStatus = saved.lastStatus === "VERIFIED" || saved.lastStatus === "ENTREGUE" || saved.lastStatus === "ENTREGUE_PAID";
+          const isClosed = saved.seen || saved.entregue || saved.entregue_paid
+                        || terminalLastStatus
+                        || (existingRow && (existingRow.seen || existingRow.entregue || existingRow.entregue_paid));
+          if(isClosed){
+            // Devolve o row existente em memória; se não houver, reconstrói a partir dos dados guardados (sem nova consulta)
+            return existingRow || buildEnviosRow(id, []);
+          }
           let records = await fetchRegistosForOrderId(id);
           if(useHistory && (!records || !records.length)){
             records = await fetchHistoryFallbackForEnvio(id);
