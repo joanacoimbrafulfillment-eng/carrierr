@@ -1429,7 +1429,7 @@
           <div class="split">
             <div>
               <label>Filtrar tabela</label>
-              <input id="enviosFilterText" placeholder="ex: order_id, tracking, user, SKU..." oninput="renderEnviosTable()" />
+              <input id="enviosFilterText" name="envios_filter_table_no_email" type="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="search" value="" placeholder="ex: order_id, tracking, user, SKU..." readonly onfocus="this.removeAttribute('readonly')" oninput="renderEnviosTable()" />
             </div>
             <div>
               <label>Mostrar</label>
@@ -11036,6 +11036,51 @@ Esta ação remove estes registos guardados na Firebase.`);
     }catch(e){ console.warn("v22 init", e); }
   })();
 </script>
+
+
+  <!-- v35: manter o filtro do Dashboard Envios vazio por defeito e bloquear autofill de email -->
+  <script>
+  (function(){
+    function fixEnviosFilterDefaultEmpty(){
+      const el = document.getElementById("enviosFilterText");
+      if(!el) return;
+      if(!el._v35DefaultEmptyInstalled){
+        el._v35DefaultEmptyInstalled = true;
+        try{
+          el.setAttribute("autocomplete", "off");
+          el.setAttribute("autocorrect", "off");
+          el.setAttribute("autocapitalize", "off");
+          el.setAttribute("spellcheck", "false");
+          el.setAttribute("type", "search");
+          el.setAttribute("name", "envios_filter_table_" + Date.now());
+        }catch(e){}
+        ["keydown", "paste", "drop"].forEach(evt=>{
+          el.addEventListener(evt, ()=>{ el.dataset.userEdited = "1"; }, {passive:true});
+        });
+        el.addEventListener("focus", ()=>{
+          try{ el.removeAttribute("readonly"); }catch(e){}
+        });
+      }
+      const clearIfNotEdited = function(){
+        if(el.dataset.userEdited === "1") return;
+        if(el.value){
+          el.value = "";
+          try{ if(typeof renderEnviosTable === "function") renderEnviosTable(); }catch(e){}
+        }
+      };
+      clearIfNotEdited();
+      setTimeout(clearIfNotEdited, 100);
+      setTimeout(clearIfNotEdited, 400);
+      setTimeout(clearIfNotEdited, 1200);
+    }
+    if(document.readyState === "loading"){
+      document.addEventListener("DOMContentLoaded", fixEnviosFilterDefaultEmpty);
+    } else {
+      fixEnviosFilterDefaultEmpty();
+    }
+    window.addEventListener("load", function(){ setTimeout(fixEnviosFilterDefaultEmpty, 50); });
+  })();
+  </script>
 
 </body>
 </html>
