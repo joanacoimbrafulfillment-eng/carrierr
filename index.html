@@ -4595,8 +4595,11 @@
       const obs = String(($("enviosObs") && $("enviosObs").value) || "").trim();
       await persistEnviosIds(ids, obs);
       if($("enviosObs")) $("enviosObs").value = "";
+      // Limpar a caixa ANTES de correr a análise para que getEnviosIds use
+      // o savedFallback (todos os IDs guardados) e não só o que está na caixa.
+      clearEnviosInputBox();
       enviosSetStatus(analysis.existingIds.length ? "IDs processados com aviso de duplicados. A verificar..." : "IDs guardados. A verificar...", analysis.existingIds.length ? "warn" : "ok");
-      await runEnviosAnalise({skipPersist:true, useSaved:false, clearInputAfter:true});
+      await runEnviosAnalise({skipPersist:true, useSaved:true});
     }catch(e){
       console.error(e);
       enviosSetStatus("Erro ao guardar IDs. Se continuar, falta permissão no nó envios_analise/items.", "bad");
