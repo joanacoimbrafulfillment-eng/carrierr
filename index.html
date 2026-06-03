@@ -8020,7 +8020,8 @@ Esta ação remove estes registos guardados na Firebase.`);
 
 // ===== PRODUCT CATALOG MODULE (CSV coluna A -> PRODUCT em Broken/Swipe/Lost) =====
 (function(){
-  const PRODUCT_FB_PATH = "case_products_catalog/items";
+  const PRODUCT_FB_PATH = "casos_broken_swipe_lost/options/productCatalog";
+  const PRODUCT_META_PATH = "casos_broken_swipe_lost/options/productCatalogMeta";
   const PRODUCT_LS_KEY  = "wh_case_products_catalog_v1";
 
   let _productMemCache = null;
@@ -8060,8 +8061,15 @@ Esta ação remove estes registos guardados na Firebase.`);
     productCatalogRender();
     try{ if(window.refreshCasesProductPickers) window.refreshCasesProductPickers(); }catch(e){}
     if(productHasFirebase()){
-      try{ await db.ref(PRODUCT_FB_PATH).set(normalized); await db.ref("case_products_catalog/meta").set({updatedAt:new Date().toISOString(), updatedBy:productUser(), count:normalized.length}); }
-      catch(e){ console.warn("productCatalogSaveList Firebase", e); }
+      try{
+        await db.ref(PRODUCT_FB_PATH).set(normalized);
+        await db.ref(PRODUCT_META_PATH).set({updatedAt:new Date().toISOString(), updatedBy:productUser(), count:normalized.length});
+      }
+      catch(e){
+        console.warn("productCatalogSaveList Firebase", e);
+        const statusEl = document.getElementById("productCatalogStatus");
+        if(statusEl) statusEl.textContent = "Sem permissao para sincronizar na Firebase; catalogo mantido neste browser.";
+      }
     }
     return normalized;
   }
@@ -8069,12 +8077,29 @@ Esta ação remove estes registos guardados na Firebase.`);
     if(!productHasFirebase()) return;
     try{
       const snap = await db.ref(PRODUCT_FB_PATH).once("value");
+      const localData = productCatalogNormalizeList(productCatalogLoadLocal());
+      if(!snap.exists()){
+        if(localData.length){
+          _productMemCache = localData;
+          productCatalogRender();
+          try{ if(window.refreshCasesProductPickers) window.refreshCasesProductPickers(); }catch(e){}
+          try{
+            await db.ref(PRODUCT_FB_PATH).set(localData);
+            await db.ref(PRODUCT_META_PATH).set({updatedAt:new Date().toISOString(), updatedBy:productUser(), count:localData.length, migratedFromLocal:true});
+          }catch(writeErr){ console.warn("productCatalog migrate local to Firebase", writeErr); }
+        }
+        return;
+      }
       const data = productCatalogNormalizeList(snap.val() || []);
       _productMemCache = data;
       productCatalogSaveLocal(data);
       productCatalogRender();
       try{ if(window.refreshCasesProductPickers) window.refreshCasesProductPickers(); }catch(e){}
-    }catch(e){ console.warn("productCatalogLoadFromFirebase", e); }
+    }catch(e){
+      console.warn("productCatalogLoadFromFirebase", e);
+      const statusEl = document.getElementById("productCatalogStatus");
+      if(statusEl) statusEl.textContent = "Sem permissao para ler catalogo na Firebase; a usar cache local.";
+    }
   }
   function productCatalogStartRealtime(){
     if(!productHasFirebase()) return;
@@ -8082,13 +8107,20 @@ Esta ação remove estes registos guardados na Firebase.`);
     try{
       _productRealtimeRef = db.ref(PRODUCT_FB_PATH);
       _productRealtimeCb = function(snap){
+        if(!snap.exists() && productCatalogNormalizeList(productCatalogLoadLocal()).length){
+          return;
+        }
         const data = productCatalogNormalizeList(snap.val() || []);
         _productMemCache = data;
         productCatalogSaveLocal(data);
         productCatalogRender();
         try{ if(window.refreshCasesProductPickers) window.refreshCasesProductPickers(); }catch(e){}
       };
-      _productRealtimeRef.on("value", _productRealtimeCb, err=>console.warn("productCatalog realtime", err));
+      _productRealtimeRef.on("value", _productRealtimeCb, err=>{
+        console.warn("productCatalog realtime", err);
+        const statusEl = document.getElementById("productCatalogStatus");
+        if(statusEl) statusEl.textContent = "Sem permissao para sincronizar catalogo na Firebase; a usar cache local.";
+      });
     }catch(e){ console.warn("productCatalogStartRealtime", e); }
   }
   function productCatalogStopRealtime(){
@@ -8130,7 +8162,7 @@ Esta ação remove estes registos guardados na Firebase.`);
     const statusEl = document.getElementById("productCatalogStatus");
     const list = productCatalogGetList();
     if(countEl) countEl.textContent = list.length + " produto" + (list.length === 1 ? "" : "s");
-    if(statusEl) statusEl.textContent = productHasFirebase() ? "Sincronizado via Firebase quando estiver autenticado." : "Sem login: usa cache local até autenticar.";
+    if(statusEl) statusEl.textContent = productHasFirebase() ? "Catalogo pronto para sincronizar com a Firebase." : "Sem login: usa cache local ate autenticar.";
     if(!listEl) return;
     if(!list.length){ listEl.innerHTML = '<div class="mini muted">Ainda não há produtos carregados.</div>'; return; }
     listEl.innerHTML = list.slice(0, 500).map(v=>`<span class="cgProductChip" title="${pEsc(v)}"><span>${pEsc(v)}</span></span>`).join("") + (list.length > 500 ? `<span class="cgProductChip"><span>+ ${list.length - 500} restantes</span></span>` : "");
