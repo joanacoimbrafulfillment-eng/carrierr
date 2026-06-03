@@ -525,6 +525,21 @@
     .cgPreviewRow:last-child{ border-bottom:none; }
     .cgArrow{ color:var(--muted); font-size:12px; }
     .cgGroupLabel{ font-weight:900; color:var(--warn); min-width:100px; }
+    .cgProductPanel{border-top:3px solid #0ea5e9;}
+    .cgProductList{margin-top:12px; max-height:260px; overflow:auto; display:flex; flex-wrap:wrap; gap:6px; padding:10px; border:1px solid #e5e7eb; background:#f8fafc; border-radius:12px;}
+    .cgProductChip{display:inline-flex; align-items:center; gap:6px; padding:6px 9px; border-radius:999px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-size:11px; font-weight:850; max-width:100%;}
+    .cgProductChip span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:280px;}
+    .casesProductSearchWrap{display:flex; gap:8px; align-items:center;}
+    .casesProductSearch{width:100%; font-size:14px; padding:11px 12px; border:2px solid #cbd5e1; border-radius:10px; background:#fff;}
+    .casesProductAddBtn{border:0; border-radius:10px; padding:11px 13px; background:#2563eb; color:#fff; font-size:11px; font-weight:900; cursor:pointer; text-transform:uppercase; white-space:nowrap;}
+    .casesProductSelected{display:flex; flex-wrap:wrap; gap:6px; min-height:38px; margin-top:8px; padding:8px; border:1px solid #e5e7eb; border-radius:10px; background:#f8fafc;}
+    .casesProductSelected.empty{color:#94a3b8; font-size:12px; font-weight:700; align-items:center;}
+    .casesProductSelectedChip{display:inline-flex; align-items:center; gap:6px; max-width:100%; padding:6px 8px; border:1px solid #bfdbfe; border-radius:999px; background:#eff6ff; color:#1e3a8a; font-size:11px; font-weight:900;}
+    .casesProductSelectedChip span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:360px;}
+    .casesProductChipRemove{border:0; background:#ef4444; color:#fff; border-radius:999px; width:18px; height:18px; line-height:18px; padding:0; cursor:pointer; font-size:12px; font-weight:900;}
+    .casesProductTextarea{display:none;}
+    .casesProductHint{font-size:11px; color:#64748b; margin-top:5px; line-height:1.35; font-weight:700;}
+    .casesProductCell{white-space:pre-line; font-size:12px; line-height:1.35;}
   
     .semPicGrid{display:grid; grid-template-columns:minmax(340px,.82fr) minmax(520px,1.18fr); gap:25px; margin-top:0; align-items:start;}
     @media(max-width:980px){.semPicGrid{grid-template-columns:1fr;}}
@@ -1725,6 +1740,33 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="card cgProductPanel">
+        <h2 style="margin-bottom:8px;">📦 Catálogo de produtos para Broken / Swipe / Lost</h2>
+        <div class="notice" style="margin-bottom:14px; background:#ecfeff; border-left:5px solid #0ea5e9; color:#164e63;">
+          Faz upload de um ficheiro <b>CSV</b> com os nomes dos produtos na <b>coluna A</b>. Esta lista fica disponível no campo <b>PRODUCT</b> de BROKEN, SWIPE e LOST, permitindo selecionar um ou vários produtos.
+        </div>
+        <label>Upload CSV — coluna A = nome do produto</label>
+        <input id="productCatalogCsv" type="file" accept=".csv,text/csv" onchange="productCatalogImportCsv(this)">
+        <div class="mini" style="margin-top:6px;">O importador lê apenas a primeira coluna. Linhas vazias e cabeçalhos comuns como PRODUCT / PRODUTO são ignorados. Produtos repetidos não são duplicados.</div>
+
+        <div class="split" style="margin-top:12px; align-items:end;">
+          <div>
+            <label>Adicionar produto manualmente</label>
+            <input id="productCatalogManual" placeholder="Escreve um produto para adicionar à lista" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault(); productCatalogAddManual();}">
+          </div>
+          <div class="row">
+            <button class="btn primary" type="button" onclick="productCatalogAddManual()">Adicionar produto</button>
+            <button class="btn" type="button" onclick="productCatalogExportCsv()">Exportar CSV</button>
+            <button class="btn danger" type="button" onclick="productCatalogClearAll()">Limpar catálogo</button>
+          </div>
+        </div>
+        <div class="row" style="justify-content:space-between; margin-top:10px;">
+          <span id="productCatalogCount" class="pill">0 produtos</span>
+          <span id="productCatalogStatus" class="mini">Catálogo pronto.</span>
+        </div>
+        <div id="productCatalogList" class="cgProductList"><div class="mini muted">Ainda não há produtos carregados.</div></div>
       </div>
 
       <!-- Preview -->
@@ -7957,8 +7999,188 @@ Esta ação remove estes registos guardados na Firebase.`);
     setTimeout(()=>{ try{ if(window.renderCarrierSelect) renderCarrierSelect(); }catch(e){} }, 400);
   });
 
+
 })();
 // ===== END CARRIER GROUPS MODULE =====
+
+// ===== PRODUCT CATALOG MODULE (CSV coluna A -> PRODUCT em Broken/Swipe/Lost) =====
+(function(){
+  const PRODUCT_FB_PATH = "case_products_catalog/items";
+  const PRODUCT_LS_KEY  = "wh_case_products_catalog_v1";
+
+  let _productMemCache = null;
+  let _productRealtimeRef = null;
+  let _productRealtimeCb = null;
+
+  function pEsc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch])); }
+  function normalizeProductName(v){ return String(v || "").replace(/^\uFEFF/, "").replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/\s+/g, " ").trim(); }
+  function productKey(v){ return normalizeProductName(v).toLowerCase(); }
+  function productHasFirebase(){ try{ return typeof db !== "undefined" && db && typeof auth !== "undefined" && auth && auth.currentUser; }catch(e){ return false; } }
+  function productUser(){ try{ return auth && auth.currentUser && (auth.currentUser.displayName || auth.currentUser.email) || ""; }catch(e){ return ""; } }
+
+  function productCatalogLoadLocal(){
+    try{ const raw = localStorage.getItem(PRODUCT_LS_KEY); const arr = raw ? JSON.parse(raw) : []; return Array.isArray(arr) ? arr : []; }
+    catch(e){ return []; }
+  }
+  function productCatalogSaveLocal(list){ try{ localStorage.setItem(PRODUCT_LS_KEY, JSON.stringify(list || [])); }catch(e){} }
+  function productCatalogNormalizeList(list){
+    const byKey = new Map();
+    (list || []).forEach(v=>{
+      const name = normalizeProductName(v);
+      if(!name) return;
+      const k = productKey(name);
+      if(!byKey.has(k)) byKey.set(k, name);
+    });
+    return Array.from(byKey.values()).sort((a,b)=>a.localeCompare(b, "pt", {numeric:true, sensitivity:"base"}));
+  }
+  function productCatalogGetList(){
+    if(_productMemCache !== null) return _productMemCache;
+    _productMemCache = productCatalogNormalizeList(productCatalogLoadLocal());
+    return _productMemCache;
+  }
+  async function productCatalogSaveList(list){
+    const normalized = productCatalogNormalizeList(list);
+    _productMemCache = normalized;
+    productCatalogSaveLocal(normalized);
+    productCatalogRender();
+    try{ if(window.refreshCasesProductPickers) window.refreshCasesProductPickers(); }catch(e){}
+    if(productHasFirebase()){
+      try{ await db.ref(PRODUCT_FB_PATH).set(normalized); await db.ref("case_products_catalog/meta").set({updatedAt:new Date().toISOString(), updatedBy:productUser(), count:normalized.length}); }
+      catch(e){ console.warn("productCatalogSaveList Firebase", e); }
+    }
+    return normalized;
+  }
+  async function productCatalogLoadFromFirebase(){
+    if(!productHasFirebase()) return;
+    try{
+      const snap = await db.ref(PRODUCT_FB_PATH).once("value");
+      const data = productCatalogNormalizeList(snap.val() || []);
+      _productMemCache = data;
+      productCatalogSaveLocal(data);
+      productCatalogRender();
+      try{ if(window.refreshCasesProductPickers) window.refreshCasesProductPickers(); }catch(e){}
+    }catch(e){ console.warn("productCatalogLoadFromFirebase", e); }
+  }
+  function productCatalogStartRealtime(){
+    if(!productHasFirebase()) return;
+    if(_productRealtimeRef) return;
+    try{
+      _productRealtimeRef = db.ref(PRODUCT_FB_PATH);
+      _productRealtimeCb = function(snap){
+        const data = productCatalogNormalizeList(snap.val() || []);
+        _productMemCache = data;
+        productCatalogSaveLocal(data);
+        productCatalogRender();
+        try{ if(window.refreshCasesProductPickers) window.refreshCasesProductPickers(); }catch(e){}
+      };
+      _productRealtimeRef.on("value", _productRealtimeCb, err=>console.warn("productCatalog realtime", err));
+    }catch(e){ console.warn("productCatalogStartRealtime", e); }
+  }
+  function productCatalogStopRealtime(){
+    try{ if(_productRealtimeRef && _productRealtimeCb) _productRealtimeRef.off("value", _productRealtimeCb); }catch(e){}
+    _productRealtimeRef = null;
+    _productRealtimeCb = null;
+  }
+
+  function parseCsvFirstColumn(text){
+    const rows = [];
+    let cell = "", row = [], inQuotes = false;
+    const src = String(text || "");
+    for(let i=0;i<src.length;i++){
+      const ch = src[i];
+      const next = src[i+1];
+      if(inQuotes){
+        if(ch === '"' && next === '"'){ cell += '"'; i++; }
+        else if(ch === '"'){ inQuotes = false; }
+        else { cell += ch; }
+      } else {
+        if(ch === '"'){ inQuotes = true; }
+        else if(ch === ',' || ch === ';' || ch === '\t') { row.push(cell); cell = ""; }
+        else if(ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ""; }
+        else if(ch === '\r') { /* ignora */ }
+        else { cell += ch; }
+      }
+    }
+    row.push(cell); rows.push(row);
+    return rows.map(r=>normalizeProductName(r && r[0])).filter(Boolean).filter((v, idx)=>{
+      if(idx !== 0) return true;
+      const h = productKey(v);
+      return !["product", "produto", "produtos", "nome do produto", "nome dos produtos", "product name", "products"].includes(h);
+    });
+  }
+
+  function productCatalogRender(){
+    const listEl = document.getElementById("productCatalogList");
+    const countEl = document.getElementById("productCatalogCount");
+    const statusEl = document.getElementById("productCatalogStatus");
+    const list = productCatalogGetList();
+    if(countEl) countEl.textContent = list.length + " produto" + (list.length === 1 ? "" : "s");
+    if(statusEl) statusEl.textContent = productHasFirebase() ? "Sincronizado via Firebase quando estiver autenticado." : "Sem login: usa cache local até autenticar.";
+    if(!listEl) return;
+    if(!list.length){ listEl.innerHTML = '<div class="mini muted">Ainda não há produtos carregados.</div>'; return; }
+    listEl.innerHTML = list.slice(0, 500).map(v=>`<span class="cgProductChip" title="${pEsc(v)}"><span>${pEsc(v)}</span></span>`).join("") + (list.length > 500 ? `<span class="cgProductChip"><span>+ ${list.length - 500} restantes</span></span>` : "");
+  }
+
+  async function productCatalogImportCsv(input){
+    const file = input && input.files && input.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async function(e){
+      try{
+        const imported = parseCsvFirstColumn(e.target.result || "");
+        if(!imported.length){ alert("Não encontrei produtos na coluna A do CSV."); return; }
+        const before = productCatalogGetList();
+        const after = await productCatalogSaveList(before.concat(imported));
+        const statusEl = document.getElementById("productCatalogStatus");
+        if(statusEl) statusEl.textContent = `CSV importado: ${imported.length} linha(s) lida(s), ${after.length} produto(s) no catálogo.`;
+        alert("Produtos importados com sucesso: " + after.length + " produto(s) disponíveis no campo PRODUCT.");
+      }catch(err){ alert("Erro ao importar CSV: " + (err && err.message ? err.message : err)); }
+      finally{ if(input) input.value = ""; }
+    };
+    reader.readAsText(file, "UTF-8");
+  }
+
+  async function productCatalogAddManual(){
+    const el = document.getElementById("productCatalogManual");
+    const name = normalizeProductName(el && el.value);
+    if(!name){ alert("Escreve um produto para adicionar."); return; }
+    await productCatalogSaveList(productCatalogGetList().concat([name]));
+    if(el) el.value = "";
+  }
+
+  async function productCatalogClearAll(){
+    if(!confirm("Limpar todos os produtos do catálogo? Isto afeta a lista usada no campo PRODUCT.")) return;
+    await productCatalogSaveList([]);
+  }
+
+  function productCatalogExportCsv(){
+    const list = productCatalogGetList();
+    if(!list.length){ alert("Não há produtos para exportar."); return; }
+    const csv = "\ufeffsep=;\r\nPRODUCT\r\n" + list.map(v=>'"' + String(v).replace(/"/g,'""') + '"').join("\r\n");
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "catalogo_produtos_broken_swipe_lost.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  window.productCatalogGetList = productCatalogGetList;
+  window.productCatalogImportCsv = productCatalogImportCsv;
+  window.productCatalogAddManual = productCatalogAddManual;
+  window.productCatalogClearAll = productCatalogClearAll;
+  window.productCatalogExportCsv = productCatalogExportCsv;
+  window.productCatalogRender = productCatalogRender;
+
+  if(typeof auth !== "undefined" && auth && auth.onAuthStateChanged){
+    auth.onAuthStateChanged(user=>{
+      if(user){ setTimeout(()=>productCatalogLoadFromFirebase().then(()=>productCatalogStartRealtime()), 800); }
+      else { productCatalogStopRealtime(); _productMemCache = productCatalogGetList(); productCatalogRender(); }
+    });
+  }
+  document.addEventListener("DOMContentLoaded", ()=>{ _productMemCache = productCatalogGetList(); productCatalogRender(); });
+})();
+// ===== END PRODUCT CATALOG MODULE =====
 
 </script>
 
@@ -9058,6 +9280,101 @@ Esta ação remove estes registos guardados na Firebase.`);
       return sortedUnique(keys.flatMap(k => applyDeletedOptions(k, state.options[k] || [])));
     }
 
+    function casesProductCatalog(){
+      try{ return window.productCatalogGetList ? window.productCatalogGetList() : []; }
+      catch(e){ return []; }
+    }
+    function splitCaseProducts(value){
+      return String(value || "").split(/\n+/g).map(v=>v.trim()).filter(Boolean);
+    }
+    function normalizeCaseProductText(value){
+      return String(value || "").trim().replace(/\s+/g, " ");
+    }
+    function caseProductLookupTyped(value){
+      const typed = normalizeCaseProductText(value);
+      if(!typed) return "";
+      const typedKey = typed.toLowerCase();
+      const products = casesProductCatalog();
+      const exact = products.find(p=>String(p || "").trim().toLowerCase() === typedKey);
+      return exact || typed;
+    }
+    function productSelectedHtml(inputId, value){
+      const parts = splitCaseProducts(value);
+      if(!parts.length){
+        return `<div id="${esc(inputId)}_selected" class="casesProductSelected empty" data-cases-product-selected="1" data-product-input-id="${esc(inputId)}">Nenhum produto selecionado.</div>`;
+      }
+      const chips = parts.map(p=>`<span class="casesProductSelectedChip" title="${esc(p)}"><span>${esc(p)}</span><button class="casesProductChipRemove" type="button" title="Remover" onclick="removeCasesProductFromPicker('${esc(inputId)}','${encodeURIComponent(p)}')">×</button></span>`).join("");
+      return `<div id="${esc(inputId)}_selected" class="casesProductSelected" data-cases-product-selected="1" data-product-input-id="${esc(inputId)}">${chips}</div>`;
+    }
+    function productDatalistOptions(){
+      return casesProductCatalog().map(p=>`<option value="${esc(p)}"></option>`).join("");
+    }
+    function renderCasesProductPicker(inputId, label, value, full){
+      const products = casesProductCatalog();
+      const cls = full ? "casesFieldFull" : "";
+      const listId = inputId + "_list";
+      const searchId = inputId + "_search";
+      const emptyMsg = products.length ? "Clica no campo PRODUCT e começa a escrever o nome/SKU. Escolhe uma opção ou carrega Enter/Adicionar. Podes adicionar vários produtos." : "Ainda não há catálogo carregado. Vai a Grupos de Transportadoras e importa um CSV de produtos.";
+      return `<div class="${cls}"><label>${esc(label)}</label><div class="casesProductSearchWrap"><input id="${esc(searchId)}" class="casesProductSearch" type="text" list="${esc(listId)}" placeholder="Escreve para procurar produto..." autocomplete="off" data-cases-product-search="1" data-product-input-id="${esc(inputId)}" onkeydown="if(event.key==='Enter'){event.preventDefault(); addCasesProductFromPicker('${esc(inputId)}');}" onchange="addCasesProductFromPicker('${esc(inputId)}')"><button class="casesProductAddBtn" type="button" onclick="addCasesProductFromPicker('${esc(inputId)}')">Adicionar</button></div><datalist id="${esc(listId)}" data-cases-product-list="1" data-product-input-id="${esc(inputId)}">${productDatalistOptions()}</datalist>${productSelectedHtml(inputId, value || "")}<textarea id="${esc(inputId)}" class="casesProductTextarea" placeholder="Produtos selecionados / um por linha" oninput="syncCasesProductSelectFromTextarea('${esc(inputId)}')">${esc(value || "")}</textarea><div class="casesProductHint">${esc(emptyMsg)}</div></div>`;
+    }
+    function addCasesProductFromPicker(inputId){
+      const searchEl = byId(inputId + "_search");
+      const txt = byId(inputId);
+      if(!searchEl || !txt) return;
+      const product = caseProductLookupTyped(searchEl.value);
+      if(!product) return;
+      const current = splitCaseProducts(txt.value);
+      const seen = new Set(current.map(v=>v.toLowerCase()));
+      if(!seen.has(product.toLowerCase())) current.push(product);
+      txt.value = current.join("\n");
+      searchEl.value = "";
+      renderCasesProductSelected(inputId);
+    }
+    window.addCasesProductFromPicker = addCasesProductFromPicker;
+    function removeCasesProductFromPicker(inputId, encodedProduct){
+      const txt = byId(inputId);
+      if(!txt) return;
+      let product = "";
+      try{ product = decodeURIComponent(encodedProduct || ""); }catch(e){ product = String(encodedProduct || ""); }
+      const removeKey = product.toLowerCase();
+      const next = splitCaseProducts(txt.value).filter(v=>v.toLowerCase() !== removeKey);
+      txt.value = next.join("\n");
+      renderCasesProductSelected(inputId);
+    }
+    window.removeCasesProductFromPicker = removeCasesProductFromPicker;
+    function renderCasesProductSelected(inputId){
+      const selectedEl = byId(inputId + "_selected");
+      const txt = byId(inputId);
+      if(!selectedEl || !txt) return;
+      const html = productSelectedHtml(inputId, txt.value);
+      const temp = document.createElement("div");
+      temp.innerHTML = html;
+      const fresh = temp.firstElementChild;
+      if(fresh) selectedEl.replaceWith(fresh);
+    }
+    function syncCasesProductPicker(inputId){
+      addCasesProductFromPicker(inputId);
+    }
+    window.syncCasesProductPicker = syncCasesProductPicker;
+    function syncCasesProductSelectFromTextarea(inputId){
+      renderCasesProductSelected(inputId);
+    }
+    window.syncCasesProductSelectFromTextarea = syncCasesProductSelectFromTextarea;
+    function refreshCasesProductPickers(){
+      const options = productDatalistOptions();
+      document.querySelectorAll('datalist[data-cases-product-list="1"]').forEach(listEl=>{ listEl.innerHTML = options; });
+      document.querySelectorAll('[data-cases-product-selected="1"]').forEach(selectedEl=>{
+        const inputId = selectedEl.dataset.productInputId || "";
+        if(inputId) renderCasesProductSelected(inputId);
+      });
+    }
+    window.refreshCasesProductPickers = refreshCasesProductPickers;
+    function caseProductDisplayHtml(value){
+      const parts = splitCaseProducts(value);
+      if(!parts.length) return "";
+      return `<div class="casesProductCell">${parts.map(esc).join("\n")}</div>`;
+    }
+
     function renderCasesFormFields(preserveValues=true){
       const type = getCurrentType();
       const box = byId("casesDynamicFields");
@@ -9067,12 +9384,13 @@ Esta ação remove estes registos guardados na Firebase.`);
         getFields("BROKEN").concat(getFields("SWIPE"), getFields("LOST")).forEach(f=>{ const el = byId("caseField_" + f.key); if(el && el.value) current[f.key] = el.value; });
       }
       box.innerHTML = getFields(type).map(f=>{
+        if(f.key === "product") return renderCasesProductPicker("caseField_" + f.key, f.label, current[f.key] || "", f.full);
         const listAttr = f.selectable ? ` list="${esc(datalistIdForOption(f.optionKey))}"` : "";
         const cls = f.full ? "casesFieldFull" : "";
         const typeAttr = f.type === "date" ? "date" : "text";
         return `<div class="${cls}"><label>${esc(f.label)}</label><input id="caseField_${esc(f.key)}" type="${typeAttr}"${listAttr} placeholder="${esc(f.label)}" autocomplete="off"></div>`;
       }).join("");
-      Object.entries(current).forEach(([k,v])=>setVal("caseField_" + k, v));
+      Object.entries(current).forEach(([k,v])=>{ setVal("caseField_" + k, v); if(k === "product") syncCasesProductSelectFromTextarea("caseField_" + k); });
       const dw = byId("caseField_dateWarehouse");
       if(dw && state.currentAutoData){
         if(state.currentAutoData.dateWarehouse && !dw.value){
@@ -9791,9 +10109,10 @@ Esta ação remove estes registos guardados na Firebase.`);
       const baseFields = getFields(type);
       const fieldHtml = baseFields.map(f=>{
         const inputId = inlineInputId(recordKey, f.key);
+        const value = (r.fields || {})[f.key] || "";
+        if(f.key === "product") return renderCasesProductPicker(inputId, f.label, value, f.full);
         const listAttr = f.selectable ? ` list="${esc(datalistIdForOption(f.optionKey))}"` : "";
         const typeAttr = f.type === "date" ? "date" : "text";
-        const value = (r.fields || {})[f.key] || "";
         return `<div class="${f.full ? "casesFieldFull" : ""}"><label>${esc(f.label)}</label><input id="${esc(inputId)}" type="${typeAttr}"${listAttr} value="${esc(value)}" autocomplete="off"></div>`;
       }).join("");
       const idInput = inlineInputId(recordKey, "id");
@@ -9896,7 +10215,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       renderCasesAutoData(state.currentAutoData, "Sem dados Firebase guardados neste registo.");
       renderCasesCrosscheckData(state.currentCrosscheckData, "Sem cruzamento guardado neste registo.");
       renderCasesFormFields();
-      getFields(r.type).forEach(f=>setVal("caseField_" + f.key, r.fields && r.fields[f.key] || ""));
+      getFields(r.type).forEach(f=>{ setVal("caseField_" + f.key, r.fields && r.fields[f.key] || ""); if(f.key === "product") syncCasesProductSelectFromTextarea("caseField_" + f.key); });
       const hint = byId("casesEditingHint"); if(hint) hint.innerHTML = `A editar <b>${esc(r.type)}</b> · <span class="mono">${esc(r.id)}</span>. Os campos estão preenchidos com os dados guardados. Ao guardar, fica registado o histórico das alterações.`;
       switchTab("cases");
       window.scrollTo({top:0, behavior:"smooth"});
@@ -10030,6 +10349,7 @@ Esta ação remove estes registos guardados na Firebase.`);
     }
     function caseFieldCellHtml(f, value){
       const v = value || "";
+      if(f && f.key === "product") return caseProductDisplayHtml(v);
       const isStatus = f.key === "status";
       if(isStatus && v) return `<span class="casesStatusBadge ${caseStatusClass(v)}">${esc(v)}</span>`;
       return esc(v);
