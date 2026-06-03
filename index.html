@@ -763,6 +763,246 @@
     #tabCases .casesTable .casesStatusBadge{font-size:10px; padding:3px 6px;}
     #tabCases .casesTable .casesTypeBadge{font-size:10px; padding:4px 7px;}
 
+
+
+    /* ===== v61: editor em linha Broken / Swipe / Lost sem campos cortados ===== */
+    .casesInlineEditRow td{
+      padding:0!important;
+      overflow:visible!important;
+    }
+    .casesInlineEditor{
+      width:min(100%, calc(100vw - 82px))!important;
+      max-width:calc(100vw - 82px)!important;
+      box-sizing:border-box;
+      overflow-x:auto!important;
+      overflow-y:visible!important;
+      margin:0;
+      scrollbar-gutter:stable;
+    }
+    .casesInlineEditorGrid{
+      grid-template-columns:repeat(auto-fit,minmax(165px,1fr))!important;
+      gap:10px!important;
+      width:100%;
+      min-width:0;
+    }
+    .casesInlineEditorGrid > div{min-width:0;}
+    .casesInlineEditorGrid input,
+    .casesInlineEditorGrid select,
+    .casesInlineEditorGrid textarea{
+      width:100%;
+      min-width:0;
+      max-width:100%;
+      padding:9px 10px;
+      font-size:13px;
+    }
+    .casesInlineEditor .casesFieldFull{grid-column:1 / -1;}
+    .casesInlineEditor .casesProductSearchWrap{min-width:0;}
+    .casesInlineEditor .casesProductSearch{min-width:0;}
+    .casesInlineEditor .casesProductSelectedChip span{max-width:min(420px, 70vw);}
+    .casesInlineEditActions{
+      position:sticky;
+      left:0;
+      background:#eff6ff;
+      padding-top:10px;
+      z-index:2;
+    }
+    @media(max-width:900px){
+      .casesInlineEditor{width:calc(100vw - 38px)!important; max-width:calc(100vw - 38px)!important;}
+      .casesInlineEditorGrid{grid-template-columns:repeat(auto-fit,minmax(135px,1fr))!important; gap:8px!important;}
+      .casesInlineEditorGrid input,
+      .casesInlineEditorGrid select,
+      .casesInlineEditorGrid textarea{font-size:12px; padding:8px 9px;}
+      .casesProductAddBtn{padding:9px 10px;}
+    }
+
+
+
+    /* ===== v62: editor em linha sempre dentro da zona visivel =====
+       Mantem a edicao na propria linha, mas prende o painel ao lado esquerdo
+       do scroll da tabela e obriga os campos a quebrar em linhas. */
+    #tabCases .casesInlineEditRow,
+    #tabCases .casesInlineEditRow td{
+      position:relative!important;
+      z-index:60!important;
+    }
+    #tabCases .casesInlineEditRow td{
+      padding:0!important;
+      overflow:visible!important;
+      background:#eff6ff!important;
+    }
+    #tabCases .casesInlineEditor{
+      position:sticky!important;
+      left:8px!important;
+      width:calc(100vw - 76px)!important;
+      max-width:calc(100vw - 76px)!important;
+      min-width:0!important;
+      box-sizing:border-box!important;
+      overflow-x:hidden!important;
+      overflow-y:visible!important;
+      margin:0!important;
+    }
+    @supports (width: 100dvw){
+      #tabCases .casesInlineEditor{
+        width:calc(100dvw - 76px)!important;
+        max-width:calc(100dvw - 76px)!important;
+      }
+    }
+    #tabCases .casesInlineEditorGrid{
+      display:flex!important;
+      flex-wrap:wrap!important;
+      align-items:flex-start!important;
+      gap:10px!important;
+      width:100%!important;
+      min-width:0!important;
+      max-width:100%!important;
+    }
+    #tabCases .casesInlineEditorGrid > div{
+      flex:1 1 175px!important;
+      min-width:150px!important;
+      max-width:260px!important;
+      box-sizing:border-box!important;
+    }
+    #tabCases .casesInlineEditorGrid > div.casesFieldFull,
+    #tabCases .casesInlineEditor .casesFieldFull{
+      flex:1 1 100%!important;
+      min-width:100%!important;
+      max-width:100%!important;
+      width:100%!important;
+    }
+    #tabCases .casesInlineEditorGrid label{
+      white-space:normal!important;
+      overflow-wrap:anywhere!important;
+      line-height:1.15!important;
+    }
+    #tabCases .casesInlineEditorGrid input,
+    #tabCases .casesInlineEditorGrid select,
+    #tabCases .casesInlineEditorGrid textarea{
+      width:100%!important;
+      min-width:0!important;
+      max-width:100%!important;
+      box-sizing:border-box!important;
+    }
+    #tabCases .casesInlineEditor .casesProductSearchWrap,
+    #tabCases .casesInlineEditor .casesProductSearch,
+    #tabCases .casesInlineEditor .casesProductSelected,
+    #tabCases .casesInlineEditor .casesProductPicker{
+      width:100%!important;
+      max-width:100%!important;
+      min-width:0!important;
+      box-sizing:border-box!important;
+    }
+    #tabCases .casesInlineEditor .casesProductSelectedChip span{
+      max-width:min(520px, calc(100vw - 160px))!important;
+    }
+    #tabCases .casesInlineEditActions{
+      position:sticky!important;
+      left:8px!important;
+      width:100%!important;
+      max-width:100%!important;
+      box-sizing:border-box!important;
+      background:#eff6ff!important;
+      z-index:65!important;
+    }
+    @media(max-width:900px){
+      #tabCases .casesInlineEditor{
+        left:4px!important;
+        width:calc(100vw - 34px)!important;
+        max-width:calc(100vw - 34px)!important;
+      }
+      @supports (width: 100dvw){
+        #tabCases .casesInlineEditor{
+          width:calc(100dvw - 34px)!important;
+          max-width:calc(100dvw - 34px)!important;
+        }
+      }
+      #tabCases .casesInlineEditorGrid > div{
+        flex:1 1 135px!important;
+        min-width:125px!important;
+        max-width:none!important;
+      }
+      #tabCases .casesInlineEditActions{left:4px!important;}
+    }
+
+
+    /* ===== v63: editor de linha em painel flutuante sem corte + filtro Cruzamento dropdown ===== */
+    #tabCases .casesInlineEditRow td{
+      min-height:0!important;
+      padding:0!important;
+      overflow:visible!important;
+    }
+    #tabCases .casesInlineEditor{
+      position:fixed!important;
+      left:24px!important;
+      right:24px!important;
+      top:88px!important;
+      width:auto!important;
+      max-width:none!important;
+      min-width:0!important;
+      max-height:calc(100vh - 112px)!important;
+      overflow:auto!important;
+      z-index:2147482500!important;
+      box-sizing:border-box!important;
+      box-shadow:0 24px 70px rgba(15,23,42,.28)!important;
+      border:2px solid #93c5fd!important;
+    }
+    #tabCases .casesInlineEditorGrid{
+      display:grid!important;
+      grid-template-columns:repeat(4,minmax(0,1fr))!important;
+      gap:10px!important;
+      width:100%!important;
+      max-width:100%!important;
+      min-width:0!important;
+    }
+    #tabCases .casesInlineEditorGrid > div{
+      min-width:0!important;
+      max-width:none!important;
+      width:auto!important;
+      box-sizing:border-box!important;
+    }
+    #tabCases .casesInlineEditorGrid > div.casesFieldFull,
+    #tabCases .casesInlineEditor .casesFieldFull{
+      grid-column:1 / -1!important;
+      min-width:0!important;
+      max-width:100%!important;
+      width:100%!important;
+    }
+    #tabCases .casesInlineEditorGrid input,
+    #tabCases .casesInlineEditorGrid select,
+    #tabCases .casesInlineEditorGrid textarea,
+    #tabCases .casesInlineEditor .casesProductSearchWrap,
+    #tabCases .casesInlineEditor .casesProductSearch,
+    #tabCases .casesInlineEditor .casesProductSelected,
+    #tabCases .casesInlineEditor .casesProductPicker{
+      width:100%!important;
+      max-width:100%!important;
+      min-width:0!important;
+      box-sizing:border-box!important;
+    }
+    #tabCases .casesInlineEditor .casesProductSelectedChip span{
+      max-width:min(720px, calc(100vw - 190px))!important;
+    }
+    #tabCases .casesInlineEditActions{
+      position:sticky!important;
+      left:0!important;
+      bottom:0!important;
+      width:100%!important;
+      max-width:100%!important;
+      background:#eff6ff!important;
+      border-top:1px solid #bfdbfe!important;
+      padding-top:12px!important;
+      z-index:2147482501!important;
+    }
+    @media(max-width:1280px){
+      #tabCases .casesInlineEditorGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+    }
+    @media(max-width:860px){
+      #tabCases .casesInlineEditor{left:10px!important; right:10px!important; top:72px!important; max-height:calc(100vh - 86px)!important;}
+      #tabCases .casesInlineEditorGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+    }
+    @media(max-width:560px){
+      #tabCases .casesInlineEditorGrid{grid-template-columns:1fr!important;}
+    }
+
 </style>
 </head>
 <body>
@@ -9098,6 +9338,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       BROKEN: [
         {key:"damageDescription", label:"DAMAGE DESCRIPTION", selectable:true, optionKey:"brokenDamageDescription", full:true},
         {key:"trackingId", label:"TRACKING ID"},
+        {key:"packedDate", label:"PACKED DATE", type:"date"},
         {key:"dateWarehouse", label:"DATE WAREHOUSE", type:"date"},
         {key:"caseReference", label:"CASE REFERENCE"},
         {key:"trackingTroca", label:"TRACKING TROCA"},
@@ -9112,6 +9353,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       SWIPE: [
         {key:"productReceived", label:"PRODUCT RECEIVED", full:true},
         {key:"trackingId", label:"TRACKING ID"},
+        {key:"packedDate", label:"PACKED DATE", type:"date"},
         {key:"dateWarehouse", label:"DATE WAREHOUSE", type:"date"},
         {key:"caseReference", label:"CASE REFERENCE"},
         {key:"status1", label:"WRONG PRODUCT STATUS", selectable:true, optionKey:"swipeStatus1"},
@@ -9126,6 +9368,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       LOST: [
         {key:"ticket", label:"TICKET"},
         {key:"trackingId", label:"TRACKING ID"},
+        {key:"packedDate", label:"PACKED DATE", type:"date"},
         {key:"trackingTroca", label:"TRACKING TROCA"},
         {key:"status", label:"STATUS", selectable:true, optionKey:"lostStatus"},
         {key:"paid", label:"PAID"},
@@ -9486,6 +9729,54 @@ Esta ação remove estes registos guardados na Firebase.`);
       return `<div class="casesProductCell">${parts.map(esc).join("\n")}</div>`;
     }
 
+    function applyCaseDateAutoFill(inputId, badgeId, autoValue, foundLabel, missingLabel){
+      const el = byId(inputId);
+      if(!el) return;
+      const value = dateFromAny(autoValue || "");
+      if(value && (!el.value || el.dataset.autoFilled === "1")){
+        el.value = value;
+        el.dataset.autoFilled = "1";
+        el.style.borderColor = "#28a745";
+        el.style.background = "#f0fff4";
+        let badge = byId(badgeId);
+        if(!badge){
+          badge = document.createElement("div");
+          badge.id = badgeId;
+          badge.style.cssText = "font-size:12px; font-weight:800; margin-top:4px; padding:5px 10px; border-radius:8px; display:inline-block;";
+          if(el.parentNode) el.parentNode.appendChild(badge);
+        }
+        badge.style.background = "#d1fae5";
+        badge.style.color = "#065f46";
+        badge.style.border = "1px solid #6ee7b7";
+        badge.textContent = foundLabel || "✅ Preenchido automaticamente via Firebase";
+      } else if(!value && (!el.value || el.dataset.autoFilled === "1")){
+        if(el.dataset.autoFilled === "1") el.value = "";
+        el.style.borderColor = "#f59e0b";
+        el.style.background = "#fffbeb";
+        let badge = byId(badgeId);
+        if(!badge){
+          badge = document.createElement("div");
+          badge.id = badgeId;
+          badge.style.cssText = "font-size:12px; font-weight:800; margin-top:4px; padding:5px 10px; border-radius:8px; display:inline-block;";
+          if(el.parentNode) el.parentNode.appendChild(badge);
+        }
+        badge.style.background = "#fef3c7";
+        badge.style.color = "#92400e";
+        badge.style.border = "1px solid #fcd34d";
+        badge.textContent = missingLabel || "⚠ Não encontrado na Firebase — insere manualmente";
+      }
+      if(!el.dataset.manualClearReady){
+        el.dataset.manualClearReady = "1";
+        el.addEventListener("input", function(){
+          el.style.borderColor = "";
+          el.style.background = "";
+          el.dataset.autoFilled = "";
+          const b = byId(badgeId);
+          if(b){ b.textContent = "✏ Data editada manualmente"; b.style.background="#f8fafc"; b.style.color="#475569"; b.style.border="1px solid #e2e8f0"; }
+        });
+      }
+    }
+
     function renderCasesFormFields(preserveValues=true){
       const type = getCurrentType();
       const box = byId("casesDynamicFields");
@@ -9538,6 +9829,15 @@ Esta ação remove estes registos guardados na Firebase.`);
           dw.style.borderColor = "#f59e0b";
           dw.style.background  = "#fffbeb";
         }
+      }
+      if(state.currentAutoData){
+        applyCaseDateAutoFill(
+          "caseField_packedDate",
+          "packedDateAutoFillBadge",
+          state.currentAutoData.packingDate || state.currentAutoData.packingDateTime,
+          "✅ PACKED DATE preenchida automaticamente (PACKING · " + (state.currentAutoData.packingDateTime || state.currentAutoData.packingDate || "") + ")",
+          "⚠ Sem PACKING — insere a PACKED DATE manualmente"
+        );
       }
     }
     window.renderCasesFormFields = renderCasesFormFields;
@@ -9729,6 +10029,14 @@ Esta ação remove estes registos guardados na Firebase.`);
           }
         }
 
+        applyCaseDateAutoFill(
+          "caseField_packedDate",
+          "packedDateAutoFillBadge",
+          data.packingDate || data.packingDateTime,
+          "✅ PACKED DATE preenchida automaticamente (PACKING · " + (data.packingDateTime || data.packingDate || "") + ")",
+          "⚠ Sem PACKING — insere a PACKED DATE manualmente"
+        );
+
         if(data.dateWarehouse && !opts.silent) setStatus("DATE WAREHOUSE preenchida automaticamente via Firebase ✅", "ok");
         else if(!opts.silent) setStatus("Sem RETURN/REFUND encontrado — preenche a DATE WAREHOUSE manualmente.", "warn");
         return data;
@@ -9744,6 +10052,152 @@ Esta ação remove estes registos guardados na Firebase.`);
       return data;
     }
     window.fetchCaseAutoDataFromForm = fetchCaseAutoDataFromForm;
+
+
+    // Atualização automática da coluna Firebase em Broken / Swipe / Lost.
+    // Quando um ID já guardado recebe nova picagem PACKING / RETURN / REFUND em registos,
+    // recalcula o resumo Firebase desse ID e grava-o no próprio registo do caso.
+    function regCaseId(r){ return normalId(r && (r.id || r.ID || r.order_id || r.orderId) || ""); }
+    function regCaseIsRelevant(r){
+      const m = regMode(r);
+      return !!(m && (m.includes("PACK") || m.includes("RETURN") || m.includes("REFUND")));
+    }
+    function caseRecordsForId(id){
+      const n = normalId(id);
+      return (state.records || []).filter(r=>normalId(r.id) === n);
+    }
+    function caseFirebaseComparable(fd){
+      fd = fd || {};
+      return JSON.stringify({
+        recordsCount: fd.recordsCount || 0,
+        returnRefundCount: fd.returnRefundCount || 0,
+        returnCount: fd.returnCount || 0,
+        refundCount: fd.refundCount || 0,
+        hasReturn: !!fd.hasReturn,
+        hasRefund: !!fd.hasRefund,
+        dateWarehouse: fd.dateWarehouse || "",
+        returnRefundMode: fd.returnRefundMode || "",
+        returnRefundDateTime: fd.returnRefundDateTime || "",
+        returnRefundTracking: fd.returnRefundTracking || "",
+        returnDateTime: fd.returnDateTime || "",
+        returnTracking: fd.returnTracking || "",
+        refundDateTime: fd.refundDateTime || "",
+        refundTracking: fd.refundTracking || "",
+        packingDateTime: fd.packingDateTime || "",
+        packingTracking: fd.packingTracking || "",
+        packingCarrier: fd.packingCarrier || "",
+        packingItems: fd.packingItems || ""
+      });
+    }
+    async function fetchCaseAutoDataForRecord(id){
+      id = normalId(id);
+      if(!id || !hasFirebase()) return null;
+      const snap = await db.ref("registos").orderByChild("id").equalTo(id).once("value");
+      const raw = snap.val() || {};
+      const records = Object.entries(raw)
+        .map(([key,r])=>Object.assign({}, r || {}, {key, source:"registos"}))
+        .filter(r=>regCaseId(r) === id);
+      const rrRecords = records.filter(r=>{ const m = regMode(r); return m.includes("RETURN") || m.includes("REFUND"); });
+      const returnRecords = records.filter(r=>regMode(r).includes("RETURN"));
+      const refundRecords = records.filter(r=>regMode(r).includes("REFUND"));
+      const pkRecords = records.filter(r=>regMode(r).includes("PACK"));
+      const rr = latestByDate(rrRecords);
+      const ret = latestByDate(returnRecords);
+      const ref = latestByDate(refundRecords);
+      const pk = latestByDate(pkRecords);
+      return {
+        id,
+        fetchedAt: nowIso(),
+        recordsCount: records.length,
+        returnRefundCount: rrRecords.length,
+        returnCount: returnRecords.length,
+        refundCount: refundRecords.length,
+        hasReturn: !!ret,
+        hasRefund: !!ref,
+        dateWarehouse: rr ? (dateFromAny(rr.dateClean) || dateFromAny(fmtDateTimeFromReg(rr))) : "",
+        returnRefundMode: rr ? regMode(rr) : "",
+        returnRefundDateTime: rr ? fmtDateTimeFromReg(rr) : "",
+        returnRefundTracking: rr ? regTracking(rr) : "",
+        returnRefundCarrier: rr ? regCarrier(rr) : "",
+        returnRefundItems: rr ? regItems(rr) : "",
+        returnDate: ret ? (dateFromAny(ret.dateClean) || dateFromAny(fmtDateTimeFromReg(ret))) : "",
+        returnDateTime: ret ? fmtDateTimeFromReg(ret) : "",
+        returnTracking: ret ? regTracking(ret) : "",
+        returnCarrier: ret ? regCarrier(ret) : "",
+        returnItems: ret ? regItems(ret) : "",
+        refundDate: ref ? (dateFromAny(ref.dateClean) || dateFromAny(fmtDateTimeFromReg(ref))) : "",
+        refundDateTime: ref ? fmtDateTimeFromReg(ref) : "",
+        refundTracking: ref ? regTracking(ref) : "",
+        refundCarrier: ref ? regCarrier(ref) : "",
+        refundItems: ref ? regItems(ref) : "",
+        packingDate: pk ? (dateFromAny(pk.dateClean) || dateFromAny(fmtDateTimeFromReg(pk))) : "",
+        packingDateTime: pk ? fmtDateTimeFromReg(pk) : "",
+        packingTracking: pk ? regTracking(pk) : "",
+        packingCarrier: pk ? regCarrier(pk) : "",
+        packingUser: pk ? regUser(pk) : "",
+        packingBatch: pk ? regBatch(pk) : "",
+        packingItems: pk ? regItems(pk) : ""
+      };
+    }
+    function scheduleCaseFirebaseRefresh(id, reason){
+      id = normalId(id);
+      if(!id || !caseRecordsForId(id).length) return;
+      state.realtime.firebaseRefreshTimers = state.realtime.firebaseRefreshTimers || {};
+      if(state.realtime.firebaseRefreshTimers[id]) clearTimeout(state.realtime.firebaseRefreshTimers[id]);
+      state.realtime.firebaseRefreshTimers[id] = setTimeout(()=>refreshCaseFirebaseForId(id, reason || "realtime"), 650);
+    }
+    async function refreshCaseFirebaseForId(id, reason){
+      id = normalId(id);
+      const records = caseRecordsForId(id);
+      if(!records.length || !hasFirebase()) return;
+      try{
+        const data = await fetchCaseAutoDataForRecord(id);
+        if(!data) return;
+        const now = nowIso();
+        let changed = false;
+        const writes = [];
+        records.forEach(rec=>{
+          const before = caseFirebaseComparable(rec.firebaseData || {});
+          const after = caseFirebaseComparable(data || {});
+          if(before !== after){
+            rec.firebaseData = data || {};
+            if(data && data.packingDate && rec.fields && !rec.fields.packedDate){
+              rec.fields.packedDate = data.packingDate;
+            }
+            rec.firebaseUpdatedAt = now;
+            rec.firebaseUpdatedBy = "Sistema realtime";
+            rec.firebaseUpdateReason = reason || "registos";
+            changed = true;
+            if(hasFirebase() && rec.key){
+              writes.push(db.ref(CASES_ITEMS_PATH + "/" + rec.key + "/firebaseData").set(data || {}));
+              if(data && data.packingDate && rec.fields && rec.fields.packedDate === data.packingDate){
+                writes.push(db.ref(CASES_ITEMS_PATH + "/" + rec.key + "/fields/packedDate").set(data.packingDate));
+              }
+              writes.push(db.ref(CASES_ITEMS_PATH + "/" + rec.key + "/firebaseUpdatedAt").set(now));
+              writes.push(db.ref(CASES_ITEMS_PATH + "/" + rec.key + "/firebaseUpdatedBy").set("Sistema realtime"));
+              writes.push(db.ref(CASES_ITEMS_PATH + "/" + rec.key + "/firebaseUpdateReason").set(reason || "registos"));
+            }
+          }
+        });
+        if(changed){
+          saveLocal();
+          renderCasesTable();
+          if(writes.length) await Promise.all(writes).catch(e=>console.warn("cases firebase realtime write", e));
+          setCasesRealtimeIndicator("Realtime: Firebase do ID " + id + " atualizado " + casesRealtimeTime(), "ok");
+        }
+      }catch(e){
+        console.warn("cases firebase realtime refresh", id, e);
+      }
+    }
+    function handleCaseRegistoRealtimeSnapshot(snap, source){
+      try{
+        const r = snap && snap.val ? (snap.val() || {}) : {};
+        if(!regCaseIsRelevant(r)) return;
+        const id = regCaseId(r);
+        if(!id || !caseRecordsForId(id).length) return;
+        scheduleCaseFirebaseRefresh(id, source || "registos");
+      }catch(e){ console.warn("cases registos realtime", e); }
+    }
     function scheduleCaseAutoFetch(){
       if(state.autoFetchTimer) clearTimeout(state.autoFetchTimer);
       state.autoFetchTimer = setTimeout(()=>{
@@ -9772,12 +10226,14 @@ Esta ação remove estes registos guardados na Firebase.`);
     }
     function caseRecordFirebaseSummary(r){
       const fd = r && r.firebaseData || {};
-      if(!fd || !Object.keys(fd).length) return "";
+      const fields = r && r.fields || {};
       const bits = [];
       const pk = caseFirebasePackingDate(fd);
       const ret = caseFirebaseReturnDate(fd);
       const ref = caseFirebaseRefundDate(fd);
+      const manualPackedDate = String(fields.packedDate || "").trim();
       if(pk) bits.push("PACKED: " + pk);
+      else if(manualPackedDate) bits.push("PACKED DATE MANUAL: " + manualPackedDate);
       if(caseFirebaseHasReturn(fd)) bits.push("RETURN: " + (ret || "sim"));
       if(caseFirebaseHasRefund(fd)) bits.push("REFUND: " + (ref || "sim"));
       if(fd.dateWarehouse) bits.push("WH: " + fd.dateWarehouse);
@@ -10557,6 +11013,12 @@ Esta ação remove estes registos guardados na Firebase.`);
       return tokens;
     }
 
+    function caseCrosscheckFilterTokens(r){
+      const data = r && r.crosscheckData || {};
+      if(!data || !data.id) return ["NÃO VERIFICADO"];
+      return hasCrossMatches(data) ? ["COM COINCIDÊNCIAS"] : ["SEM COINCIDÊNCIAS"];
+    }
+
     function caseColumnValue(r, key){
       if(key === "__type") return r.type || "";
       if(key === "__id") return [r.id, r.entryDate, r.createdDate, r.updatedAt].join(" ");
@@ -10579,6 +11041,10 @@ Esta ação remove estes registos guardados na Firebase.`);
             if(["PACKED","RETURN","REFUND"].includes(selected)) return tokens.includes(selected);
             return false;
           });
+        }
+        if(key === "__crosscheck"){
+          const tokens = caseCrosscheckFilterTokens(r);
+          return values.some(v=>tokens.includes(String(v || "").trim().toUpperCase()));
         }
         const actual = String(caseColumnValue(r, key) || "").toLowerCase();
         return values.some(v=>actual.includes(String(v || "").toLowerCase()));
@@ -10613,7 +11079,9 @@ Esta ação remove estes registos guardados na Firebase.`);
 
     function visibleFieldSet(records){
       const type = selectedCaseTypeForColumns();
-      if(type !== "ALL") return getFields(type);
+      // PACKED DATE continua disponível no formulário/editor, mas na tabela
+      // aparece dentro da coluna Firebase para não criar mais uma coluna.
+      if(type !== "ALL") return getFields(type).filter(f=>f.key !== "packedDate");
 
       // Vista "Todos": mostra todas as colunas que podem ser preenchidas
       // em BROKEN, SWIPE e LOST, mesmo que numa linha concreta fiquem vazias.
@@ -10627,7 +11095,7 @@ Esta ação remove estes registos guardados na Firebase.`);
         });
       });
       return preferredOrder.map(key=>byKey.get(key)).filter(Boolean)
-        .concat(Array.from(byKey.values()).filter(f=>!preferredOrder.includes(f.key)));
+        .concat(Array.from(byKey.values()).filter(f=>!preferredOrder.includes(f.key) && f.key !== "packedDate"));
     }
 
     function caseStatusClass(value){
@@ -10698,7 +11166,7 @@ Esta ação remove estes registos guardados na Firebase.`);
         ${caseHeaderCell("ID / Entrada", caseFilterInputHtml("__id", "ID/data"))}
         ${caseHeaderCell("Transportadora", caseFilterMultiHtml("__carrier", state.options.carriers || []))}
         ${caseHeaderCell("Firebase", caseFilterSelectHtml("__firebase", ["PACKED","RETURN","REFUND","SEM REGISTO"]))}
-        ${caseHeaderCell("Cruzamento", caseFilterInputHtml("__crosscheck", "Coincidência"))}
+        ${caseHeaderCell("Cruzamento", caseFilterSelectHtml("__crosscheck", ["COM COINCIDÊNCIAS","SEM COINCIDÊNCIAS","NÃO VERIFICADO"]))}
         ${fields.map(f=>caseHeaderCell(f.label, f.selectable ? caseFilterMultiHtml(f.key, state.options[f.optionKey] || []) : caseFilterInputHtml(f.key, "Filtrar", ""), f.label.toUpperCase().includes("AMSPED") ? "Filtro próprio" : "")).join("")}
         <th><span class="casesThLabel">Ações</span><button class="casesColClearBtn" type="button" onclick="clearCaseColumnFilters()">Limpar filtros</button></th>
       </tr>`;
@@ -11274,8 +11742,12 @@ Esta ação remove estes registos guardados na Firebase.`);
     function stopCasesRealtime(){
       try{
         (state.realtime.refs || []).forEach(item=>{
-          try{ item.ref.off("value", item.cb); }catch(e){}
+          try{ item.ref.off(item.event || "value", item.cb); }catch(e){}
         });
+        if(state.realtime && state.realtime.firebaseRefreshTimers){
+          Object.values(state.realtime.firebaseRefreshTimers).forEach(t=>{ try{ clearTimeout(t); }catch(e){} });
+          state.realtime.firebaseRefreshTimers = {};
+        }
       }catch(e){}
       state.realtime.refs = [];
       state.realtime.started = false;
@@ -11310,9 +11782,38 @@ Esta ação remove estes registos guardados na Firebase.`);
             setCasesRealtimeIndicator("Realtime: sem permissão", "bad");
             setStatus("Sem permissão realtime em " + item.path + ".", "warn");
           });
-          state.realtime.refs.push({ref, cb:item.cb, path:item.path});
+          state.realtime.refs.push({ref, cb:item.cb, path:item.path, event:"value"});
         }catch(e){ console.warn("cases realtime start", item.path, e); }
       });
+
+      // Também escuta novas picagens em registos para atualizar automaticamente a coluna Firebase
+      // dos IDs já guardados em Broken / Swipe / Lost. Usa os últimos 30 dias para apanhar
+      // alterações feitas enquanto o ficheiro esteve fechado, sem ler toda a base de dados.
+      try{
+        const start = dateAddDays(today(), -30);
+        const regRef = db.ref("registos").orderByChild("dateClean").startAt(start);
+        const seen = new Set();
+        regRef.once("value").then(snap=>{
+          try{
+            snap.forEach(child=>{
+              if(child && child.key) seen.add(child.key);
+              handleCaseRegistoRealtimeSnapshot(child, "registos_initial");
+            });
+          }catch(e){ console.warn("cases registos initial", e); }
+        }).catch(e=>console.warn("cases registos initial permission", e));
+        const addedCb = snap=>{
+          const key = snap && snap.key;
+          if(key && seen.has(key)) return;
+          if(key) seen.add(key);
+          handleCaseRegistoRealtimeSnapshot(snap, "registos_child_added");
+        };
+        const changedCb = snap=>handleCaseRegistoRealtimeSnapshot(snap, "registos_child_changed");
+        regRef.on("child_added", addedCb, err=>console.warn("cases registos child_added", err));
+        regRef.on("child_changed", changedCb, err=>console.warn("cases registos child_changed", err));
+        state.realtime.refs.push({ref:regRef, cb:addedCb, path:"registos", event:"child_added"});
+        state.realtime.refs.push({ref:regRef, cb:changedCb, path:"registos", event:"child_changed"});
+      }catch(e){ console.warn("cases registos realtime start", e); }
+
       setCasesRealtimeIndicator("Realtime: ativo", "ok");
     }
     window.startCasesRealtime = startCasesRealtime;
