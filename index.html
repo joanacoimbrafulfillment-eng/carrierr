@@ -729,6 +729,23 @@
     .casesColFilter:focus{border-color:var(--accent); box-shadow:0 0 0 2px rgba(52,152,219,.14); outline:none;}
     .casesColClearBtn{width:100%; border:0; border-radius:8px; padding:7px 6px; font-size:9.5px; line-height:1.15; font-weight:900; cursor:pointer; text-transform:uppercase; background:#64748b; color:#fff; white-space:normal;}
     .casesColFilterHint{display:block; margin-top:5px; color:#64748b; font-size:10px; font-weight:700; text-transform:none; line-height:1.2;}
+
+    .casesMultiFilter{position:relative; width:100%; min-width:0; text-transform:none;}
+    .casesMultiFilter summary{height:26px; padding:5px 20px 4px 7px; border:1px solid #cbd5e1; border-radius:7px; background:#fff; color:#111827; font-size:10.5px; font-weight:800; line-height:1.15; cursor:pointer; list-style:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; position:relative;}
+    .casesMultiFilter summary::-webkit-details-marker{display:none;}
+    .casesMultiFilter summary:after{content:'▾'; position:absolute; right:7px; top:5px; font-size:10px; color:#475569;}
+    .casesMultiFilter[open] summary{border-color:var(--accent); box-shadow:0 0 0 2px rgba(52,152,219,.12);}
+    .casesMultiFilter[open] summary:after{content:'▴';}
+    .casesMultiMenu{position:absolute; left:0; top:30px; z-index:80; width:230px; max-height:260px; overflow:auto; background:#fff; border:1px solid #cbd5e1; border-radius:10px; box-shadow:0 14px 34px rgba(15,23,42,.18); padding:8px; color:#111827; text-align:left;}
+    .casesMultiFilter[open] .casesMultiMenu{position:fixed; z-index:2147483000!important; width:min(280px, calc(100vw - 24px)); max-height:min(360px, calc(100vh - 48px)); overflow:auto; background:#fff; isolation:isolate;}
+    .casesTable thead th.casesFilterOpenCell{z-index:2147482999!important; overflow:visible!important;}
+    .casesMultiOption{display:flex; gap:7px; align-items:flex-start; padding:5px 4px; border-radius:7px; font-size:11px; font-weight:750; line-height:1.2; text-transform:none; cursor:pointer;}
+    .casesMultiOption:hover{background:#f1f5f9;}
+    .casesMultiOption input{width:auto; margin:1px 0 0; padding:0; border:0; box-shadow:none;}
+    .casesMultiActions{display:flex; gap:6px; position:sticky; bottom:0; z-index:2147483001; background:#fff; border-top:1px solid #e5e7eb; padding:8px 0 0; margin:6px 0 0; box-shadow:0 -8px 14px rgba(255,255,255,.96);}
+    .casesMultiActions button{flex:1; border:0; border-radius:7px; padding:7px 7px; font-size:9.5px; font-weight:900; cursor:pointer; text-transform:uppercase; color:#fff; background:#2563eb; position:relative; z-index:2147483002;}
+    .casesMultiActions button.secondary{background:#64748b;}
+    .casesMultiActions button.dangerLight{background:#ef4444;}
     #tabCases .tableWrap{overflow-x:auto; overflow-y:visible; scrollbar-gutter:stable; padding-bottom:12px;}
 
 
@@ -2056,6 +2073,9 @@
     // Usa a carrier real do registo de packing se disponível;
     // só cai no inputCarrier se não houver carrier no registo.
     const carrierFromPacked = fmt(packed.carrier || "");
+    const terminalBy = enviosTerminalActor(saved);
+    const terminalAt = enviosTerminalActionAt(saved);
+
     return {
       id,
       carrier: carrierFromPacked || inputCarrier || "N/A",
@@ -4487,6 +4507,24 @@
     return "active";
   }
 
+  function enviosTerminalActor(rowOrItem){
+    const o = rowOrItem || {};
+    const list = envioTerminalList(o);
+    if(list === "ENTREGUE_PAID") return fmt(o.entregue_paidBy || o.closedBy || o.updatedBy || o.entregueBy || o.seenBy || o.createdBy || "");
+    if(list === "ENTREGUE") return fmt(o.entregueBy || o.closedBy || o.updatedBy || o.seenBy || o.createdBy || "");
+    if(list === "VERIFIED") return fmt(o.seenBy || o.closedBy || o.updatedBy || o.createdBy || "");
+    return "";
+  }
+
+  function enviosTerminalActionAt(rowOrItem){
+    const o = rowOrItem || {};
+    const list = envioTerminalList(o);
+    if(list === "ENTREGUE_PAID") return fmt(o.entregue_paidAt || o.closedAt || o.updatedAt || o.entregueAt || o.seenAt || o.createdAt || "");
+    if(list === "ENTREGUE") return fmt(o.entregueAt || o.closedAt || o.updatedAt || o.seenAt || o.createdAt || "");
+    if(list === "VERIFIED") return fmt(o.seenAt || o.closedAt || o.updatedAt || o.createdAt || "");
+    return "";
+  }
+
   function buildEnviosRow(id, records){
     const saved = savedEnvio(id);
     const packing = latestRecord(records, r => modeIs(r, "PACK"));
@@ -4537,6 +4575,10 @@
     }
 
     const terminalNow = envioTerminalList({seen, entregue, entregue_paid});
+    const terminalData = Object.assign({}, saved, {seen, entregue, entregue_paid});
+    const terminalBy = enviosTerminalActor(terminalData);
+    const terminalAt = enviosTerminalActionAt(terminalData);
+
     if(terminalNow === "ENTREGUE_PAID"){
       verificacao = "Encerrado — Entregue/Paid. Não volta para análise nem para returns/refunds.";
       statusClass = "ENVIO_OK";
@@ -4561,8 +4603,10 @@
       return: !!ret,
       refund: !!refund,
       seen,
-      seenAt: fmt(saved.seenAt || ""),
-      seenBy: fmt(saved.seenBy || ""),
+      seenAt: fmt(saved.seenAt || terminalAt || ""),
+      seenBy: fmt(saved.seenBy || terminalBy || ""),
+      terminalBy,
+      terminalAt,
       insertedDate,
       createdBy,
       createdAt: fmt(saved.createdAt || ""),
@@ -5082,8 +5126,10 @@
         : (r.entregue
             ? `<button class="btn-mini" style="background:#1d4ed8;" type="button" onclick="markEnvioEntregue('${escapeJs(r.id)}', 'PAID')">+ Paid</button><button class="btn-mini mutedBtn" type="button" onclick="markEnvioEntregue('${escapeJs(r.id)}', null)">Rem. entregue</button>`
             : `<button class="btn-mini" style="background:#1d4ed8;" type="button" onclick="markEnvioEntregue('${escapeJs(r.id)}', 'ENTREGUE')">Entregue</button><button class="btn-mini" style="background:#14532d;" type="button" onclick="markEnvioEntregue('${escapeJs(r.id)}', 'PAID')">Entregue/Paid</button>`);
-      const seenText = r.seen
-        ? `Visto por ${escapeHtml(r.seenBy || "-")}${r.seenAt ? `<span class="envio-subline">${escapeHtml(r.seenAt.replace("T"," ").slice(0,16))}</span>` : ""}`
+      const vistoBy = r.terminalBy || r.seenBy || "";
+      const vistoAt = r.terminalAt || r.seenAt || "";
+      const seenText = isEnvioTerminal(r)
+        ? `Visto por ${escapeHtml(vistoBy || "-")}${vistoAt ? `<span class="envio-subline">${escapeHtml(String(vistoAt).replace("T"," ").slice(0,16))}</span>` : ""}`
         : `Ainda não visto`;
       const itemsHtml = r.items
         ? `<div class="envio-items-cell">${escapeHtml(r.items)}</div>`
@@ -5541,7 +5587,7 @@
           <h2 style="margin:0 0 8px 0;">Verificação</h2>
           <div class="status ${escapeHtml(updatedRow.statusClass)}"><b>${escapeHtml(updatedRow.verificacao)}</b></div>
           ${updatedRow.items ? `<div class="mini" style="margin-top:8px;"><b>Items:</b> ${escapeHtml(updatedRow.items)}</div>` : ""}
-          ${updatedRow.seen ? `<div class="mini" style="margin-top:8px;"><b>Visto por:</b> ${escapeHtml(updatedRow.seenBy || "")} ${updatedRow.seenAt ? " — " + escapeHtml(updatedRow.seenAt.replace("T"," ").slice(0,16)) : ""}</div>` : ""}
+          ${isEnvioTerminal(updatedRow) ? `<div class="mini" style="margin-top:8px;"><b>Visto por:</b> ${escapeHtml(updatedRow.terminalBy || updatedRow.seenBy || "-")} ${(updatedRow.terminalAt || updatedRow.seenAt) ? " — " + escapeHtml(String(updatedRow.terminalAt || updatedRow.seenAt).replace("T"," ").slice(0,16)) : ""}</div>` : ""}
         </div>
         <div class="card" style="padding:12px; margin-top:10px;">
           <h2 style="margin:0 0 8px 0;">Ações</h2>
@@ -9355,7 +9401,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       if(!parts.length){
         return `<div id="${esc(inputId)}_selected" class="casesProductSelected empty" data-cases-product-selected="1" data-product-input-id="${esc(inputId)}">Nenhum produto selecionado.</div>`;
       }
-      const chips = parts.map(p=>`<span class="casesProductSelectedChip" title="${esc(p)}"><span>${esc(p)}</span><button class="casesProductChipRemove" type="button" title="Remover" onclick="removeCasesProductFromPicker('${esc(inputId)}','${encodeURIComponent(p)}')">×</button></span>`).join("");
+      const chips = parts.map((p, idx)=>`<span class="casesProductSelectedChip" title="${esc(p)}"><span>${esc(p)}</span><button class="casesProductChipRemove" type="button" title="Remover este produto" onclick="removeCasesProductFromPicker('${esc(inputId)}',${idx})">×</button></span>`).join("");
       return `<div id="${esc(inputId)}_selected" class="casesProductSelected" data-cases-product-selected="1" data-product-input-id="${esc(inputId)}">${chips}</div>`;
     }
     function productDatalistOptions(){
@@ -9366,7 +9412,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       const cls = full ? "casesFieldFull" : "";
       const listId = inputId + "_list";
       const searchId = inputId + "_search";
-      const emptyMsg = products.length ? "Clica no campo PRODUCT e começa a escrever o nome/SKU. Escolhe uma opção ou carrega Enter/Adicionar. Podes adicionar vários produtos." : "Ainda não há catálogo carregado. Vai a Grupos de Transportadoras e importa um CSV de produtos.";
+      const emptyMsg = products.length ? "Clica no campo PRODUCT e começa a escrever o nome/SKU. Escolhe uma opção ou carrega Enter/Adicionar. Podes adicionar vários produtos, incluindo repetir o mesmo produto quando forem 2 ou mais unidades." : "Ainda não há catálogo carregado. Vai a Grupos de Transportadoras e importa um CSV de produtos.";
       return `<div class="${cls}"><label>${esc(label)}</label><div class="casesProductSearchWrap"><input id="${esc(searchId)}" class="casesProductSearch" type="text" list="${esc(listId)}" placeholder="Escreve para procurar produto..." autocomplete="off" data-cases-product-search="1" data-product-input-id="${esc(inputId)}" onkeydown="if(event.key==='Enter'){event.preventDefault(); addCasesProductFromPicker('${esc(inputId)}');}" onchange="addCasesProductFromPicker('${esc(inputId)}')"><button class="casesProductAddBtn" type="button" onclick="addCasesProductFromPicker('${esc(inputId)}')">Adicionar</button></div><datalist id="${esc(listId)}" data-cases-product-list="1" data-product-input-id="${esc(inputId)}">${productDatalistOptions()}</datalist>${productSelectedHtml(inputId, value || "")}<textarea id="${esc(inputId)}" class="casesProductTextarea" placeholder="Produtos selecionados / um por linha" oninput="syncCasesProductSelectFromTextarea('${esc(inputId)}')">${esc(value || "")}</textarea><div class="casesProductHint">${esc(emptyMsg)}</div></div>`;
     }
     function addCasesProductFromPicker(inputId){
@@ -9376,20 +9422,33 @@ Esta ação remove estes registos guardados na Firebase.`);
       const product = caseProductLookupTyped(searchEl.value);
       if(!product) return;
       const current = splitCaseProducts(txt.value);
-      const seen = new Set(current.map(v=>v.toLowerCase()));
-      if(!seen.has(product.toLowerCase())) current.push(product);
+      // Permite repetir o mesmo produto: cada clique/Enter adiciona uma nova ocorrência.
+      current.push(product);
       txt.value = current.join("\n");
       searchEl.value = "";
+      try{ searchEl.blur(); setTimeout(()=>{ try{ searchEl.focus(); }catch(e){} }, 0); }catch(e){}
       renderCasesProductSelected(inputId);
     }
     window.addCasesProductFromPicker = addCasesProductFromPicker;
-    function removeCasesProductFromPicker(inputId, encodedProduct){
+    function removeCasesProductFromPicker(inputId, removeIndexOrProduct){
       const txt = byId(inputId);
       if(!txt) return;
-      let product = "";
-      try{ product = decodeURIComponent(encodedProduct || ""); }catch(e){ product = String(encodedProduct || ""); }
-      const removeKey = product.toLowerCase();
-      const next = splitCaseProducts(txt.value).filter(v=>v.toLowerCase() !== removeKey);
+      const parts = splitCaseProducts(txt.value);
+      let next = parts;
+      const idx = Number(removeIndexOrProduct);
+      if(Number.isInteger(idx) && idx >= 0 && idx < parts.length){
+        next = parts.filter((_, i)=>i !== idx);
+      } else {
+        // Compatibilidade com versões antigas: remove apenas a primeira ocorrência encontrada.
+        let product = "";
+        try{ product = decodeURIComponent(removeIndexOrProduct || ""); }catch(e){ product = String(removeIndexOrProduct || ""); }
+        const removeKey = product.toLowerCase();
+        let removed = false;
+        next = parts.filter(v=>{
+          if(!removed && v.toLowerCase() === removeKey){ removed = true; return false; }
+          return true;
+        });
+      }
       txt.value = next.join("\n");
       renderCasesProductSelected(inputId);
     }
@@ -10364,8 +10423,25 @@ Esta ação remove estes registos guardados na Firebase.`);
     }
     window.setCaseColumnFilter = setCaseColumnFilter;
 
+    function setCaseColumnMultiFilter(key, values){
+      if(!state.columnFilters) state.columnFilters = {};
+      const arr = sortedUnique((values || []).map(x=>String(x || "").trim()).filter(Boolean));
+      if(arr.length) state.columnFilters[key] = arr;
+      else delete state.columnFilters[key];
+      renderCasesTable();
+    }
+    window.setCaseColumnMultiFilter = setCaseColumnMultiFilter;
+
     function getCaseColumnFilter(key){
-      return state.columnFilters && state.columnFilters[key] ? state.columnFilters[key] : "";
+      const v = state.columnFilters && state.columnFilters[key] ? state.columnFilters[key] : "";
+      return Array.isArray(v) ? v.join(" | ") : v;
+    }
+
+    function getCaseColumnFilterValues(key){
+      const v = state.columnFilters && state.columnFilters[key] ? state.columnFilters[key] : "";
+      if(Array.isArray(v)) return v.map(x=>String(x || "").trim()).filter(Boolean);
+      const one = String(v || "").trim();
+      return one ? [one] : [];
     }
 
     function clearCaseColumnFilters(){
@@ -10374,16 +10450,97 @@ Esta ação remove estes registos guardados na Firebase.`);
     }
     window.clearCaseColumnFilters = clearCaseColumnFilters;
 
+    function clearCaseFilterOpenCells(){
+      document.querySelectorAll('.casesFilterOpenCell').forEach(th=>th.classList.remove('casesFilterOpenCell'));
+    }
+
+    function closeOtherCaseMultiFilters(current){
+      document.querySelectorAll('.casesMultiFilter[open]').forEach(d=>{
+        if(d !== current) d.removeAttribute('open');
+      });
+      clearCaseFilterOpenCells();
+      if(current && current.open){
+        const th = current.closest ? current.closest('th') : null;
+        if(th) th.classList.add('casesFilterOpenCell');
+      }
+    }
+
+    function positionCaseMultiFilterMenu(details){
+      if(!details){ return; }
+      if(!details.open){
+        clearCaseFilterOpenCells();
+        return;
+      }
+      closeOtherCaseMultiFilters(details);
+      const summary = details.querySelector('summary');
+      const menu = details.querySelector('.casesMultiMenu');
+      if(!summary || !menu) return;
+      const rect = summary.getBoundingClientRect();
+      const margin = 8;
+      const desiredWidth = Math.min(280, Math.max(220, window.innerWidth - (margin * 2)));
+      menu.style.width = desiredWidth + 'px';
+      menu.style.left = Math.max(margin, Math.min(rect.left, window.innerWidth - desiredWidth - margin)) + 'px';
+      menu.style.top = (rect.bottom + 6) + 'px';
+      requestAnimationFrame(()=>{
+        const menuRect = menu.getBoundingClientRect();
+        if(menuRect.bottom > window.innerHeight - margin){
+          const aboveTop = rect.top - menuRect.height - 6;
+          menu.style.top = Math.max(margin, aboveTop) + 'px';
+        }
+      });
+    }
+    window.positionCaseMultiFilterMenu = positionCaseMultiFilterMenu;
+
+    function repositionOpenCaseMultiFilter(){
+      const open = document.querySelector('.casesMultiFilter[open]');
+      if(open) positionCaseMultiFilterMenu(open);
+    }
+    window.addEventListener('resize', repositionOpenCaseMultiFilter);
+    window.addEventListener('scroll', repositionOpenCaseMultiFilter, true);
+
+    function clearCaseColumnFilterFromButton(btn){
+      const menu = btn && btn.closest ? btn.closest(".casesMultiMenu") : null;
+      const key = menu ? menu.getAttribute("data-cases-multi-key") : "";
+      if(!key || !state.columnFilters) return;
+      delete state.columnFilters[key];
+      renderCasesTable();
+    }
+    window.clearCaseColumnFilterFromButton = clearCaseColumnFilterFromButton;
+
+    function clearAllCaseColumnFiltersFromButton(btn){
+      clearCaseColumnFilters();
+    }
+    window.clearAllCaseColumnFiltersFromButton = clearAllCaseColumnFiltersFromButton;
+
+    function applyCaseColumnMultiFilterFromButton(btn){
+      const menu = btn && btn.closest ? btn.closest(".casesMultiMenu") : null;
+      if(!menu) return;
+      const key = menu.getAttribute("data-cases-multi-key") || "";
+      const values = Array.from(menu.querySelectorAll("input[type='checkbox']:checked")).map(x=>x.value);
+      setCaseColumnMultiFilter(key, values);
+    }
+    window.applyCaseColumnMultiFilterFromButton = applyCaseColumnMultiFilterFromButton;
+
     function caseFilterInputHtml(key, placeholder, listId){
       const v = esc(getCaseColumnFilter(key));
       const listAttr = listId ? ` list="${esc(listId)}"` : "";
       return `<input class="casesColFilter" value="${v}"${listAttr} placeholder="${esc(placeholder || 'Filtrar')}" onchange="setCaseColumnFilter('${esc(key)}', this.value)" onkeydown="if(event.key==='Enter'){this.blur();}">`;
     }
 
+    function caseFilterMultiHtml(key, options){
+      const selected = getCaseColumnFilterValues(key);
+      const selectedSet = new Set(selected.map(x=>String(x)));
+      const opts = sortedUnique(options || []);
+      const summary = selected.length ? (selected.length === 1 ? selected[0] : selected.length + " selecionados") : "Todos";
+      const html = opts.length ? opts.map(o=>{
+        const checked = selectedSet.has(String(o)) ? " checked" : "";
+        return `<label class="casesMultiOption"><input type="checkbox" value="${esc(o)}"${checked}> <span>${esc(o)}</span></label>`;
+      }).join("") : `<div class="muted" style="font-size:11px;padding:6px 4px;">Sem opções.</div>`;
+      return `<details class="casesMultiFilter" ontoggle="positionCaseMultiFilterMenu(this)"><summary title="${esc(selected.join(', ') || 'Todos')}">${esc(summary)}</summary><div class="casesMultiMenu" data-cases-multi-key="${esc(key)}">${html}<div class="casesMultiActions"><button type="button" onclick="applyCaseColumnMultiFilterFromButton(this)">Aplicar</button><button class="secondary" type="button" onclick="clearCaseColumnFilterFromButton(this)">Limpar</button><button class="dangerLight" type="button" onclick="clearAllCaseColumnFiltersFromButton(this)">Limpar tudo</button></div></div></details>`;
+    }
+
     function caseFilterSelectHtml(key, options){
-      const v = getCaseColumnFilter(key);
-      const opts = [`<option value="">Todos</option>`].concat((options || []).map(o=>`<option value="${esc(o)}" ${String(o)===String(v)?'selected':''}>${esc(o)}</option>`));
-      return `<select class="casesColFilter" onchange="setCaseColumnFilter('${esc(key)}', this.value)">${opts.join('')}</select>`;
+      return caseFilterMultiHtml(key, options);
     }
 
     function caseHeaderCell(label, filterHtml, hint){
@@ -10412,16 +10569,19 @@ Esta ação remove estes registos guardados na Firebase.`);
     function recordMatchesColumnFilters(r){
       const filters = state.columnFilters || {};
       return Object.entries(filters).every(([key, value])=>{
-        const q = String(value || "").trim().toLowerCase();
-        if(!q) return true;
+        const values = Array.isArray(value) ? value.map(x=>String(x || "").trim()).filter(Boolean) : [String(value || "").trim()].filter(Boolean);
+        if(!values.length) return true;
         if(key === "__firebase"){
-          const selected = String(value || "").trim().toUpperCase();
           const tokens = caseFirebaseFilterTokens(r);
-          if(selected === "SEM REGISTO") return tokens.includes("SEM REGISTO");
-          if(["PACKED","RETURN","REFUND"].includes(selected)) return tokens.includes(selected);
+          return values.some(v=>{
+            const selected = String(v || "").trim().toUpperCase();
+            if(selected === "SEM REGISTO") return tokens.includes("SEM REGISTO");
+            if(["PACKED","RETURN","REFUND"].includes(selected)) return tokens.includes(selected);
+            return false;
+          });
         }
         const actual = String(caseColumnValue(r, key) || "").toLowerCase();
-        return actual.includes(q);
+        return values.some(v=>actual.includes(String(v || "").toLowerCase()));
       });
     }
 
@@ -10446,8 +10606,8 @@ Esta ação remove estes registos guardados na Firebase.`);
     function selectedCaseTypeForColumns(){
       const mainType = val("casesFilterType") || "ALL";
       if(["BROKEN","SWIPE","LOST"].includes(mainType)) return mainType;
-      const colType = getCaseColumnFilter("__type");
-      if(["BROKEN","SWIPE","LOST"].includes(colType)) return colType;
+      const colTypes = getCaseColumnFilterValues("__type").filter(x=>["BROKEN","SWIPE","LOST"].includes(x));
+      if(colTypes.length === 1) return colTypes[0];
       return "ALL";
     }
 
@@ -10536,11 +10696,11 @@ Esta ação remove estes registos guardados na Firebase.`);
       thead.innerHTML = `<tr>
         ${caseHeaderCell("Tipo", caseFilterSelectHtml("__type", ["BROKEN","SWIPE","LOST"]))}
         ${caseHeaderCell("ID / Entrada", caseFilterInputHtml("__id", "ID/data"))}
-        ${caseHeaderCell("Transportadora", caseFilterInputHtml("__carrier", "Carrier", "casesCarrierList"))}
+        ${caseHeaderCell("Transportadora", caseFilterMultiHtml("__carrier", state.options.carriers || []))}
         ${caseHeaderCell("Firebase", caseFilterSelectHtml("__firebase", ["PACKED","RETURN","REFUND","SEM REGISTO"]))}
         ${caseHeaderCell("Cruzamento", caseFilterInputHtml("__crosscheck", "Coincidência"))}
-        ${fields.map(f=>caseHeaderCell(f.label, caseFilterInputHtml(f.key, "Filtrar", f.selectable ? datalistIdForOption(f.optionKey) : ""), f.label.toUpperCase().includes("AMSPED") ? "Filtro próprio" : "")).join("")}
-        <th><span class="casesThLabel">Ações</span><button class="casesColClearBtn" type="button" onclick="clearCaseColumnFilters()">Limpar coluna</button></th>
+        ${fields.map(f=>caseHeaderCell(f.label, f.selectable ? caseFilterMultiHtml(f.key, state.options[f.optionKey] || []) : caseFilterInputHtml(f.key, "Filtrar", ""), f.label.toUpperCase().includes("AMSPED") ? "Filtro próprio" : "")).join("")}
+        <th><span class="casesThLabel">Ações</span><button class="casesColClearBtn" type="button" onclick="clearCaseColumnFilters()">Limpar filtros</button></th>
       </tr>`;
       if(!rows.length){
         tbody.innerHTML = `<tr><td colspan="${6+fields.length}" class="muted" style="padding:16px;">Sem registos para estes filtros.</td></tr>`;
@@ -10934,7 +11094,10 @@ Esta ação remove estes registos guardados na Firebase.`);
       if(val("casesFilterType") && val("casesFilterType") !== "ALL") parts.push("Tipo: " + val("casesFilterType"));
       if(val("casesFilterStatus")) parts.push("Status: " + val("casesFilterStatus"));
       if(val("casesFilterCarrier")) parts.push("Transportadora: " + val("casesFilterCarrier"));
-      const colCount = Object.keys(state.columnFilters || {}).filter(k=>state.columnFilters[k]).length;
+      const colCount = Object.keys(state.columnFilters || {}).filter(k=>{
+        const v = state.columnFilters[k];
+        return Array.isArray(v) ? v.length : !!v;
+      }).length;
       if(colCount) parts.push("Filtros por coluna: " + colCount);
       const el = byId("casesActiveFilters"); if(el) el.textContent = parts.length ? "Filtro ativo → " + parts.join(" | ") : "Sem filtros";
     }
