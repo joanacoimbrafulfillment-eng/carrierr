@@ -648,15 +648,21 @@
     .casesStatusBadge.pending{background:#fef3c7; color:#92400e; border:1px solid #fcd34d;}
     .casesStatusBadge.paid{background:#dcfce7; color:#166534; border:1px solid #86efac;}
     .casesStatusBadge.neutral{background:#f1f5f9; color:#475569; border:1px solid #e2e8f0;}
-    .casesTable{min-width:1500px; table-layout:fixed;}
-    .casesTable th,.casesTable td{white-space:normal; overflow-wrap:anywhere; word-break:break-word; vertical-align:top;}
-    .casesTable th:nth-child(1),.casesTable td:nth-child(1){width:92px;}
-    .casesTable th:nth-child(2),.casesTable td:nth-child(2){width:115px;}
-    .casesTable th:nth-child(3),.casesTable td:nth-child(3){width:150px;}
-    .casesTable th:nth-child(4),.casesTable td:nth-child(4){width:130px;}
+    .casesTable{min-width:1960px; table-layout:fixed; font-size:12px;}
+    .casesTable th,.casesTable td{white-space:normal; overflow-wrap:anywhere; word-break:break-word; vertical-align:top; padding:8px 7px;}
+    .casesTable th{overflow-wrap:normal; word-break:normal; hyphens:none; line-height:1.12; padding:8px 7px 9px;}
+    .casesTable th:nth-child(1),.casesTable td:nth-child(1){width:72px;}
+    .casesTable th:nth-child(2),.casesTable td:nth-child(2){width:100px;}
+    .casesTable th:nth-child(3),.casesTable td:nth-child(3){width:118px;}
+    .casesTable th:nth-child(4),.casesTable td:nth-child(4){width:105px;}
     .casesTable th:nth-child(5),.casesTable td:nth-child(5){width:110px;}
-    .casesTable th:last-child,.casesTable td:last-child{position:sticky; right:0; background:#fff; z-index:4; box-shadow:-8px 0 12px rgba(15,23,42,.06); width:175px;}
+    .casesTable th:nth-child(n+6):not(:last-child),.casesTable td:nth-child(n+6):not(:last-child){width:92px; min-width:92px;}
+    .casesTable th:last-child,.casesTable td:last-child{position:sticky; right:0; background:#fff; z-index:4; box-shadow:-8px 0 12px rgba(15,23,42,.06); width:150px; min-width:150px;}
     .casesTable th:last-child{z-index:12; background:#f1f3f5;}
+    .casesTopScroll{display:none; max-width:100%; height:18px; overflow-x:auto; overflow-y:hidden; border:1px solid #dbe3ef; border-radius:12px; background:#f8fafc; margin:0 0 8px; scrollbar-gutter:stable;}
+    .casesTopScrollInner{height:1px;}
+    #tabCases .resultsCard .tableWrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+    #tabCases .casesColClearBtn{width:100%; white-space:normal; line-height:1.05;}
     .casesMiniGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px;}
     .casesFinanceSummary{margin-top:16px; border:1px solid #e5e7eb; border-radius:14px; padding:14px; background:#f8fafc;}
     .casesFinanceSummary h3{margin:0 0 10px; color:var(--primary); font-size:15px; font-weight:900;}
@@ -714,12 +720,13 @@
   
 
     /* ===== Filtros por coluna - Broken / Swipe / Lost ===== */
-    .casesTable thead th{vertical-align:top;}
-    .casesThLabel{display:block; margin-bottom:6px; font-weight:900;}
-    .casesColFilter{width:100%; min-width:90px; padding:6px 7px; border-radius:7px; border:1px solid #cbd5e1; background:#fff; color:#111827; font-size:11px; font-weight:650; text-transform:none;}
+    .casesTable thead th{vertical-align:top; padding:8px 7px 9px; background:#f8fafc;}
+    .casesThLabel{display:block; margin-bottom:5px; min-height:22px; font-size:9.8px; line-height:1.1; font-weight:900; letter-spacing:.05px; white-space:normal; overflow-wrap:normal; word-break:normal; hyphens:none;}
+    .casesColFilter{width:100%; min-width:0; height:26px; padding:4px 6px; border-radius:7px; border:1px solid #cbd5e1; background:#fff; color:#111827; font-size:10.5px; font-weight:650; text-transform:none;}
     .casesColFilter:focus{border-color:var(--accent); box-shadow:0 0 0 2px rgba(52,152,219,.14); outline:none;}
-    .casesColClearBtn{border:0; border-radius:7px; padding:6px 8px; font-size:10px; font-weight:900; cursor:pointer; text-transform:uppercase; background:#64748b; color:#fff; white-space:nowrap;}
-    .casesColFilterHint{display:block; margin-top:4px; color:#64748b; font-size:10px; font-weight:700; text-transform:none; line-height:1.2;}
+    .casesColClearBtn{width:100%; border:0; border-radius:8px; padding:7px 6px; font-size:9.5px; line-height:1.15; font-weight:900; cursor:pointer; text-transform:uppercase; background:#64748b; color:#fff; white-space:normal;}
+    .casesColFilterHint{display:block; margin-top:5px; color:#64748b; font-size:10px; font-weight:700; text-transform:none; line-height:1.2;}
+    #tabCases .tableWrap{overflow-x:auto; overflow-y:visible; scrollbar-gutter:stable; padding-bottom:12px;}
 
 
     /* ===== v26: filtros rápidos no resumo Broken / Swipe / Lost ===== */
@@ -730,6 +737,11 @@
     .casesFinanceQuickFilters select{width:100%; padding:10px 12px; border-radius:10px; border:1px solid #cbd5e1; background:#fff; color:#111827; font-size:13px;}
     .casesFinanceQuickFilters .btn{padding:10px 12px; font-size:12px; width:100%;}
     .casesFinanceQuickHint{margin-top:8px; color:#64748b; font-size:12px; line-height:1.35; font-weight:700;}
+
+    #tabCases .tableWrap{overflow-x:auto; overflow-y:visible; max-width:100%; scrollbar-gutter:stable;}
+    #tabCases .casesTable input::placeholder{font-size:10px;}
+    #tabCases .casesTable .casesStatusBadge{font-size:10px; padding:3px 6px;}
+    #tabCases .casesTable .casesTypeBadge{font-size:10px; padding:4px 7px;}
 
 </style>
 </head>
@@ -1295,7 +1307,10 @@
           <span id="casesActiveFilters" class="pill">Sem filtros</span>
         </div>
         <div class="hr"></div>
-        <div class="tableWrap">
+        <div id="casesTopScroll" class="casesTopScroll" aria-label="Barra horizontal superior da tabela Broken / Swipe / Lost">
+          <div id="casesTopScrollInner" class="casesTopScrollInner"></div>
+        </div>
+        <div class="tableWrap" id="casesTableWrap">
           <table class="casesTable">
             <thead id="casesThead"></thead>
             <tbody id="casesTbody"><tr><td colspan="8" class="muted" style="padding:16px;">Ainda não há registos.</td></tr></tbody>
@@ -10326,17 +10341,31 @@ Esta ação remove estes registos guardados na Firebase.`);
       }).sort((a,b)=>(b.updatedAt || "").localeCompare(a.updatedAt || ""));
     }
 
+    function selectedCaseTypeForColumns(){
+      const mainType = val("casesFilterType") || "ALL";
+      if(["BROKEN","SWIPE","LOST"].includes(mainType)) return mainType;
+      const colType = getCaseColumnFilter("__type");
+      if(["BROKEN","SWIPE","LOST"].includes(colType)) return colType;
+      return "ALL";
+    }
+
     function visibleFieldSet(records){
-      const type = val("casesFilterType") || "ALL";
+      const type = selectedCaseTypeForColumns();
       if(type !== "ALL") return getFields(type);
-      const keys = new Map();
-      const alwaysVisibleKeys = ["trackingId","status","paid","paymentDate","paymentDoc","amspedStatus","product","price"];
-      records.forEach(r=>getFields(r.type).forEach(f=>{
-        const hasValue = !!((r.fields || {})[f.key]);
-        const shouldAlwaysShow = alwaysVisibleKeys.includes(f.key);
-        if(hasValue || shouldAlwaysShow) keys.set(f.key, f);
-      }));
-      return Array.from(keys.values()).slice(0, 12);
+
+      // Vista "Todos": mostra todas as colunas que podem ser preenchidas
+      // em BROKEN, SWIPE e LOST, mesmo que numa linha concreta fiquem vazias.
+      // Quando se filtra por um tipo específico, a tabela volta a mostrar só
+      // os campos desse tipo + as colunas fixas do cabeçalho.
+      const preferredOrder = ["damageDescription","productReceived","ticket","trackingId","dateWarehouse","caseReference","trackingTroca","status","status1","status2","paid","paymentDate","paymentDoc","product","price","amspedStatus","employee"];
+      const byKey = new Map();
+      ["BROKEN","SWIPE","LOST"].forEach(caseType=>{
+        getFields(caseType).forEach(f=>{
+          if(!byKey.has(f.key)) byKey.set(f.key, f);
+        });
+      });
+      return preferredOrder.map(key=>byKey.get(key)).filter(Boolean)
+        .concat(Array.from(byKey.values()).filter(f=>!preferredOrder.includes(f.key)));
     }
 
     function caseStatusClass(value){
@@ -10355,11 +10384,53 @@ Esta ação remove estes registos guardados na Firebase.`);
       return esc(v);
     }
 
+    function updateCasesTopScrollbar(){
+      const top = byId("casesTopScroll");
+      const inner = byId("casesTopScrollInner");
+      const wrap = byId("casesTableWrap");
+      const table = document.querySelector("#tabCases .casesTable");
+      if(!top || !inner || !wrap || !table) return;
+
+      const width = Math.max(table.scrollWidth || 0, table.offsetWidth || 0, wrap.scrollWidth || 0);
+      inner.style.width = width + "px";
+      const needsScroll = width > (wrap.clientWidth + 8);
+      top.style.display = needsScroll ? "block" : "none";
+
+      if(top.dataset.bound !== "1"){
+        let syncing = false;
+        top.addEventListener("scroll", ()=>{
+          if(syncing) return;
+          syncing = true;
+          wrap.scrollLeft = top.scrollLeft;
+          syncing = false;
+        });
+        wrap.addEventListener("scroll", ()=>{
+          if(syncing) return;
+          syncing = true;
+          top.scrollLeft = wrap.scrollLeft;
+          syncing = false;
+        });
+        window.addEventListener("resize", ()=>setTimeout(updateCasesTopScrollbar, 60));
+        top.dataset.bound = "1";
+      }
+      top.scrollLeft = wrap.scrollLeft;
+    }
+    window.updateCasesTopScrollbar = updateCasesTopScrollbar;
+
     function renderCasesTable(){
       const thead = byId("casesThead"), tbody = byId("casesTbody");
       if(!thead || !tbody) return;
       const rows = getFilteredRecords();
       const fields = visibleFieldSet(rows);
+      const casesTableEl = thead.closest("table");
+      if(casesTableEl){
+        const columnType = selectedCaseTypeForColumns();
+        const baseWidth = columnType === "ALL" ? 760 : 640;
+        const perFieldWidth = columnType === "ALL" ? 92 : 98;
+        const minWidth = columnType === "ALL" ? 2020 : 1180;
+        const dynamicMinWidth = Math.max(minWidth, baseWidth + (fields.length * perFieldWidth));
+        casesTableEl.style.minWidth = dynamicMinWidth + "px";
+      }
       thead.innerHTML = `<tr>
         ${caseHeaderCell("Tipo", caseFilterSelectHtml("__type", ["BROKEN","SWIPE","LOST"]))}
         ${caseHeaderCell("ID / Entrada", caseFilterInputHtml("__id", "ID/data"))}
@@ -10392,6 +10463,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       renderCasesSummaryFilterControls();
       updateCasesKpis();
       updateCasesActiveFilters();
+      setTimeout(updateCasesTopScrollbar, 0);
     }
     window.renderCasesTable = renderCasesTable;
 
