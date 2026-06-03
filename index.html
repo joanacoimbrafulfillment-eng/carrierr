@@ -10406,24 +10406,59 @@ Esta ação remove estes registos guardados na Firebase.`);
         raw: item
       };
     }
-    function hasCrossMatches(data){ return !!(data && ((data.envios && data.envios.length) || (data.semPic && data.semPic.length))); }
+    function buildCaseInternalMatch(record, currentType){
+      const rec = record || {};
+      const fields = rec.fields || {};
+      const recType = String(rec.type || "").toUpperCase();
+      const curType = String(currentType || "").toUpperCase();
+      const relation = curType && recType === curType ? "MESMO TIPO" : (curType ? "OUTRO TIPO" : "REGISTADO");
+      const statusText = String(fields.status || fields.status1 || fields.status2 || fields.amspedStatus || "").trim();
+      const trackingText = String(fields.trackingId || fields.trackingID || fields.tracking || "").trim();
+      const priceText = String(fields.price || "").trim();
+      const noteBits = [];
+      if(statusText) noteBits.push(statusText);
+      if(priceText) noteBits.push("PRICE " + priceText);
+      return {
+        source:"cases",
+        label:"Broken / Swipe / Lost",
+        key: rec.key || "",
+        id: normalId(rec.id || ""),
+        type: recType,
+        matchedType: recType,
+        relation,
+        carrier: rec.carrier || "",
+        insertedDate: rec.entryDate || rec.createdDate || String(rec.createdAt || "").slice(0,10),
+        tracking: trackingText,
+        status: (relation + (recType ? " · " + recType : "")).trim(),
+        note: noteBits.join(" · "),
+        raw: rec
+      };
+    }
+    function hasCrossMatches(data){ return !!(data && ((data.envios && data.envios.length) || (data.semPic && data.semPic.length) || (data.cases && data.cases.length))); }
     function crosscheckSummaryText(data){
       if(!data || !data.id) return "";
       const env = (data.envios || []).length;
       const sp = (data.semPic || []).length;
+      const ca = (data.cases || []).length;
       const parts = [];
       if(env) parts.push(env + " em Envios em Análise");
       if(sp) parts.push(sp + " em IDs sem picagem");
+      if(ca){
+        const types = sortedUnique((data.cases || []).map(m=>String(m.matchedType || m.type || "").toUpperCase()).filter(Boolean)).join("/");
+        parts.push(ca + " em Broken/Swipe/Lost" + (types ? " (" + types + ")" : ""));
+      }
       return parts.length ? parts.join(" · ") : "Sem coincidências";
     }
     function crosscheckBadgeHtml(data){
       if(!data || !data.id) return '<span class="casesCrossBadge none">Não verificado</span>';
       const env = (data.envios || []).length;
       const sp = (data.semPic || []).length;
-      if(!env && !sp) return '<span class="casesCrossBadge ok">Sem coincidências</span>';
-      return `<span class="casesCrossBadge bad">${esc(env + sp)} coincidência(s)</span>` +
+      const ca = (data.cases || []).length;
+      if(!env && !sp && !ca) return '<span class="casesCrossBadge ok">Sem coincidências</span>';
+      return `<span class="casesCrossBadge bad">${esc(env + sp + ca)} coincidência(s)</span>` +
         (env ? `<span class="casesCrossBadge warn">Envios: ${esc(env)}</span>` : "") +
-        (sp ? `<span class="casesCrossBadge warn">Sem picagem: ${esc(sp)}</span>` : "");
+        (sp ? `<span class="casesCrossBadge warn">Sem picagem: ${esc(sp)}</span>` : "") +
+        (ca ? `<span class="casesCrossBadge warn">Broken/Swipe/Lost: ${esc(ca)}</span>` : "");
     }
     function renderCasesCrosscheckData(data, msg){
       const box = byId("casesCrossData");
@@ -10434,13 +10469,15 @@ Esta ação remove estes registos guardados na Firebase.`);
       }
       const env = data.envios || [];
       const sp = data.semPic || [];
-      const total = env.length + sp.length;
+      const ca = data.cases || [];
+      const total = env.length + sp.length + ca.length;
       const stateText = total ? `${total} coincidência(s) encontrada(s)` : "Sem coincidências";
-      const preview = (arr)=> arr.length ? arr.slice(0,3).map(m=>`${m.carrier || "sem carrier"}${m.status ? " · " + m.status : ""}${m.insertedDate ? " · " + m.insertedDate : ""}`).join(" | ") : "—";
+      const preview = (arr)=> arr.length ? arr.slice(0,3).map(m=>`${m.carrier || m.matchedType || "sem carrier"}${m.status ? " · " + m.status : ""}${m.insertedDate ? " · " + m.insertedDate : ""}`).join(" | ") : "—";
       box.innerHTML = `
         <div class="casesCrossItem"><b>Estado</b>${esc(stateText)}</div>
         <div class="casesCrossItem"><b>Envios em Análise</b>${esc(env.length)}${env.length ? `<div class="casesCrossBox">${esc(preview(env))}</div>` : ""}</div>
         <div class="casesCrossItem"><b>IDs sem picagem</b>${esc(sp.length)}${sp.length ? `<div class="casesCrossBox">${esc(preview(sp))}</div>` : ""}</div>
+        <div class="casesCrossItem"><b>Broken / Swipe / Lost</b>${esc(ca.length)}${ca.length ? `<div class="casesCrossBox">${esc(preview(ca))}</div>` : ""}</div>
         <div class="casesCrossItem"><b>Última verificação</b>${esc((data.checkedAt || "").slice(0,19).replace("T"," ") || "—")}</div>
       `;
     }
@@ -10448,7 +10485,9 @@ Esta ação remove estes registos guardados na Firebase.`);
       opts = opts || {};
       id = normalId(id);
       if(!id){ if(!opts.silent) setStatus("Escreve o ID para cruzar.", "bad"); return null; }
-      const data = {id, checkedAt: nowIso(), envios: [], semPic: [], source:"firebase"};
+      const excludeKey = String(opts.excludeKey || opts.recordKey || "").trim();
+      const currentType = String(opts.currentType || "").trim().toUpperCase();
+      const data = {id, checkedAt: nowIso(), envios: [], semPic: [], cases: [], source:"firebase"};
       if(hasFirebase()){
         try{
           const envSnap = await db.ref("envios_analise/items").orderByChild("id").equalTo(id).once("value");
@@ -10458,6 +10497,30 @@ Esta ação remove estes registos guardados na Firebase.`);
           const semSnap = await db.ref("ids_sem_picagens_transportadora/items").orderByChild("id").equalTo(id).once("value");
           data.semPic = asObjectValues(semSnap.val()).filter(x=>activeOperationalItem(x.value)).map(x=>buildCaseMatch("sempic", x.key, x.value));
         }catch(e){ console.warn("cases sem pic crosscheck", e); data.semPicError = String(e && e.message || e); }
+        try{
+          const caseSnap = await db.ref(CASES_ITEMS_PATH).orderByChild("id").equalTo(id).once("value");
+          const deletedKeys = deletedRecordKeySet();
+          const map = new Map();
+          asObjectValues(caseSnap.val()).forEach(x=>{
+            const rec = Object.assign({}, x.value || {}, {key:x.key});
+            if(!isActiveCaseRecord(rec) || deletedKeys.has(x.key) || (excludeKey && String(x.key) === excludeKey)) return;
+            if(normalId(rec.id || "") === id) map.set(x.key, rec);
+          });
+          activeCaseRecords(state.records || []).forEach(rec=>{
+            if(!rec || (excludeKey && String(rec.key || "") === excludeKey)) return;
+            if(normalId(rec.id || "") === id) map.set(rec.key || (rec.type + "_" + rec.id), rec);
+          });
+          data.cases = Array.from(map.values()).map(rec=>buildCaseInternalMatch(rec, currentType));
+        }catch(e){
+          console.warn("cases internal crosscheck", e);
+          data.casesError = String(e && e.message || e);
+          try{
+            data.cases = activeCaseRecords(state.records || []).filter(rec=>{
+              if(!rec || (excludeKey && String(rec.key || "") === excludeKey)) return false;
+              return normalId(rec.id || "") === id;
+            }).map(rec=>buildCaseInternalMatch(rec, currentType));
+          }catch(inner){ console.warn("cases internal local fallback", inner); }
+        }
       } else {
         data.source = "local";
         try{
@@ -10467,21 +10530,25 @@ Esta ação remove estes registos guardados na Firebase.`);
           if(typeof semPicState !== "undefined" && semPicState && semPicState.savedItems){
             data.semPic = Object.entries(semPicState.savedItems || {}).filter(([k,item])=>normalId(item && item.id || "") === id && activeOperationalItem(item)).map(([k,item])=>buildCaseMatch("sempic", k, item));
           }
+          data.cases = activeCaseRecords(state.records || []).filter(rec=>{
+            if(!rec || (excludeKey && String(rec.key || "") === excludeKey)) return false;
+            return normalId(rec.id || "") === id;
+          }).map(rec=>buildCaseInternalMatch(rec, currentType));
         }catch(e){ console.warn("cases local crosscheck", e); }
       }
       state.currentCrosscheckData = data;
       renderCasesCrosscheckData(data);
       if(!opts.silent){
-        if(hasCrossMatches(data)) setStatus("Atenção: ID encontrado também em Envios/Sem Picagem.", "warn");
+        if(hasCrossMatches(data)) setStatus("Atenção: ID encontrado também em Envios/Sem Picagem ou Broken/Swipe/Lost.", "warn");
         else setStatus("Cruzamento feito: sem coincidências.", "ok");
       }
       return data;
     }
-    async function fetchCaseCrosscheckFromForm(){ return await fetchCaseCrosscheckData(val("casesId"), {silent:false}); }
+    async function fetchCaseCrosscheckFromForm(){ return await fetchCaseCrosscheckData(val("casesId"), {silent:false, excludeKey:state.editingKey, currentType:val("casesType")}); }
     window.fetchCaseCrosscheckFromForm = fetchCaseCrosscheckFromForm;
     function scheduleCaseCrosscheckFetch(){
       if(state.crosscheckFetchTimer) clearTimeout(state.crosscheckFetchTimer);
-      state.crosscheckFetchTimer = setTimeout(()=>{ const id = val("casesId"); if(id && id.length >= 4) fetchCaseCrosscheckData(id, {silent:true}); }, 1000);
+      state.crosscheckFetchTimer = setTimeout(()=>{ const id = val("casesId"); if(id && id.length >= 4) fetchCaseCrosscheckData(id, {silent:true, excludeKey:state.editingKey, currentType:val("casesType")}); }, 1000);
     }
     async function refreshCaseCrosschecks(opts){
       opts = opts || {};
@@ -10492,7 +10559,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       let matches = 0;
       for(let i=0; i<rows.length; i+=15){
         const chunk = rows.slice(i, i+15);
-        const results = await Promise.all(chunk.map(r=>fetchCaseCrosscheckData(r.id, {silent:true})));
+        const results = await Promise.all(chunk.map(r=>fetchCaseCrosscheckData(r.id, {silent:true, excludeKey:r.key, currentType:r.type})));
         for(let j=0; j<chunk.length; j++){
           const r = chunk[j];
           const data = results[j];
@@ -10530,15 +10597,17 @@ Esta ação remove estes registos guardados na Firebase.`);
       let data = null;
       const rec = recordKey ? (state.records || []).find(r=>r.key === recordKey) : null;
       if(rec && rec.crosscheckData && rec.crosscheckData.id === id) data = rec.crosscheckData;
-      data = await fetchCaseCrosscheckData(id, {silent:true}) || data || {id, checkedAt:nowIso(), envios:[], semPic:[]};
+      data = await fetchCaseCrosscheckData(id, {silent:true, excludeKey:recordKey, currentType:rec && rec.type}) || data || {id, checkedAt:nowIso(), envios:[], semPic:[], cases:[]};
       if(rec){ rec.crosscheckData = data; rec.crossCheckedAt = data.checkedAt; saveLocal(); try{ if(hasFirebase()) await db.ref(CASES_ITEMS_PATH + "/" + rec.key + "/crosscheckData").set(data); }catch(e){} }
-      const total = (data.envios || []).length + (data.semPic || []).length;
+      const total = (data.envios || []).length + (data.semPic || []).length + (data.cases || []).length;
       body.innerHTML = `
         <div class="notice"><b>ID:</b> <span class="mono">${esc(id)}</span><br><b>Resultado:</b> ${total ? `<span class="bad"><b>${esc(total)} coincidência(s) encontrada(s)</b></span>` : `<span class="ok"><b>sem coincidências</b></span>`}<br><b>Verificado em:</b> ${esc((data.checkedAt || "").slice(0,19).replace("T"," ") || "—")}</div>
         <div class="hr"></div>
         ${crossMatchesTable("Envios em Análise", data.envios || [])}
         <div class="hr"></div>
         ${crossMatchesTable("IDs sem picagem da transportadora", data.semPic || [])}
+        <div class="hr"></div>
+        ${crossMatchesTable("Broken / Swipe / Lost", data.cases || [])}
       `;
       renderCasesTable();
     }
@@ -10731,11 +10800,12 @@ Esta ação remove estes registos guardados na Firebase.`);
         await fetchCaseAutoData(data.id, {silent:true});
         data = collectFormData();
       }
+      const preExistingActive = state.editingKey ? null : activeRecordForTypeId(data.type, data.id);
       if(!state.currentCrosscheckData || state.currentCrosscheckData.id !== data.id){
-        await fetchCaseCrosscheckData(data.id, {silent:true});
+        await fetchCaseCrosscheckData(data.id, {silent:true, excludeKey:state.editingKey || (preExistingActive && preExistingActive.key) || "", currentType:data.type});
         data = collectFormData();
       }
-      const active = state.editingKey ? null : activeRecordForTypeId(data.type, data.id);
+      const active = preExistingActive;
       const key = state.editingKey || (active ? active.key : createFreshRecordKey(data.type, data.id));
       const existing = state.records.find(r=>r.key === key) || active || {};
       const firebaseData = state.currentAutoData && state.currentAutoData.id === data.id ? state.currentAutoData : (existing.firebaseData || null);
@@ -10897,7 +10967,7 @@ Esta ação remove estes registos guardados na Firebase.`);
           if(auto) firebaseData = auto;
         }catch(e){ console.warn("inline case auto fetch", e); }
         try{
-          const cross = await fetchCaseCrosscheckData(id, {silent:true});
+          const cross = await fetchCaseCrosscheckData(id, {silent:true, excludeKey:key, currentType:type});
           if(cross){ crosscheckData = cross; crossCheckedAt = cross.checkedAt || nowIso(); }
         }catch(e){ console.warn("inline case cross fetch", e); }
       }
@@ -12037,8 +12107,8 @@ Esta ação remove estes registos guardados na Firebase.`);
         idEl.dataset.autoFirebaseReady = "1";
         idEl.addEventListener("input", scheduleCaseAutoFetch);
         idEl.addEventListener("input", scheduleCaseCrosscheckFetch);
-        idEl.addEventListener("change", ()=>{ fetchCaseAutoData(val("casesId"), {silent:true}); fetchCaseCrosscheckData(val("casesId"), {silent:true}); });
-        idEl.addEventListener("blur", ()=>{ fetchCaseAutoData(val("casesId"), {silent:true}); fetchCaseCrosscheckData(val("casesId"), {silent:true}); });
+        idEl.addEventListener("change", ()=>{ fetchCaseAutoData(val("casesId"), {silent:true}); fetchCaseCrosscheckData(val("casesId"), {silent:true, excludeKey:state.editingKey, currentType:val("casesType")}); });
+        idEl.addEventListener("blur", ()=>{ fetchCaseAutoData(val("casesId"), {silent:true}); fetchCaseCrosscheckData(val("casesId"), {silent:true, excludeKey:state.editingKey, currentType:val("casesType")}); });
       }
       if(typeof auth !== "undefined" && auth && auth.onAuthStateChanged){
         auth.onAuthStateChanged(async user=>{
