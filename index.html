@@ -700,6 +700,9 @@
     .casesAutoItem b{display:block; color:#334155; font-size:11px; text-transform:uppercase; margin-bottom:3px;}
     .casesAutoItems{max-height:90px; overflow:auto; background:#fff; border:1px solid #dbeafe; border-radius:10px; padding:9px; font-size:12px; white-space:pre-wrap; color:#334155;}
     .casesDbBadge{display:inline-flex; border-radius:999px; padding:4px 8px; background:#dbeafe; color:#1d4ed8; border:1px solid #93c5fd; font-size:11px; font-weight:900; margin-top:5px;}
+    .casesDbBadge.return{background:#ffedd5; color:#c2410c; border-color:#fdba74;}
+    .casesDbBadge.refund{background:#fef3c7; color:#92400e; border-color:#fbbf24;}
+    .casesFirebaseBadges{display:flex; flex-wrap:wrap; gap:4px; margin-top:5px;}
 
 
     /* ===== Cruzamento Broken/Swipe/Lost com Envios e Sem Picagem ===== */
@@ -9500,7 +9503,7 @@ Esta ação remove estes registos guardados na Firebase.`);
     function recordSearchText(r){
       const fd = r.firebaseData || {};
       const cd = r.crosscheckData || {};
-      return [r.type,r.id,r.carrier,r.entryDate,fd.dateWarehouse,fd.returnRefundMode,fd.returnRefundDateTime,fd.returnRefundTracking,fd.packingDate,fd.packingDateTime,fd.packingItems,fd.packingTracking,crosscheckSummaryText(cd), ...(Object.values(r.fields || {}))].join(" ").toLowerCase();
+      return [r.type,r.id,r.carrier,r.entryDate,fd.dateWarehouse,fd.returnRefundMode,fd.returnRefundDateTime,fd.returnRefundTracking,fd.returnDateTime,fd.refundDateTime,fd.returnTracking,fd.refundTracking,fd.packingDate,fd.packingDateTime,fd.packingItems,fd.packingTracking,crosscheckSummaryText(cd), ...(Object.values(r.fields || {}))].join(" ").toLowerCase();
     }
     function fieldLabelFor(type, fieldKey){
       if(fieldKey === "type") return "TIPO";
@@ -9568,21 +9571,38 @@ Esta ação remove estes registos guardados na Firebase.`);
         const raw = snap.val() || {};
         const records = Object.entries(raw).map(([key,r])=>Object.assign({}, r || {}, {key, source:"registos"})).filter(r=>normalId(r.id || r.ID || r.order_id || r.orderId) === id);
         const rrRecords = records.filter(r=>{ const m = regMode(r); return m.includes("RETURN") || m.includes("REFUND"); });
+        const returnRecords = records.filter(r=>regMode(r).includes("RETURN"));
+        const refundRecords = records.filter(r=>regMode(r).includes("REFUND"));
         const pkRecords = records.filter(r=>regMode(r).includes("PACK"));
         const rr = latestByDate(rrRecords);
+        const ret = latestByDate(returnRecords);
+        const ref = latestByDate(refundRecords);
         const pk = latestByDate(pkRecords);
         const data = {
           id,
           fetchedAt: nowIso(),
           recordsCount: records.length,
           returnRefundCount: rrRecords.length,
-          packingCount: pkRecords.length,
+          returnCount: returnRecords.length,
+          refundCount: refundRecords.length,
+          hasReturn: !!ret,
+          hasRefund: !!ref,
           dateWarehouse: rr ? (dateFromAny(rr.dateClean) || dateFromAny(fmtDateTimeFromReg(rr))) : "",
           returnRefundMode: rr ? regMode(rr) : "",
           returnRefundDateTime: rr ? fmtDateTimeFromReg(rr) : "",
           returnRefundTracking: rr ? regTracking(rr) : "",
           returnRefundCarrier: rr ? regCarrier(rr) : "",
           returnRefundItems: rr ? regItems(rr) : "",
+          returnDate: ret ? (dateFromAny(ret.dateClean) || dateFromAny(fmtDateTimeFromReg(ret))) : "",
+          returnDateTime: ret ? fmtDateTimeFromReg(ret) : "",
+          returnTracking: ret ? regTracking(ret) : "",
+          returnCarrier: ret ? regCarrier(ret) : "",
+          returnItems: ret ? regItems(ret) : "",
+          refundDate: ref ? (dateFromAny(ref.dateClean) || dateFromAny(fmtDateTimeFromReg(ref))) : "",
+          refundDateTime: ref ? fmtDateTimeFromReg(ref) : "",
+          refundTracking: ref ? regTracking(ref) : "",
+          refundCarrier: ref ? regCarrier(ref) : "",
+          refundItems: ref ? regItems(ref) : "",
           packingDate: pk ? (dateFromAny(pk.dateClean) || dateFromAny(fmtDateTimeFromReg(pk))) : "",
           packingDateTime: pk ? fmtDateTimeFromReg(pk) : "",
           packingTracking: pk ? regTracking(pk) : "",
@@ -9672,14 +9692,46 @@ Esta ação remove estes registos guardados na Firebase.`);
         if(id && id.length >= 4) fetchCaseAutoData(id, {silent:true});
       }, 900);
     }
+    function caseFirebaseHasReturn(fd){
+      const mode = String(fd && fd.returnRefundMode || "").toUpperCase();
+      return !!(fd && (fd.hasReturn || fd.returnDate || fd.returnDateTime || mode.includes("RETURN")));
+    }
+    function caseFirebaseHasRefund(fd){
+      const mode = String(fd && fd.returnRefundMode || "").toUpperCase();
+      return !!(fd && (fd.hasRefund || fd.refundDate || fd.refundDateTime || mode.includes("REFUND")));
+    }
+    function caseFirebasePackingDate(fd){ return fd && (fd.packingDateTime || fd.packingDate) || ""; }
+    function caseFirebaseReturnDate(fd){
+      if(!fd) return "";
+      const mode = String(fd.returnRefundMode || "").toUpperCase();
+      return fd.returnDateTime || fd.returnDate || (mode.includes("RETURN") ? (fd.returnRefundDateTime || fd.dateWarehouse || "") : "");
+    }
+    function caseFirebaseRefundDate(fd){
+      if(!fd) return "";
+      const mode = String(fd.returnRefundMode || "").toUpperCase();
+      return fd.refundDateTime || fd.refundDate || (mode.includes("REFUND") ? (fd.returnRefundDateTime || fd.dateWarehouse || "") : "");
+    }
     function caseRecordFirebaseSummary(r){
       const fd = r && r.firebaseData || {};
       if(!fd || !Object.keys(fd).length) return "";
       const bits = [];
+      const pk = caseFirebasePackingDate(fd);
+      const ret = caseFirebaseReturnDate(fd);
+      const ref = caseFirebaseRefundDate(fd);
+      if(pk) bits.push("PACKED: " + pk);
+      if(caseFirebaseHasReturn(fd)) bits.push("RETURN: " + (ret || "sim"));
+      if(caseFirebaseHasRefund(fd)) bits.push("REFUND: " + (ref || "sim"));
       if(fd.dateWarehouse) bits.push("WH: " + fd.dateWarehouse);
-      if(fd.packingDate) bits.push("PACK: " + fd.packingDate);
       if(fd.packingItems) bits.push("Produtos PACKING guardados");
       return bits.join(" · ");
+    }
+    function caseFirebaseBadgesHtml(fd){
+      fd = fd || {};
+      const badges = [];
+      if(caseFirebasePackingDate(fd) || fd.packingItems) badges.push('<span class="casesDbBadge">PACKED</span>');
+      if(caseFirebaseHasReturn(fd)) badges.push('<span class="casesDbBadge return">RETURN</span>');
+      if(caseFirebaseHasRefund(fd)) badges.push('<span class="casesDbBadge refund">REFUND</span>');
+      return badges.length ? '<div class="casesFirebaseBadges">' + badges.join("") + '</div>' : '';
     }
 
 
@@ -10338,6 +10390,16 @@ Esta ação remove estes registos guardados na Firebase.`);
       return `<th><span class="casesThLabel">${esc(label)}</span>${filterHtml || ""}${hint ? `<span class="casesColFilterHint">${esc(hint)}</span>` : ""}</th>`;
     }
 
+    function caseFirebaseFilterTokens(r){
+      const fd = r && r.firebaseData || {};
+      const tokens = [];
+      if(caseFirebasePackingDate(fd) || fd.packingItems) tokens.push("PACKED");
+      if(caseFirebaseHasReturn(fd)) tokens.push("RETURN");
+      if(caseFirebaseHasRefund(fd)) tokens.push("REFUND");
+      if(!tokens.length) tokens.push("SEM REGISTO");
+      return tokens;
+    }
+
     function caseColumnValue(r, key){
       if(key === "__type") return r.type || "";
       if(key === "__id") return [r.id, r.entryDate, r.createdDate, r.updatedAt].join(" ");
@@ -10352,6 +10414,12 @@ Esta ação remove estes registos guardados na Firebase.`);
       return Object.entries(filters).every(([key, value])=>{
         const q = String(value || "").trim().toLowerCase();
         if(!q) return true;
+        if(key === "__firebase"){
+          const selected = String(value || "").trim().toUpperCase();
+          const tokens = caseFirebaseFilterTokens(r);
+          if(selected === "SEM REGISTO") return tokens.includes("SEM REGISTO");
+          if(["PACKED","RETURN","REFUND"].includes(selected)) return tokens.includes(selected);
+        }
         const actual = String(caseColumnValue(r, key) || "").toLowerCase();
         return actual.includes(q);
       });
@@ -10469,7 +10537,7 @@ Esta ação remove estes registos guardados na Firebase.`);
         ${caseHeaderCell("Tipo", caseFilterSelectHtml("__type", ["BROKEN","SWIPE","LOST"]))}
         ${caseHeaderCell("ID / Entrada", caseFilterInputHtml("__id", "ID/data"))}
         ${caseHeaderCell("Transportadora", caseFilterInputHtml("__carrier", "Carrier", "casesCarrierList"))}
-        ${caseHeaderCell("Firebase", caseFilterInputHtml("__firebase", "Packing/return"))}
+        ${caseHeaderCell("Firebase", caseFilterSelectHtml("__firebase", ["PACKED","RETURN","REFUND","SEM REGISTO"]))}
         ${caseHeaderCell("Cruzamento", caseFilterInputHtml("__crosscheck", "Coincidência"))}
         ${fields.map(f=>caseHeaderCell(f.label, caseFilterInputHtml(f.key, "Filtrar", f.selectable ? datalistIdForOption(f.optionKey) : ""), f.label.toUpperCase().includes("AMSPED") ? "Filtro próprio" : "")).join("")}
         <th><span class="casesThLabel">Ações</span><button class="casesColClearBtn" type="button" onclick="clearCaseColumnFilters()">Limpar coluna</button></th>
@@ -10485,7 +10553,7 @@ Esta ação remove estes registos guardados na Firebase.`);
           <td><span class="casesTypeBadge ${esc(r.type)}">${esc(r.type)}</span></td>
           <td class="mono"><b>${esc(r.id)}</b><span class="envio-subline">Entrada: ${esc(r.entryDate || r.createdDate || "")}</span><span class="envio-subline">Atualizado: ${esc((r.updatedAt || "").slice(0,16).replace("T"," "))}</span></td>
           <td><b>${esc(r.carrier)}</b></td>
-          <td><span class="mini">${esc(fb)}</span>${fd.packingItems ? '<span class="casesDbBadge">PACKING DB</span>' : ''}</td>
+          <td><span class="mini">${esc(fb)}</span>${caseFirebaseBadgesHtml(fd)}</td>
           <td>${crosscheckBadgeHtml(r.crosscheckData || {})}<div class="mini">${esc(crosscheckSummaryText(r.crosscheckData || {}))}</div></td>
           ${fields.map(f=>`<td>${caseFieldCellHtml(f, (r.fields || {})[f.key] || "")}</td>`).join("")}
           <td><div class="casesActions"><button class="btn-mini info" type="button" onclick="startInlineEditCaseRecord('${esc(r.key)}')">${isInlineEditing ? 'A editar' : 'Editar'}</button><button class="btn-mini warn" type="button" onclick="openCaseHistory('${esc(r.key)}')">Histórico</button><button class="btn-mini mutedBtn" type="button" onclick="openCaseIdHistory('${esc(r.id)}','${esc(r.key)}')">Hist. ID</button><button class="btn-mini ok" type="button" onclick="openCaseCrosscheck('${esc(r.id)}','${esc(r.key)}')">Coincid.</button><button class="btn-mini danger" type="button" onclick="deleteCaseRecord('${esc(r.key)}')">Eliminar</button></div></td>
