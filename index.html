@@ -9496,17 +9496,57 @@ Esta ação remove estes registos guardados na Firebase.`);
       saveLocal();
       if(hasFirebase()){
         try{
-          await db.ref(CASES_DELETED_RECORDS_PATH + "/" + key).set({
-            key,
-            id: rec && rec.id || "",
-            type: rec && rec.type || "",
-            carrier: rec && rec.carrier || "",
-            deletedAt: nowIso(),
-            deletedDate: today(),
-            deletedBy: currentUserEmail() || ""
-          });
+          // Marcador técnico mínimo: serve só para impedir que caches/registos antigos
+          // voltem a entrar na tabela/resumos. Não guarda ID, preço, produto nem outros dados.
+          await db.ref(CASES_DELETED_RECORDS_PATH + "/" + key).set(true);
         }catch(e){ console.warn("case deleted record tombstone save", e); }
       }
+    }
+
+    function caseRecordIdentityMatches(rec, entry){
+      if(!rec || !entry) return false;
+      const recId = normalId(rec.id || "");
+      const entryId = normalId(entry.id || "");
+      if(rec.key && entry.recordKey && String(entry.recordKey) === String(rec.key)) return true;
+      if(recId && entryId && recId === entryId){
+        const rt = String(rec.type || "").toUpperCase();
+        const et = String(entry.type || "").toUpperCase();
+        if(!rt || !et || rt === et) return true;
+      }
+      return false;
+    }
+
+    function purgeCaseRecordLocalData(key, rec){
+      if(!key) return;
+      const recObj = rec || {key};
+      state.records = (state.records || []).filter(r=>String(r && r.key || "") !== String(key));
+      if(state.history && state.history[key]) delete state.history[key];
+      state.movements = (state.movements || []).filter(m=>!caseRecordIdentityMatches(recObj, m));
+      saveLocal();
+    }
+
+    function purgeDeletedCaseDataLocal(){
+      const keys = deletedRecordKeySet();
+      if(!keys.size) return;
+      state.records = (state.records || []).filter(r=>r && !keys.has(r.key || ""));
+      try{ keys.forEach(k=>{ if(state.history && state.history[k]) delete state.history[k]; }); }catch(e){}
+      state.movements = (state.movements || []).filter(m=>m && !keys.has(m.recordKey || ""));
+      saveLocal();
+    }
+
+    async function purgeCaseRecordRemoteData(key, rec){
+      if(!hasFirebase() || !key) return;
+      const updates = {};
+      updates[CASES_ITEMS_PATH + "/" + key] = null;
+      updates[CASES_HISTORY_PATH + "/" + key] = null;
+      updates[CASES_DELETED_RECORDS_PATH + "/" + key] = true;
+      await db.ref().update(updates);
+      try{
+        const snap = await db.ref(CASES_MOVEMENTS_PATH).orderByChild("recordKey").equalTo(key).once("value");
+        const movementRemoves = {};
+        snap.forEach(child=>{ movementRemoves[CASES_MOVEMENTS_PATH + "/" + child.key] = null; });
+        if(Object.keys(movementRemoves).length) await db.ref().update(movementRemoves);
+      }catch(e){ console.warn("case movements hard delete cleanup", e); }
     }
 
     function applyCaseDeletedRecordsSnapshot(raw, silent){
@@ -9514,6 +9554,7 @@ Esta ação remove estes registos guardados na Firebase.`);
         const keys = new Set([...(state.deletedRecordKeys || []), ...normalizeDeletedRecordKeys(raw || {})]);
         state.deletedRecordKeys = Array.from(keys).filter(Boolean).sort();
         normalizeCaseRecordsForSummary();
+        purgeDeletedCaseDataLocal();
         saveLocal();
         if(shouldRenderCasesAfterRealtime && shouldRenderCasesAfterRealtime()) renderCasesTable();
         else { try{ updateCasesFinanceSummary(); updateCasesKpis(); }catch(e){} }
@@ -10937,26 +10978,24 @@ Esta ação remove estes registos guardados na Firebase.`);
     async function deleteCaseRecord(key){
       const r = (state.records || []).find(x=>x.key === key);
       if(!r) return;
-      if(!confirm("Eliminar o registo " + r.type + " / " + r.id + "?")) return;
-      await pushCaseHistory(key, r, [{fieldKey:"__deleted", fieldLabel:"REGISTO", oldValue:"Ativo", newValue:"Eliminado"}], "DELETE");
+      if(!confirm("Eliminar definitivamente o registo " + r.type + " / " + r.id + "? Os dados deixam de aparecer na tabela, resumo, histórico e movimentos.")) return;
       await persistCaseDeletedRecordKey(key, r);
-      state.records = (state.records || []).filter(x=>x.key !== key);
-      // Atualiza já a tabela e o resumo financeiro sem esperar pela Firebase.
-      // Assim o PRICE do ID eliminado sai imediatamente de Total/Paid/Denied/Pending.
+      purgeCaseRecordLocalData(key, r);
       refreshCasesAfterRecordsChange();
       if(hasFirebase()){
         try{
-          await db.ref(CASES_ITEMS_PATH + "/" + key).remove();
+          await purgeCaseRecordRemoteData(key, r);
+          purgeCaseRecordLocalData(key, r);
           refreshCasesAfterRecordsChange();
-          setStatus("Registo eliminado com histórico ✅ Resumo de valores atualizado.", "ok");
+          setStatus("Registo eliminado definitivamente ✅ Não conta nem aparece em tabelas/resumos/histórico.", "ok");
         }
         catch(e){
           console.error(e);
           refreshCasesAfterRecordsChange();
-          setStatus("Eliminado localmente e resumo atualizado, mas falhou na Firebase.", "warn");
+          setStatus("Eliminado localmente e removido dos resumos, mas falhou parte da limpeza na Firebase.", "warn");
         }
       } else {
-        setStatus("Registo eliminado localmente com histórico. Resumo de valores atualizado.", "ok");
+        setStatus("Registo eliminado localmente. Faz login para eliminar também na Firebase.", "warn");
       }
     }
     window.deleteCaseRecord = deleteCaseRecord;
@@ -10964,29 +11003,28 @@ Esta ação remove estes registos guardados na Firebase.`);
     async function deleteAllCaseRecords(){
       if(!state.records.length){ setStatus("Não há registos para eliminar.", "warn"); return; }
       const visible = getFilteredRecords();
-      const msg = visible.length === state.records.length ? `Eliminar TODOS os ${state.records.length} registos?` : `Eliminar os ${visible.length} registos visíveis/filtrados?`;
-      if(!confirm(msg + " Esta ação não elimina as listas de opções.")) return;
-      for(const r of visible){
-        await pushCaseHistory(r.key, r, [{fieldKey:"__deleted", fieldLabel:"REGISTO", oldValue:"Ativo", newValue:"Eliminado"}], "DELETE");
-        await persistCaseDeletedRecordKey(r.key, r);
-      }
+      const msg = visible.length === state.records.length ? `Eliminar definitivamente TODOS os ${state.records.length} registos?` : `Eliminar definitivamente os ${visible.length} registos visíveis/filtrados?`;
+      if(!confirm(msg + " Os dados deixam de aparecer na tabela, resumo, histórico e movimentos.")) return;
       const keys = new Set(visible.map(r=>r.key));
-      state.records = (state.records || []).filter(r=>!keys.has(r.key));
-      // Atualiza imediatamente a tabela e o resumo financeiro sem os IDs eliminados.
+      for(const r of visible){
+        await persistCaseDeletedRecordKey(r.key, r);
+        purgeCaseRecordLocalData(r.key, r);
+      }
       refreshCasesAfterRecordsChange();
       if(hasFirebase()){
         try{
-          await Promise.all(Array.from(keys).map(k=>db.ref(CASES_ITEMS_PATH + "/" + k).remove()));
+          await Promise.all(visible.map(r=>purgeCaseRecordRemoteData(r.key, r)));
+          visible.forEach(r=>purgeCaseRecordLocalData(r.key, r));
           refreshCasesAfterRecordsChange();
-          setStatus("Registos eliminados ✅ Resumo de valores atualizado.", "ok");
+          setStatus("Registos eliminados definitivamente ✅ Não contam nem aparecem em tabelas/resumos/histórico.", "ok");
         }
         catch(e){
           console.error(e);
           refreshCasesAfterRecordsChange();
-          setStatus("Eliminados localmente e resumo atualizado, mas falhou na Firebase.", "warn");
+          setStatus("Eliminados localmente e removidos dos resumos, mas falhou parte da limpeza na Firebase.", "warn");
         }
       } else {
-        setStatus("Registos eliminados localmente. Resumo de valores atualizado.", "ok");
+        setStatus("Registos eliminados localmente. Faz login para eliminar também na Firebase.", "warn");
       }
     }
     window.deleteAllCaseRecords = deleteAllCaseRecords;
@@ -11457,6 +11495,7 @@ Esta ação remove estes registos guardados na Firebase.`);
         state.movements = Object.values(byKey).sort((a,b)=>(b.changedAt || b.at || "").localeCompare(a.changedAt || a.at || ""));
         rebuildDeletedRecordKeysFromMovements();
         normalizeCaseRecordsForSummary();
+        purgeDeletedCaseDataLocal();
         saveLocal();
         if(shouldRenderCasesAfterRealtime && shouldRenderCasesAfterRealtime()) renderCasesTable();
         else { try{ updateCasesFinanceSummary(); updateCasesKpis(); }catch(e){} }
@@ -11475,7 +11514,10 @@ Esta ação remove estes registos guardados na Firebase.`);
           if(!byKey[k]) byKey[k] = Object.assign({}, e, {movementKey:k, category:"REGISTO", summary: movementSummaryFromChanges(e.changes || [])});
         });
       });
-      return Object.values(byKey).sort((a,b)=>(b.changedAt || b.at || "").localeCompare(a.changedAt || a.at || ""));
+      const deletedKeys = deletedRecordKeySet();
+      return Object.values(byKey)
+        .filter(m=>m && !deletedKeys.has(m.recordKey || ""))
+        .sort((a,b)=>(b.changedAt || b.at || "").localeCompare(a.changedAt || a.at || ""));
     }
 
     function movementChangesHtml(m){
@@ -11776,6 +11818,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       await loadCaseHistory();
       await loadCaseMovements();
       normalizeCaseRecordsForSummary();
+      purgeDeletedCaseDataLocal();
       state.loaded = true;
       saveLocal();
       renderCasesTable();
