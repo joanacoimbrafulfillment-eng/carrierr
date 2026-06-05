@@ -5393,6 +5393,7 @@
   }
 
   function setEnviosListFilter(list){
+    if(enviosState) enviosState.quickSearchAllLists = "";
     enviosState.listFilter = list || "ACTIVE";
     enviosState.page = 1;
     renderEnviosTable();
@@ -5467,6 +5468,29 @@
   }
 
   function enviosPassFilters(r){
+    const quickLocalSearch = String((enviosState && enviosState.quickSearchAllLists) || "").trim().toLowerCase();
+    if(quickLocalSearch){
+      const qId = normaliseOrderId(quickLocalSearch);
+      const quickHay = [
+        r && r.id,
+        r && r.tracking,
+        r && r.carrier,
+        r && r.verificacao,
+        r && r.packingDate,
+        r && r.returnRefundDate,
+        r && r.user,
+        r && r.items,
+        r && r.manualSaiu,
+        r && r.seenBy,
+        r && r.observacoes,
+        r && r.batch,
+        r && r.statusClass,
+        r && JSON.stringify(r || {})
+      ].join(" ").toLowerCase();
+      if(qId && normaliseOrderId(r && r.id) === qId) return true;
+      return quickHay.includes(quickLocalSearch);
+    }
+
     const list = enviosState.listFilter || "ACTIVE";
     const rowList = envioList(r);
     if(list !== "ALL" && rowList !== list) return false;
@@ -5494,6 +5518,11 @@
   }
 
   function updateEnviosActiveFilters(){
+    const quickLocalSearch = String((enviosState && enviosState.quickSearchAllLists) || "").trim();
+    if(quickLocalSearch){
+      if($("enviosActiveFilters")) $("enviosActiveFilters").textContent = "Pesquisa ativa em todas as listagens → " + quickLocalSearch;
+      return;
+    }
     const kind = $("enviosFilterKind") ? $("enviosFilterKind").value : "ALL";
     const q = ($("enviosFilterText") ? $("enviosFilterText").value : "").trim();
     const carrierSel = $("enviosCarrierFilter");
@@ -5530,6 +5559,7 @@
 
   function enviosPaginationSignature(){
     return JSON.stringify({
+      quick: (enviosState && enviosState.quickSearchAllLists) || "",
       list: enviosState.listFilter || "ACTIVE",
       text: $("enviosFilterText") ? $("enviosFilterText").value : "",
       kind: $("enviosFilterKind") ? $("enviosFilterKind").value : "ALL",
@@ -5687,6 +5717,7 @@
     if($("enviosFilterText")) $("enviosFilterText").value = "";
     if($("enviosFilterKind")) $("enviosFilterKind").value = "ALL";
     if($("enviosCarrierFilter")) $("enviosCarrierFilter").value = "ALL";
+    if(enviosState) enviosState.quickSearchAllLists = "";
     enviosState.listFilter = "ACTIVE";
     enviosState.page = 1;
     renderEnviosTable();
@@ -13509,6 +13540,305 @@ Esta ação remove estes registos guardados na Firebase.`);
     };
 
     window.clearSectionSearch = function(section){ clearLocalSearch(section); };
+  })();
+  </script>
+
+
+  <!-- v79: correção da pesquisa local em Envios em Análise para procurar em TODAS as listagens e itens guardados -->
+  <script>
+  (function(){
+    function textOf(v){ return String(v == null ? "" : v); }
+    function normIdLocal(v){
+      try{ if(typeof window.normaliseOrderId === "function") return window.normaliseOrderId(v); }catch(e){}
+      var s = textOf(v).trim();
+      return /^\d+\.0+$/.test(s) ? s.replace(/\.0+$/, "") : s;
+    }
+    function setValue(id, value){ var el = document.getElementById(id); if(el) el.value = value || ""; }
+    function getValue(id){ var el = document.getElementById(id); return el ? textOf(el.value).trim() : ""; }
+
+    async function syncEnviosSavedItemsForLocalSearch(){
+      if(!(window.firebase && window.firebase.database && window.enviosState)) return;
+      try{
+        var path = window.ENVIOS_DB_PATH || "envios_analise/items";
+        var snap = await window.firebase.database().ref(path).once("value");
+        var val = snap.val() || {};
+        var saved = Object.assign({}, window.enviosState.savedItems || {});
+        Object.keys(val).forEach(function(key){
+          var item = val[key];
+          if(!item || item.deleted) return;
+          var id = normIdLocal(item.id || key);
+          if(!id) return;
+          saved[id] = Object.assign({}, item, {id:id});
+        });
+        window.enviosState.savedItems = saved;
+        window.enviosState.firebaseLoaded = true;
+      }catch(e){
+        console.warn("envios local search firebase sync", e);
+      }
+    }
+
+    function rebuildEnviosRowsForAllLists(){
+      if(!window.enviosState) return;
+      var byId = {};
+      ((window.enviosState.rows || [])).forEach(function(r){
+        if(!r || !r.id) return;
+        byId[normIdLocal(r.id)] = r;
+      });
+      Object.values(window.enviosState.savedItems || {}).forEach(function(item){
+        if(!item || item.deleted) return;
+        var id = normIdLocal(item.id || "");
+        if(!id) return;
+        var current = byId[id];
+        var records = (current && current.records && current.records.length) ? current.records : (item.lastRecords || []);
+        try{
+          if(typeof window.buildEnviosRow === "function") byId[id] = window.buildEnviosRow(id, records);
+          else byId[id] = Object.assign({}, item, current || {}, {id:id, records:records});
+        }catch(e){
+          byId[id] = Object.assign({}, item, current || {}, {id:id, records:records});
+        }
+      });
+      var rows = Object.values(byId).filter(function(r){ return r && !r.deleted; });
+      try{ if(typeof window.sortEnviosByPackingDateAsc === "function") rows = window.sortEnviosByPackingDateAsc(rows); }catch(e){}
+      window.enviosState.rows = rows;
+    }
+
+    async function runEnviosLocalSearchAllLists(query){
+      query = textOf(query).trim();
+      var input = document.getElementById("enviosFilterText");
+      if(input){ input.removeAttribute("readonly"); input.value = query; }
+
+      // A pesquisa local deve ignorar completamente a listagem aberta e os filtros operacionais,
+      // para encontrar o ID/tracking em Em análise, Returns/Refunds, Sem registo,
+      // Entregue, Entregue/Paid e Verificados.
+      setValue("enviosFilterKind", "ALL");
+      setValue("enviosCarrierFilter", "ALL");
+      if(window.enviosState){
+        window.enviosState.quickSearchAllLists = query;
+        window.enviosState.listFilter = "ALL";
+        window.enviosState.page = 1;
+        window.enviosState.lastPaginationSignature = "";
+      }
+
+      await syncEnviosSavedItemsForLocalSearch();
+      rebuildEnviosRowsForAllLists();
+      if(window.enviosState){
+        window.enviosState.quickSearchAllLists = query;
+        window.enviosState.listFilter = "ALL";
+        window.enviosState.page = 1;
+        window.enviosState.lastPaginationSignature = "";
+      }
+      if(typeof window.renderEnviosTable === "function") window.renderEnviosTable();
+    }
+
+    var previousRunSectionSearch = window.runSectionSearch;
+    window.runSectionSearch = function(section){
+      if(section !== "envios"){
+        if(typeof previousRunSectionSearch === "function") return previousRunSectionSearch(section);
+        return;
+      }
+      var query = getValue("enviosQuickSearch");
+      var scope = getValue("enviosQuickSearchScope") || "local";
+      if(scope === "global"){
+        if(typeof previousRunSectionSearch === "function") return previousRunSectionSearch(section);
+        return;
+      }
+      if(!query){
+        setValue("enviosQuickSearch", "");
+        setValue("enviosFilterText", "");
+        setValue("enviosFilterKind", "ALL");
+        setValue("enviosCarrierFilter", "ALL");
+        if(window.enviosState){
+          window.enviosState.quickSearchAllLists = "";
+          window.enviosState.listFilter = "ACTIVE";
+          window.enviosState.page = 1;
+          window.enviosState.lastPaginationSignature = "";
+        }
+        if(typeof window.renderEnviosTable === "function") window.renderEnviosTable();
+        return;
+      }
+      runEnviosLocalSearchAllLists(query);
+    };
+
+    var previousClearSectionSearch = window.clearSectionSearch;
+    window.clearSectionSearch = function(section){
+      if(section !== "envios"){
+        if(typeof previousClearSectionSearch === "function") return previousClearSectionSearch(section);
+        return;
+      }
+      setValue("enviosQuickSearch", "");
+      setValue("enviosFilterText", "");
+      setValue("enviosFilterKind", "ALL");
+      setValue("enviosCarrierFilter", "ALL");
+      if(window.enviosState){
+        window.enviosState.quickSearchAllLists = "";
+        window.enviosState.listFilter = "ACTIVE";
+        window.enviosState.page = 1;
+        window.enviosState.lastPaginationSignature = "";
+      }
+      if(typeof window.renderEnviosTable === "function") window.renderEnviosTable();
+    };
+
+  })();
+  </script>
+
+
+  <!-- v81: correção definitiva da pesquisa local em Envios - usa estados globais reais e ignora listagem ativa -->
+  <script>
+  (function(){
+    // Os scripts adicionais anteriores usam window.enviosState, mas os estados originais foram criados com const.
+    // Exportamos referências reais para que a pesquisa consiga mexer no mesmo estado usado pela tabela.
+    try{ window.state = state; }catch(e){}
+    try{ window.enviosState = enviosState; }catch(e){}
+    try{ window.semPicState = semPicState; }catch(e){}
+    try{ window.ENVIOS_DB_PATH = ENVIOS_DB_PATH; }catch(e){}
+
+    function text(v){ return String(v == null ? "" : v); }
+    function normIdHard(v){
+      try{ if(typeof normaliseOrderId === "function") return normaliseOrderId(v); }catch(e){}
+      var s = text(v).trim();
+      return /^\d+\.0+$/.test(s) ? s.replace(/\.0+$/, "") : s;
+    }
+    function setElValue(id, value){
+      var el = document.getElementById(id);
+      if(!el) return;
+      el.removeAttribute("readonly");
+      el.value = value == null ? "" : String(value);
+    }
+    function getElValue(id){
+      var el = document.getElementById(id);
+      return el ? text(el.value).trim() : "";
+    }
+
+    async function syncEnviosItemsFromFirebaseHard(){
+      try{
+        if(!(firebase && firebase.database && enviosState)) return;
+        var path = (typeof ENVIOS_DB_PATH !== "undefined" && ENVIOS_DB_PATH) ? ENVIOS_DB_PATH : "envios_analise/items";
+        var snap = await firebase.database().ref(path).once("value");
+        var val = snap.val() || {};
+        var saved = Object.assign({}, enviosState.savedItems || {});
+        Object.keys(val).forEach(function(key){
+          var item = val[key];
+          if(!item || item.deleted) return;
+          var id = normIdHard(item.id || key);
+          if(!id) return;
+          saved[id] = Object.assign({}, saved[id] || {}, item, {id:id, key:key});
+        });
+        enviosState.savedItems = saved;
+        enviosState.firebaseLoaded = true;
+      }catch(e){
+        console.warn("envios local search firebase fallback", e);
+      }
+    }
+
+    function mergeEnviosSavedItemsIntoRowsHard(){
+      try{
+        if(!enviosState) return;
+        var byId = {};
+        (enviosState.rows || []).forEach(function(row){
+          if(!row || row.deleted) return;
+          var id = normIdHard(row.id || "");
+          if(id) byId[id] = row;
+        });
+        Object.keys(enviosState.savedItems || {}).forEach(function(key){
+          var item = enviosState.savedItems[key];
+          if(!item || item.deleted) return;
+          var id = normIdHard(item.id || key);
+          if(!id || byId[id]) return;
+          byId[id] = Object.assign({}, item, {
+            id:id,
+            key:key,
+            records:item.lastRecords || item.records || [],
+            observacoes:item.observacoes || item.obs || item.note || "",
+            tracking:item.tracking || item.trackingId || "",
+            carrier:item.carrier || item.transportadora || ""
+          });
+        });
+        var rows = Object.keys(byId).map(function(id){ return byId[id]; }).filter(function(r){ return r && !r.deleted; });
+        try{ if(typeof sortEnviosByPackingDateAsc === "function") rows = sortEnviosByPackingDateAsc(rows); }catch(e){}
+        enviosState.rows = rows;
+      }catch(e){ console.warn("envios local search merge rows", e); }
+    }
+
+    async function runEnviosSearchAllListsHard(query){
+      query = text(query).trim();
+      if(!query){
+        clearEnviosSearchHard();
+        return;
+      }
+
+      // Mantém a pesquisa rápida visível, mas NÃO usa o filtro normal da tabela.
+      // O filtro normal estava a prender a pesquisa à listagem ativa.
+      setElValue("enviosQuickSearch", query);
+      setElValue("enviosFilterText", "");
+      setElValue("enviosFilterKind", "ALL");
+      setElValue("enviosCarrierFilter", "ALL");
+
+      enviosState.quickSearchAllLists = query;
+      enviosState.listFilter = "ALL";
+      enviosState.page = 1;
+      enviosState.lastPaginationSignature = "";
+
+      await syncEnviosItemsFromFirebaseHard();
+      mergeEnviosSavedItemsIntoRowsHard();
+
+      enviosState.quickSearchAllLists = query;
+      enviosState.listFilter = "ALL";
+      enviosState.page = 1;
+      enviosState.lastPaginationSignature = "";
+
+      if(typeof renderEnviosTable === "function") renderEnviosTable();
+    }
+
+    function clearEnviosSearchHard(){
+      setElValue("enviosQuickSearch", "");
+      setElValue("enviosFilterText", "");
+      setElValue("enviosFilterKind", "ALL");
+      setElValue("enviosCarrierFilter", "ALL");
+      enviosState.quickSearchAllLists = "";
+      enviosState.listFilter = "ACTIVE";
+      enviosState.page = 1;
+      enviosState.lastPaginationSignature = "";
+      if(typeof renderEnviosTable === "function") renderEnviosTable();
+    }
+
+    var prevRunSectionSearchV81 = window.runSectionSearch;
+    window.runSectionSearch = function(section){
+      if(section !== "envios"){
+        if(typeof prevRunSectionSearchV81 === "function") return prevRunSectionSearchV81(section);
+        return;
+      }
+      var query = getElValue("enviosQuickSearch");
+      var scope = getElValue("enviosQuickSearchScope") || "local";
+      if(scope === "global"){
+        if(typeof prevRunSectionSearchV81 === "function") return prevRunSectionSearchV81(section);
+        return;
+      }
+      return runEnviosSearchAllListsHard(query);
+    };
+
+    var prevClearSectionSearchV81 = window.clearSectionSearch;
+    window.clearSectionSearch = function(section){
+      if(section !== "envios"){
+        if(typeof prevClearSectionSearchV81 === "function") return prevClearSectionSearchV81(section);
+        return;
+      }
+      clearEnviosSearchHard();
+    };
+
+    var prevOpenSearchResultV81 = window.openSearchResultInSection;
+    window.openSearchResultInSection = function(section, query){
+      if(section !== "envios"){
+        if(typeof prevOpenSearchResultV81 === "function") return prevOpenSearchResultV81(section, query);
+        return;
+      }
+      try{ if(typeof switchTab === "function") switchTab("envios"); }catch(e){}
+      var modal = document.getElementById("detailModal");
+      if(modal) modal.style.display = "none";
+      setTimeout(function(){ runEnviosSearchAllListsHard(query); }, 80);
+    };
+
+    // Exposto apenas para testes no browser/console, sem interferir com o resto.
+    window.runEnviosSearchAllListsHard = runEnviosSearchAllListsHard;
   })();
   </script>
 
