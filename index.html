@@ -423,6 +423,9 @@
     .envio-badge.manual{background:#fef3c7; color:#92400e; border-color:#fbbf24;}
     .envio-badge.entregue{background:#dbeafe; color:#1e40af; border-color:#93c5fd;}
     .envio-badge.entregue-paid{background:#bbf7d0; color:#14532d; border-color:#4ade80;}
+    .envio-badge.manual-rr{background:#fff7ed; color:#9a3412; border-color:#fdba74; margin-top:6px;}
+    .envio-manual-rr-box{margin-top:8px; padding:8px 10px; border-radius:10px; border:2px solid #fdba74; background:#fff7ed; color:#9a3412; font-size:12px; font-weight:800; line-height:1.35;}
+    .envio-manual-rr-box b{display:block; color:#7c2d12; margin-bottom:3px;}
     .enviosSaveHint{font-size:12px; color:#64748b; margin-top:8px; line-height:1.4;}
     .enviosDuplicateWarning{display:none; margin-top:10px; padding:12px 14px; border-radius:12px; border:2px solid #fbbf24; background:#fffbeb; color:#92400e; font-size:13px; line-height:1.45; font-weight:700;}
     .enviosDuplicateWarning b{color:#78350f;}
@@ -4932,7 +4935,12 @@
     if(list === "ENTREGUE_PAID") return "Entregue/Paid";
     if(list === "ENTREGUE") return "Entregue";
     if(list === "VERIFIED") return "Verificado";
-    if(list === "RETURN_OR_REFUND") return row.refund ? "Refund" : "Return";
+    if(list === "RETURN_OR_REFUND") {
+      const manualMode = String(row && row.manualReturnRefundMode || "").toUpperCase();
+      if(row && row.manualReturnRefund && manualMode === "REFUND") return "Refund manual";
+      if(row && row.manualReturnRefund && manualMode === "RETURN") return "Return manual";
+      return row.refund ? "Refund" : "Return";
+    }
     if(list === "NO_RECORD") return "Sem registo";
     return "Em análise";
   }
@@ -4971,6 +4979,11 @@
     const ret = latestRecord(records, r => modeIs(r, "RETURN"));
     const refund = latestRecord(records, r => modeIs(r, "REFUND"));
     const latest = latestRecord(records, r => true);
+    const manualReturnRefundModeRaw = String(saved.manualReturnRefundMode || saved.manualReturnRefundType || "").trim().toUpperCase();
+    const manualReturnRefundMode = manualReturnRefundModeRaw === "REFUND" ? "REFUND" : (manualReturnRefundModeRaw === "RETURN" ? "RETURN" : "");
+    const manualReturnRefund = !!manualReturnRefundMode;
+    const manualReturn = manualReturnRefundMode === "RETURN";
+    const manualRefund = manualReturnRefundMode === "REFUND";
     const issue = refund || ret;
     const manualSaiu = fmt(saved.manualSaiu || "");
     const insertedDate = fmt(saved.insertedDate || (saved.createdAt ? String(saved.createdAt).slice(0,10) : ""));
@@ -4988,7 +5001,7 @@
     const carrier = fmt((carrierRecord && carrierRecord.carrier) || saved.carrier || "");
     const items = fmt((packing && packing.items) || (issue && issue.items) || (latest && latest.items) || saved.items || "");
     const user = fmt((packing && packing.user) || (issue && issue.user) || (latest && latest.user) || saved.user || "");
-    const returnRefundDate = fmt((issue && issue.dateTime) || "");
+    const returnRefundDate = fmt((issue && issue.dateTime) || (manualReturnRefund ? (saved.manualReturnRefundDate || saved.manualReturnRefundAt || saved.manualReturnRefundCreatedAt || "") : ""));
     const seen = !!saved.seen || savedTerminal === "VERIFIED";
     const packedEffective = !!packing || !!manualSaiu;
 
@@ -4999,6 +5012,12 @@
       statusClass = "ENVIO_BAD";
     } else if(ret){
       verificacao = packing ? "Embalado + já está em RETURN" : (manualSaiu ? "SAIU manual + já está em RETURN" : "RETURN encontrado, mas sem PACKING");
+      statusClass = "ENVIO_WARN";
+    } else if(manualRefund){
+      verificacao = packing ? "Embalado + REFUND manual" : (manualSaiu ? "SAIU manual + REFUND manual" : "REFUND manual, mas sem PACKING");
+      statusClass = "ENVIO_BAD";
+    } else if(manualReturn){
+      verificacao = packing ? "Embalado + RETURN manual" : (manualSaiu ? "SAIU manual + RETURN manual" : "RETURN manual, mas sem PACKING");
       statusClass = "ENVIO_WARN";
     } else if(packing){
       verificacao = "OK — embalado e sem return/refund encontrado";
@@ -5040,8 +5059,14 @@
       observacoes,
       entregue,
       entregue_paid,
-      return: !!ret,
-      refund: !!refund,
+      return: !!ret || manualReturn,
+      refund: !!refund || manualRefund,
+      manualReturnRefund,
+      manualReturnRefundMode,
+      manualReturnRefundDate: fmt(saved.manualReturnRefundDate || ""),
+      manualReturnRefundAt: fmt(saved.manualReturnRefundAt || ""),
+      manualReturnRefundBy: fmt(saved.manualReturnRefundBy || ""),
+      manualReturnRefundNote: fmt(saved.manualReturnRefundNote || ""),
       seen,
       seenAt: fmt(saved.seenAt || terminalAt || ""),
       seenBy: fmt(saved.seenBy || terminalBy || ""),
@@ -5206,6 +5231,14 @@
       };
       // Only include manual/user fields if present, to avoid overwriting with empty values
       if(r.observacoes !== undefined) snapshotFields.observacoes = fmt(r.observacoes || "");
+      if(r.manualReturnRefund){
+        snapshotFields.manualReturnRefund = true;
+        snapshotFields.manualReturnRefundMode = fmt(r.manualReturnRefundMode || "");
+        snapshotFields.manualReturnRefundDate = fmt(r.manualReturnRefundDate || "");
+        snapshotFields.manualReturnRefundAt = fmt(r.manualReturnRefundAt || "");
+        snapshotFields.manualReturnRefundBy = fmt(r.manualReturnRefundBy || "");
+        snapshotFields.manualReturnRefundNote = fmt(r.manualReturnRefundNote || "");
+      }
       if(r.entregue !== undefined) snapshotFields.entregue = !!r.entregue;
       if(r.entregue_paid !== undefined) snapshotFields.entregue_paid = !!r.entregue_paid;
       // Spread snapshot fields as individual Firebase paths so it's a true merge
@@ -5666,6 +5699,13 @@
         : (r.entregue
             ? `<button class="btn-mini" style="background:#1d4ed8;" type="button" onclick="markEnvioEntregue('${escapeJs(r.id)}', 'PAID')">+ Paid</button><button class="btn-mini mutedBtn" type="button" onclick="markEnvioEntregue('${escapeJs(r.id)}', null)">Rem. entregue</button>`
             : `<button class="btn-mini" style="background:#1d4ed8;" type="button" onclick="markEnvioEntregue('${escapeJs(r.id)}', 'ENTREGUE')">Entregue</button><button class="btn-mini" style="background:#14532d;" type="button" onclick="markEnvioEntregue('${escapeJs(r.id)}', 'PAID')">Entregue/Paid</button>`);
+      const manualRRAction = r.manualReturnRefund
+        ? `<button class="btn-mini warn" type="button" onclick="promptManualReturnRefund('${escapeJs(r.id)}')">Editar R/R manual</button><button class="btn-mini mutedBtn" type="button" onclick="clearManualReturnRefund('${escapeJs(r.id)}')">Rem. R/R</button>`
+        : `<button class="btn-mini warn" type="button" onclick="promptManualReturnRefund('${escapeJs(r.id)}')">Return/Refund manual</button>`;
+      const returnLabel = r.return ? (r.manualReturnRefundMode === "RETURN" ? "SIM (MANUAL)" : "SIM") : "NÃO";
+      const refundLabel = r.refund ? (r.manualReturnRefundMode === "REFUND" ? "SIM (MANUAL)" : "SIM") : "NÃO";
+      const manualRRModeText = String(r.manualReturnRefundMode || "").toUpperCase();
+      const manualRRBox = r.manualReturnRefund ? `<div class="envio-manual-rr-box"><b>${escapeHtml(manualRRModeText)} MANUAL</b>${r.manualReturnRefundDate ? `Data manual: ${escapeHtml(r.manualReturnRefundDate)}<br>` : ""}${r.manualReturnRefundBy ? `Feito por: ${escapeHtml(r.manualReturnRefundBy)}<br>` : ""}${r.manualReturnRefundAt ? `Registado em: ${escapeHtml(String(r.manualReturnRefundAt).replace("T"," ").slice(0,16))}<br>` : ""}${r.manualReturnRefundNote ? `Nota: ${escapeHtml(r.manualReturnRefundNote)}` : ""}</div>` : "";
       const vistoBy = r.terminalBy || r.seenBy || "";
       const vistoAt = r.terminalAt || r.seenAt || "";
       const seenText = isEnvioTerminal(r)
@@ -5686,6 +5726,7 @@
           <td><span class="mono"><b>${insertedDate}</b></span>${createdBy}</td>
           <td>
             <span class="envio-badge ${envioListClass(r)}">${escapeHtml(envioListLabel(r))}</span>
+            ${r.manualReturnRefund ? `<span class="envio-badge manual-rr">${escapeHtml(manualRRModeText)} MANUAL</span>` : ""}
             <span class="envio-subline">Embalado: <b class="${r.packedEffective ? "ok" : "bad"}">${packedText}</b></span>
           </td>
           <td>
@@ -5694,8 +5735,9 @@
           </td>
           <td><input class="manual-saiu-input" value="${manual}" placeholder="ex: Saiu antes do sistema" onblur="saveManualSaiu('${escapeJs(r.id)}', this.value)" onkeydown="if(event.key==='Enter'){this.blur();}"></td>
           <td>
-            <span class="envio-status-line">Return: <b class="${r.return ? "warn" : "muted"}">${enviosYesNo(r.return)}</b></span>
-            <span class="envio-status-line">Refund: <b class="${r.refund ? "bad" : "muted"}">${enviosYesNo(r.refund)}</b></span>
+            <span class="envio-status-line">Return: <b class="${r.return ? "warn" : "muted"}">${escapeHtml(returnLabel)}</b></span>
+            <span class="envio-status-line">Refund: <b class="${r.refund ? "bad" : "muted"}">${escapeHtml(refundLabel)}</b></span>
+            ${manualRRBox}
             ${isEnvioTerminal(r) && (r.return || r.refund) ? `<span class="envio-subline"><b>Encerrado:</b> não entra na lista Returns/Refunds.</span>` : ""}
           </td>
           <td>
@@ -5704,7 +5746,7 @@
           </td>
           <td><input class="manual-saiu-input" value="${obs}" placeholder="Observação..." onblur="saveEnvioObs('${escapeJs(r.id)}', this.value)" onkeydown="if(event.key==='Enter'){this.blur();}"></td>
           <td>${itemsHtml}${userHtml}</td>
-          <td><div class="btn-row"><button class="btn-mini info" type="button" onclick="openEnviosDetail('${escapeJs(r.id)}')">Histórico</button>${actions}${entregueBtn}<button class="btn-mini danger" type="button" onclick="deleteEnvioId('${escapeJs(r.id)}')">Eliminar</button></div></td>
+          <td><div class="btn-row"><button class="btn-mini info" type="button" onclick="openEnviosDetail('${escapeJs(r.id)}')">Histórico</button>${manualRRAction}${actions}${entregueBtn}<button class="btn-mini danger" type="button" onclick="deleteEnvioId('${escapeJs(r.id)}')">Eliminar</button></div></td>
         </tr>`;
     }).join("");
 
@@ -5789,6 +5831,98 @@
     await saveManualSaiu(id, val);
   }
   window.promptManualSaiu = promptManualSaiu;
+
+  async function saveManualReturnRefund(id, mode, dateValue, noteValue){
+    id = normaliseOrderId(id);
+    if(!id) return;
+    const now = new Date().toISOString();
+    const by = enviosCurrentUser();
+    const old = savedEnvio(id);
+    const cleanMode = String(mode || "").trim().toUpperCase();
+    const validMode = cleanMode === "REFUND" ? "REFUND" : (cleanMode === "RETURN" ? "RETURN" : "");
+    const patch = validMode ? {
+      manualReturnRefund: true,
+      manualReturnRefundMode: validMode,
+      manualReturnRefundDate: String(dateValue || "").trim(),
+      manualReturnRefundAt: now,
+      manualReturnRefundBy: by,
+      manualReturnRefundNote: String(noteValue || "").trim(),
+      updatedAt: now,
+      updatedBy: by,
+      deleted: false
+    } : {
+      manualReturnRefund: null,
+      manualReturnRefundMode: null,
+      manualReturnRefundDate: null,
+      manualReturnRefundAt: null,
+      manualReturnRefundBy: null,
+      manualReturnRefundNote: null,
+      updatedAt: now,
+      updatedBy: by,
+      deleted: false
+    };
+
+    if(validMode){
+      enviosState.savedItems[id] = Object.assign({}, old, {id}, patch);
+    } else {
+      const next = Object.assign({}, old, {id, updatedAt:now, updatedBy:by, deleted:false});
+      delete next.manualReturnRefund;
+      delete next.manualReturnRefundMode;
+      delete next.manualReturnRefundDate;
+      delete next.manualReturnRefundAt;
+      delete next.manualReturnRefundBy;
+      delete next.manualReturnRefundNote;
+      enviosState.savedItems[id] = next;
+    }
+
+    const idx = (enviosState.rows || []).findIndex(r=>normaliseOrderId(r.id) === id);
+    if(idx >= 0) enviosState.rows[idx] = buildEnviosRow(id, enviosState.rows[idx].records || []);
+    renderEnviosTable();
+
+    try{
+      if(auth.currentUser){
+        await db.ref(`${ENVIOS_DB_PATH}/${enviosItemKey(id)}`).update(Object.assign({id, updatedAt:now, updatedBy:by, deleted:false}, patch));
+        await db.ref(ENVIOS_META_PATH).update({lastManualReturnRefundAt:now, lastManualReturnRefundBy:by, lastManualReturnRefundId:id, lastManualReturnRefundMode:validMode || "REMOVED"});
+      }
+      enviosSetStatus(validMode ? `${id} marcado como ${validMode} manual.` : `${id} removido de Return/Refund manual.`, validMode ? "ok" : "");
+    }catch(e){
+      console.error(e);
+      enviosSetStatus("Não consegui guardar o Return/Refund manual na Firebase.", "bad");
+    }
+  }
+  window.saveManualReturnRefund = saveManualReturnRefund;
+
+  async function promptManualReturnRefund(id){
+    id = normaliseOrderId(id);
+    const old = savedEnvio(id);
+    const currentMode = String(old.manualReturnRefundMode || "").toUpperCase();
+    const mode = window.prompt("Escreve RETURN ou REFUND para marcar manualmente.\nDeixa vazio para remover a marca manual.", currentMode || "RETURN");
+    if(mode === null) return;
+    const cleanMode = String(mode || "").trim().toUpperCase();
+    if(!cleanMode){
+      await saveManualReturnRefund(id, "", "", "");
+      return;
+    }
+    if(cleanMode !== "RETURN" && cleanMode !== "REFUND"){
+      window.alert("Valor inválido. Escreve apenas RETURN ou REFUND.");
+      return;
+    }
+    const defaultDate = old.manualReturnRefundDate || nowDate();
+    const dateValue = window.prompt("Data manual do RETURN/REFUND (AAAA-MM-DD).", defaultDate);
+    if(dateValue === null) return;
+    const noteValue = window.prompt("Nota opcional para este Return/Refund manual.", old.manualReturnRefundNote || "Veio para cá, mas não foi picado no sistema");
+    if(noteValue === null) return;
+    await saveManualReturnRefund(id, cleanMode, dateValue, noteValue);
+  }
+  window.promptManualReturnRefund = promptManualReturnRefund;
+
+  async function clearManualReturnRefund(id){
+    id = normaliseOrderId(id);
+    if(!id) return;
+    if(!window.confirm(`Remover Return/Refund manual do ID ${id}?`)) return;
+    await saveManualReturnRefund(id, "", "", "");
+  }
+  window.clearManualReturnRefund = clearManualReturnRefund;
 
   async function markEnvioSeen(id, seen){
     id = normaliseOrderId(id);
@@ -6006,12 +6140,13 @@
   function exportEnviosCsv(){
     const rows = sortEnviosByPackingDateAsc(enviosState.rows || []);
     if(!rows.length){ enviosSetStatus("Não há resultados para exportar.", "bad"); return; }
-    const header = ["order_id","data_insercao","inserido_por","lista","tracking","transportadora","embalado_sistema","saiu_manual","embalado_final","return","refund","visto","visto_por","visto_em","verificacao","data_packing","data_return_refund","user","items","observacoes"];
+    const header = ["order_id","data_insercao","inserido_por","lista","tracking","transportadora","embalado_sistema","saiu_manual","embalado_final","return","refund","return_refund_manual","return_refund_manual_tipo","return_refund_manual_data","return_refund_manual_user","visto","visto_por","visto_em","verificacao","data_packing","data_return_refund","user","items","observacoes"];
     const delimiter = ";";
     const lines = [header.map(csvCell).join(delimiter)];
     rows.forEach(r=>{
       lines.push([
         r.id, r.insertedDate, r.createdBy, envioListLabel(r), r.tracking, r.carrier, enviosYesNo(r.packed), r.manualSaiu, enviosYesNo(r.packedEffective), enviosYesNo(r.return), enviosYesNo(r.refund),
+        enviosYesNo(r.manualReturnRefund), r.manualReturnRefundMode || "", r.manualReturnRefundDate || "", r.manualReturnRefundBy || "",
         enviosYesNo(r.seen), r.seenBy, r.seenAt, r.verificacao, r.packingDate, r.returnRefundDate, r.user, r.items, r.observacoes || ""
       ].map(csvCell).join(delimiter));
     });
@@ -6119,6 +6254,7 @@
     meta.push(`<div class="tag"><b>Saiu final:</b> ${enviosYesNo(updatedRow.packedEffective)}</div>`);
     meta.push(`<div class="tag"><b>Return:</b> ${enviosYesNo(updatedRow.return)}</div>`);
     meta.push(`<div class="tag"><b>Refund:</b> ${enviosYesNo(updatedRow.refund)}</div>`);
+    if(updatedRow.manualReturnRefund) meta.push(`<div class="tag" style="background:#fff7ed;border-color:#fdba74;color:#9a3412;"><b>${escapeHtml(String(updatedRow.manualReturnRefundMode || "").toUpperCase())} MANUAL:</b> ${updatedRow.manualReturnRefundDate ? escapeHtml(updatedRow.manualReturnRefundDate) : "sem data"}${updatedRow.manualReturnRefundBy ? " — feito por " + escapeHtml(updatedRow.manualReturnRefundBy) : ""}${updatedRow.manualReturnRefundNote ? " — " + escapeHtml(updatedRow.manualReturnRefundNote) : ""}</div>`);
     meta.push(`<div class="tag"><b>Visto:</b> ${enviosYesNo(updatedRow.seen)}</div>`);
     if(updatedRow.tracking) meta.push(`<div class="tag"><b>Tracking:</b> <span class="mono">${escapeHtml(updatedRow.tracking)}</span></div>`);
     if(updatedRow.carrier) meta.push(`<div class="tag"><b>Transportadora:</b> ${escapeHtml(updatedRow.carrier)}</div>`);
@@ -6141,6 +6277,8 @@
           <div class="row" style="margin-top:8px;">
             <button class="btn" type="button" onclick="saveManualSaiu('${escapeJs(id)}', document.getElementById('envioDetailManualSaiu').value)">Guardar saiu</button>
             <button class="btn" type="button" onclick="saveEnvioObs('${escapeJs(id)}', document.getElementById('envioDetailObs').value)">Guardar obs.</button>
+            <button class="btn" style="background:#f59e0b;color:#fff;" type="button" onclick="promptManualReturnRefund('${escapeJs(id)}')">Return/Refund manual</button>
+            ${updatedRow.manualReturnRefund ? `<button class="btn" type="button" onclick="clearManualReturnRefund('${escapeJs(id)}')">Remover R/R manual</button>` : ""}
             ${updatedRow.seen ? `<button class="btn" type="button" onclick="markEnvioSeen('${escapeJs(id)}', false)">Reabrir</button>` : `<button class="btn primary" type="button" onclick="markEnvioSeen('${escapeJs(id)}', true)">Marcar como já vi</button>`}
             ${updatedRow.entregue_paid
               ? `<button class="btn" type="button" onclick="markEnvioEntregue('${escapeJs(id)}', null)">Remover Entregue</button>`
