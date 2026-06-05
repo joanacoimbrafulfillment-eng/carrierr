@@ -13131,15 +13131,49 @@ Esta ação remove estes registos guardados na Firebase.`);
   </script>
 
 
-  <!-- v75: pesquisa local/global por ID ou tracking nos 3 separadores principais -->
+  <!-- v76: pesquisa local/global por ID ou tracking nos 3 separadores principais com fallback Firebase -->
   <script>
   (function(){
     function textOf(v){ return String(v == null ? "" : v); }
     function up(v){ return textOf(v).trim().toLowerCase(); }
+    function normId(v){
+      try{ if(typeof window.normaliseOrderId === "function") return window.normaliseOrderId(v); }catch(e){}
+      var s = textOf(v).trim();
+      return /^\d+\.0+$/.test(s) ? s.replace(/\.0+$/, "") : s;
+    }
+    function flattenValues(obj, limit, out){
+      out = out || [];
+      limit = limit || 0;
+      if(limit > 4 || out.length > 250) return out;
+      if(obj == null) return out;
+      if(typeof obj === "string" || typeof obj === "number" || typeof obj === "boolean"){
+        out.push(textOf(obj));
+        return out;
+      }
+      if(Array.isArray(obj)){
+        obj.forEach(function(x){ flattenValues(x, limit + 1, out); });
+        return out;
+      }
+      if(typeof obj === "object"){
+        Object.keys(obj).forEach(function(k){
+          if(/pass|password|token|apikey|apiKey/i.test(k)) return;
+          out.push(k);
+          flattenValues(obj[k], limit + 1, out);
+        });
+      }
+      return out;
+    }
     function containsQuery(values, query){
       var q = up(query);
       if(!q) return false;
-      return (values || []).some(function(v){ return up(v).indexOf(q) !== -1; });
+      var qId = normId(query);
+      return (values || []).some(function(v){
+        var value = textOf(v);
+        if(!value) return false;
+        if(up(value).indexOf(q) !== -1) return true;
+        if(qId && normId(value) === qId) return true;
+        return false;
+      });
     }
     function ehtml(v){
       if(typeof window.escapeHtml === "function") return window.escapeHtml(v);
@@ -13159,7 +13193,9 @@ Esta ação remove estes registos guardados na Firebase.`);
       if(section === "envios"){
         setInputValue("enviosFilterText", query);
         var envEl = document.getElementById("enviosFilterText"); if(envEl) envEl.removeAttribute("readonly");
-        if(window.enviosState){ window.enviosState.page = 1; window.enviosState.lastPaginationSignature = ""; }
+        // Pesquisa local em Envios deve procurar em todas as listagens do separador,
+        // não apenas na lista atualmente aberta (Em análise, Returns/Refunds, Verificados, etc.).
+        if(window.enviosState){ window.enviosState.listFilter = "ALL"; window.enviosState.page = 1; window.enviosState.lastPaginationSignature = ""; }
         if(typeof window.renderEnviosTable === "function") window.renderEnviosTable();
         return;
       }
@@ -13213,12 +13249,11 @@ Esta ação remove estes registos guardados na Firebase.`);
         fd.packingTracking,
         fd.returnTracking,
         fd.refundTracking,
-        fd.batchKey,
-        JSON.stringify(fd)
-      ];
+        fd.batchKey
+      ].concat(flattenValues(fields), flattenValues(fd));
     }
-    function enviosSearchValues(r){ return [r && r.id, r && r.tracking, r && r.batch, r && r.carrier]; }
-    function semPicSearchValues(r){ return [r && r.id, r && r.tracking, r && r.batch, r && r.expectedCarrier, r && r.packingCarrier]; }
+    function enviosSearchValues(r){ return [r && r.id, r && r.tracking, r && r.batch, r && r.carrier].concat(flattenValues(r)); }
+    function semPicSearchValues(r){ return [r && r.id, r && r.tracking, r && r.batch, r && r.expectedCarrier, r && r.packingCarrier].concat(flattenValues(r)); }
 
     function caseTrackingLabel(r){
       var fields = (r && r.fields) || {};
@@ -13227,20 +13262,65 @@ Esta ação remove estes registos guardados na Firebase.`);
     }
     function enviosListLabel(r){
       try{ if(typeof window.envioList === "function") return window.envioList(r); }catch(e){}
-      return r && r.list || "—";
+      return r && (r.list || r.terminalList || r.status || r.verificacao) || "—";
     }
     function semPicListLabel(r){
       try{ if(typeof window.semPicList === "function") return window.semPicList(r); }catch(e){}
-      return r && r.list || "—";
+      return r && (r.list || r.status) || "—";
+    }
+
+    function uniquePush(results, seen, row){
+      var key = [row.sectionKey, row.recordKey || "", normId(row.id || ""), up(row.tracking || ""), up(row.status || "")].join("|");
+      if(seen[key]) return;
+      seen[key] = true;
+      results.push(row);
+    }
+
+    function savedEnviosRowsForSearch(){
+      var out = [];
+      var byId = {};
+      ((window.enviosState && window.enviosState.rows) || []).forEach(function(r){
+        if(r && r.id) byId[normId(r.id)] = r;
+      });
+      Object.values((window.enviosState && window.enviosState.savedItems) || {}).forEach(function(item){
+        if(!item || item.deleted) return;
+        var id = normId(item.id || "");
+        if(!id || byId[id]) return;
+        try{
+          if(typeof window.buildEnviosRow === "function") out.push(window.buildEnviosRow(id, item.lastRecords || []));
+          else out.push(Object.assign({}, item, {id:id, records:item.lastRecords || []}));
+        }catch(e){ out.push(Object.assign({}, item, {id:id, records:item.lastRecords || []})); }
+      });
+      return out;
+    }
+    function savedSemPicRowsForSearch(){
+      var out = [];
+      var existing = {};
+      ((window.semPicState && window.semPicState.rows) || []).forEach(function(r){
+        if(r && r.id) existing[normId(r.id) + "@@" + up(r.expectedCarrier || r.carrier || "")] = true;
+      });
+      Object.values((window.semPicState && window.semPicState.savedItems) || {}).forEach(function(item){
+        if(!item || item.deleted) return;
+        var id = normId(item.id || "");
+        var carrier = textOf(item.expectedCarrier || item.carrier || "").trim().toUpperCase();
+        if(!id || !carrier || existing[id + "@@" + up(carrier)]) return;
+        try{
+          if(typeof window.buildSemPicRow === "function") out.push(window.buildSemPicRow(id, carrier, item.lastRecords || []));
+          else out.push(Object.assign({}, item, {id:id, expectedCarrier:carrier, records:item.lastRecords || []}));
+        }catch(e){ out.push(Object.assign({}, item, {id:id, expectedCarrier:carrier, records:item.lastRecords || []})); }
+      });
+      return out;
     }
 
     function getGlobalSearchResults(query){
       var results = [];
+      var seen = {};
       caseRowsForSearch().forEach(function(r){
         if(!containsQuery(caseSearchValues(r), query)) return;
-        results.push({
+        uniquePush(results, seen, {
           section:"Broken / Swipe / Lost",
           sectionKey:"cases",
+          recordKey:r && r.key,
           id:r && r.id,
           tracking:caseTrackingLabel(r),
           status:(r && r.type) || "—",
@@ -13248,11 +13328,12 @@ Esta ação remove estes registos guardados na Firebase.`);
           raw:r
         });
       });
-      (((window.enviosState && window.enviosState.rows) || [])).forEach(function(r){
+      (((window.enviosState && window.enviosState.rows) || []).concat(savedEnviosRowsForSearch())).forEach(function(r){
         if(!containsQuery(enviosSearchValues(r), query)) return;
-        results.push({
+        uniquePush(results, seen, {
           section:"Envios em Análise",
           sectionKey:"envios",
+          recordKey:r && (r.key || r.id),
           id:r && r.id,
           tracking:(r && r.tracking) || "—",
           status:enviosListLabel(r),
@@ -13260,11 +13341,12 @@ Esta ação remove estes registos guardados na Firebase.`);
           raw:r
         });
       });
-      (((window.semPicState && window.semPicState.rows) || [])).forEach(function(r){
+      (((window.semPicState && window.semPicState.rows) || []).concat(savedSemPicRowsForSearch())).forEach(function(r){
         if(!containsQuery(semPicSearchValues(r), query)) return;
-        results.push({
+        uniquePush(results, seen, {
           section:"IDs sem picagem",
           sectionKey:"semPic",
+          recordKey:r && (r.key || (r.id + "@@" + (r.expectedCarrier || ""))),
           id:r && r.id,
           tracking:(r && r.tracking) || "—",
           status:semPicListLabel(r),
@@ -13272,11 +13354,95 @@ Esta ação remove estes registos guardados na Firebase.`);
           raw:r
         });
       });
-      return results;
+      return {results:results, seen:seen};
     }
 
-    function openGlobalSearch(query){
-      var results = getGlobalSearchResults(query);
+    async function loadFirebaseSearchResults(query, results, seen){
+      if(!(window.firebase && window.firebase.database)) return false;
+      try{
+        var database = window.firebase.database();
+        var paths = {
+          cases:"casos_broken_swipe_lost/items",
+          envios:"envios_analise/items",
+          semPic:"ids_sem_picagens_transportadora/items"
+        };
+        var snaps = await Promise.all([
+          database.ref(paths.cases).once("value"),
+          database.ref(paths.envios).once("value"),
+          database.ref(paths.semPic).once("value")
+        ]);
+        var casesVal = snaps[0].val() || {};
+        Object.entries(casesVal).forEach(function(pair){
+          var key = pair[0], r = pair[1];
+          if(!r || r.deleted) return;
+          var rec = Object.assign({}, r, {key:key, id:normId(r.id || "")});
+          if(!containsQuery(caseSearchValues(rec), query)) return;
+          uniquePush(results, seen, {
+            section:"Broken / Swipe / Lost",
+            sectionKey:"cases",
+            recordKey:key,
+            id:rec.id,
+            tracking:caseTrackingLabel(rec),
+            status:rec.type || "—",
+            extra:(rec.carrier ? "Transportadora: " + rec.carrier : "") + " · Firebase",
+            raw:rec
+          });
+        });
+        var enviosVal = snaps[1].val() || {};
+        Object.entries(enviosVal).forEach(function(pair){
+          var key = pair[0], item = pair[1];
+          if(!item || item.deleted) return;
+          var id = normId(item.id || key);
+          if(!id) return;
+          var row;
+          try{
+            if(typeof window.buildEnviosRow === "function") row = window.buildEnviosRow(id, item.lastRecords || []);
+          }catch(e){}
+          row = Object.assign({}, item, row || {}, {id:id, key:key});
+          if(!containsQuery(enviosSearchValues(row), query)) return;
+          uniquePush(results, seen, {
+            section:"Envios em Análise",
+            sectionKey:"envios",
+            recordKey:key,
+            id:id,
+            tracking:row.tracking || "—",
+            status:enviosListLabel(row),
+            extra:(row.carrier ? "Transportadora: " + row.carrier : "") + (row.verificacao ? " · " + row.verificacao : "") + " · Firebase",
+            raw:row
+          });
+        });
+        var semPicVal = snaps[2].val() || {};
+        Object.entries(semPicVal).forEach(function(pair){
+          var key = pair[0], item = pair[1];
+          if(!item || item.deleted) return;
+          var id = normId(item.id || "");
+          var carrier = textOf(item.expectedCarrier || item.carrier || "").trim().toUpperCase();
+          if(!id || !carrier) return;
+          var row;
+          try{
+            if(typeof window.buildSemPicRow === "function") row = window.buildSemPicRow(id, carrier, item.lastRecords || []);
+          }catch(e){}
+          row = Object.assign({}, item, row || {}, {id:id, key:key, expectedCarrier:carrier});
+          if(!containsQuery(semPicSearchValues(row), query)) return;
+          uniquePush(results, seen, {
+            section:"IDs sem picagem",
+            sectionKey:"semPic",
+            recordKey:key,
+            id:id,
+            tracking:row.tracking || "—",
+            status:semPicListLabel(row),
+            extra:(row.expectedCarrier ? "Transportadora esperada: " + row.expectedCarrier : "") + " · Firebase",
+            raw:row
+          });
+        });
+        return true;
+      }catch(e){
+        console.warn("global search firebase fallback", e);
+        return false;
+      }
+    }
+
+    function renderGlobalSearch(query, results, fromFirebase, loading){
       var body = document.getElementById("detailBody");
       var modal = document.getElementById("detailModal");
       var title = document.getElementById("detailTitle");
@@ -13286,24 +13452,47 @@ Esta ação remove estes registos guardados na Firebase.`);
       var badges = ["Broken / Swipe / Lost", "Envios em Análise", "IDs sem picagem"].map(function(name){
         return '<span class="globalSearchBadge">' + ehtml(name) + ': ' + ehtml(counts[name] || 0) + '</span>';
       }).join("");
-      if(!query){
+      var sourceBadge = fromFirebase ? '<span class="globalSearchBadge">Inclui Firebase</span>' : '<span class="globalSearchBadge">Dados carregados</span>';
+      if(loading){
+        body.innerHTML = '<div class="globalSearchSummary"><span class="globalSearchBadge">Pesquisa: ' + ehtml(query) + '</span>' + sourceBadge + '</div><div class="muted" style="padding:12px;">A pesquisar também na Firebase...</div>';
+      } else if(!query){
         body.innerHTML = '<div class="muted" style="padding:12px;">Escreve um Order ID ou tracking para pesquisar.</div>';
       } else if(!results.length){
-        body.innerHTML = '<div class="globalSearchSummary"><span class="globalSearchBadge">Pesquisa: ' + ehtml(query) + '</span>' + badges + '</div><div class="muted" style="padding:12px;">Sem resultados nos três separadores carregados.</div>';
+        body.innerHTML = '<div class="globalSearchSummary"><span class="globalSearchBadge">Pesquisa: ' + ehtml(query) + '</span>' + sourceBadge + badges + '</div><div class="muted" style="padding:12px;">Sem resultados nos três separadores.</div>';
       } else {
-        body.innerHTML = '<div class="globalSearchSummary"><span class="globalSearchBadge">Pesquisa: ' + ehtml(query) + '</span><span class="globalSearchBadge">Total: ' + results.length + '</span>' + badges + '</div>' +
+        body.innerHTML = '<div class="globalSearchSummary"><span class="globalSearchBadge">Pesquisa: ' + ehtml(query) + '</span><span class="globalSearchBadge">Total: ' + results.length + '</span>' + sourceBadge + badges + '</div>' +
           '<div class="tableWrap"><table class="globalSearchTable"><thead><tr><th>Separador</th><th>Order ID</th><th>Tracking</th><th>Lista / Tipo / Estado</th><th>Detalhes</th><th>Ação</th></tr></thead><tbody>' +
           results.map(function(r){
-            return '<tr><td><b>' + ehtml(r.section) + '</b></td><td class="mono">' + ehtml(r.id || "—") + '</td><td class="mono">' + ehtml(r.tracking || "—") + '</td><td>' + ehtml(r.status || "—") + '</td><td>' + ehtml(r.extra || "") + '</td><td><button class="btn" type="button" onclick="openSearchResultInSection(\'' + ehtml(r.sectionKey) + '\', \'' + ehtml(query).replace(/'/g,"&#39;") + '\')">Abrir</button></td></tr>';
+            var safeQuery = ehtml(query).replace(/'/g,"&#39;");
+            var safeIdParam = encodeURIComponent(r.id || query || "");
+            var histBtn = (r.id || query) ? '<button class="btn" type="button" onclick="openGlobalSearchFirebaseHistory(decodeURIComponent(\'' + safeIdParam + '\'))">Histórico Firebase</button>' : '';
+            return '<tr><td><b>' + ehtml(r.section) + '</b></td><td class="mono">' + ehtml(r.id || "—") + '</td><td class="mono">' + ehtml(r.tracking || "—") + '</td><td>' + ehtml(r.status || "—") + '</td><td>' + ehtml(r.extra || "") + '</td><td><div class="btn-row"><button class="btn" type="button" onclick="openSearchResultInSection(\'' + ehtml(r.sectionKey) + '\', \'' + safeQuery + '\')">Abrir</button>' + histBtn + '</div></td></tr>';
           }).join("") + '</tbody></table></div>';
       }
       modal.style.display = "flex";
+    }
+
+    async function openGlobalSearch(query){
+      var data = getGlobalSearchResults(query);
+      renderGlobalSearch(query, data.results, false, true);
+      var fromFirebase = await loadFirebaseSearchResults(query, data.results, data.seen);
+      renderGlobalSearch(query, data.results, fromFirebase, false);
     }
 
     window.openSearchResultInSection = function(section, query){
       try{ if(typeof window.switchTab === "function") window.switchTab(section === "semPic" ? "sempic" : (section === "cases" ? "cases" : "envios")); }catch(e){}
       setTimeout(function(){ localSearch(section, query); }, 50);
       var modal = document.getElementById("detailModal"); if(modal) modal.style.display = "none";
+    };
+
+    window.openGlobalSearchFirebaseHistory = function(id){
+      id = normId(id || "");
+      if(!id){ alert("Sem ID para abrir histórico Firebase."); return; }
+      if(typeof window.openCaseIdHistory === "function"){
+        window.openCaseIdHistory(id, "");
+      } else {
+        alert("Histórico Firebase do ID " + id + " não está disponível nesta versão.");
+      }
     };
 
     window.runSectionSearch = function(section){
