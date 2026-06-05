@@ -671,6 +671,23 @@
     #casesPageInfo,#casesPageInfoBottom,#enviosPageInfo,#enviosPageInfoBottom,#semPicPageInfo,#semPicPageInfoBottom{background:#fff; color:#0f172a; border-color:#cbd5e1;}
     .casesPaginationBarBottom{margin:10px 0 0;}
 
+    /* ===== v75: pesquisa local/global por ID ou tracking ===== */
+    .sectionSearchBox{margin:12px 0 14px; padding:12px; border:1px solid #bfdbfe; background:#eff6ff; border-radius:14px; color:#1e3a8a;}
+    .sectionSearchTitle{font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:.35px; margin-bottom:8px; color:#1e3a8a;}
+    .sectionSearchGrid{display:grid; grid-template-columns:minmax(220px,1fr) minmax(170px,220px) auto auto; gap:8px; align-items:end;}
+    .sectionSearchGrid label{margin:0 0 4px; color:#334155; font-size:11px;}
+    .sectionSearchGrid input,.sectionSearchGrid select{padding:10px 12px; border-radius:10px; border:1px solid #93c5fd; background:#fff; font-size:13px;}
+    .sectionSearchGrid .btn{padding:10px 12px; font-size:12px; white-space:nowrap;}
+    .sectionSearchHint{margin-top:8px; font-size:12px; color:#475569; line-height:1.35; font-weight:700;}
+    @media(max-width:900px){.sectionSearchGrid{grid-template-columns:1fr 1fr;} .sectionSearchGrid .btn{width:100%;}}
+    @media(max-width:560px){.sectionSearchGrid{grid-template-columns:1fr;}}
+    .globalSearchSummary{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px;}
+    .globalSearchBadge{display:inline-flex; border-radius:999px; padding:6px 10px; border:1px solid #cbd5e1; background:#f8fafc; color:#334155; font-size:12px; font-weight:900;}
+    .globalSearchTable{width:100%; min-width:860px; border-collapse:collapse; font-size:13px;}
+    .globalSearchTable th,.globalSearchTable td{padding:10px 10px; border-bottom:1px solid #e5e7eb; vertical-align:top;}
+    .globalSearchTable th{background:#f1f5f9; color:#334155; text-transform:uppercase; font-size:11px; font-weight:900;}
+
+
     #tabCases .resultsCard .tableWrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
     #tabCases .casesColClearBtn{width:100%; white-space:normal; line-height:1.05;}
     .casesMiniGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px;}
@@ -1550,6 +1567,25 @@
           <span id="casesRowsShown" class="pill">0 linhas</span>
         </div>
         <div class="hr"></div>
+        <div class="sectionSearchBox" aria-label="Pesquisa Broken Swipe Lost">
+          <div class="sectionSearchTitle">🔎 Pesquisa rápida por ID ou tracking</div>
+          <div class="sectionSearchGrid">
+            <div>
+              <label>Pesquisar</label>
+              <input id="casesQuickSearch" placeholder="Order ID ou tracking" onkeydown="if(event.key==='Enter'){runSectionSearch('cases');}">
+            </div>
+            <div>
+              <label>Onde procurar</label>
+              <select id="casesQuickSearchScope">
+                <option value="local" selected>Neste separador</option>
+                <option value="global">Global</option>
+              </select>
+            </div>
+            <button class="btn primary" type="button" onclick="runSectionSearch('cases')">Pesquisar</button>
+            <button class="btn" type="button" onclick="clearSectionSearch('cases')">Limpar</button>
+          </div>
+          <div class="sectionSearchHint">Local filtra apenas Broken / Swipe / Lost. Global procura nos três separadores: Broken / Swipe / Lost, Envios em Análise e IDs sem picagem.</div>
+        </div>
         <div class="split">
           <div>
             <label>Filtrar tabela</label>
@@ -1764,6 +1800,25 @@
           </div>
 
           <div class="hr"></div>
+          <div class="sectionSearchBox" aria-label="Pesquisa Envios em Análise">
+            <div class="sectionSearchTitle">🔎 Pesquisa rápida por ID ou tracking</div>
+            <div class="sectionSearchGrid">
+              <div>
+                <label>Pesquisar</label>
+                <input id="enviosQuickSearch" placeholder="Order ID ou tracking" onkeydown="if(event.key==='Enter'){runSectionSearch('envios');}">
+              </div>
+              <div>
+                <label>Onde procurar</label>
+                <select id="enviosQuickSearchScope">
+                  <option value="local" selected>Neste separador</option>
+                  <option value="global">Global</option>
+                </select>
+              </div>
+              <button class="btn primary" type="button" onclick="runSectionSearch('envios')">Pesquisar</button>
+              <button class="btn" type="button" onclick="clearSectionSearch('envios')">Limpar</button>
+            </div>
+            <div class="sectionSearchHint">Local filtra apenas Envios em Análise. Global procura nos três separadores.</div>
+          </div>
           <div class="split">
             <div>
               <label>Filtrar tabela</label>
@@ -1947,6 +2002,25 @@
           </div>
 
           <div class="hr"></div>
+          <div class="sectionSearchBox" aria-label="Pesquisa IDs sem picagens da transportadora">
+            <div class="sectionSearchTitle">🔎 Pesquisa rápida por ID ou tracking</div>
+            <div class="sectionSearchGrid">
+              <div>
+                <label>Pesquisar</label>
+                <input id="semPicQuickSearch" placeholder="Order ID ou tracking" onkeydown="if(event.key==='Enter'){runSectionSearch('semPic');}">
+              </div>
+              <div>
+                <label>Onde procurar</label>
+                <select id="semPicQuickSearchScope">
+                  <option value="local" selected>Neste separador</option>
+                  <option value="global">Global</option>
+                </select>
+              </div>
+              <button class="btn primary" type="button" onclick="runSectionSearch('semPic')">Pesquisar</button>
+              <button class="btn" type="button" onclick="clearSectionSearch('semPic')">Limpar</button>
+            </div>
+            <div class="sectionSearchHint">Local filtra apenas IDs sem picagem. Global procura nos três separadores.</div>
+          </div>
           <div class="split">
             <div>
               <label>Filtrar tabela</label>
@@ -13053,6 +13127,199 @@ Esta ação remove estes registos guardados na Firebase.`);
       }
     }
     window.addEventListener("load", installCasesDefaultClearWrapper);
+  })();
+  </script>
+
+
+  <!-- v75: pesquisa local/global por ID ou tracking nos 3 separadores principais -->
+  <script>
+  (function(){
+    function textOf(v){ return String(v == null ? "" : v); }
+    function up(v){ return textOf(v).trim().toLowerCase(); }
+    function containsQuery(values, query){
+      var q = up(query);
+      if(!q) return false;
+      return (values || []).some(function(v){ return up(v).indexOf(q) !== -1; });
+    }
+    function ehtml(v){
+      if(typeof window.escapeHtml === "function") return window.escapeHtml(v);
+      return textOf(v).replace(/[&<>"']/g, function(ch){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]; });
+    }
+    function setInputValue(id, value){ var el = document.getElementById(id); if(el) el.value = value || ""; }
+    function getInputValue(id){ var el = document.getElementById(id); return el ? textOf(el.value).trim() : ""; }
+
+    function localSearch(section, query){
+      if(!query) return;
+      if(section === "cases"){
+        setInputValue("casesFilterText", query);
+        if(window.state){ window.state.casesPage = 1; window.state.casesLastPaginationSignature = ""; }
+        if(typeof window.renderCasesTable === "function") window.renderCasesTable();
+        return;
+      }
+      if(section === "envios"){
+        setInputValue("enviosFilterText", query);
+        var envEl = document.getElementById("enviosFilterText"); if(envEl) envEl.removeAttribute("readonly");
+        if(window.enviosState){ window.enviosState.page = 1; window.enviosState.lastPaginationSignature = ""; }
+        if(typeof window.renderEnviosTable === "function") window.renderEnviosTable();
+        return;
+      }
+      if(section === "semPic"){
+        setInputValue("semPicFilterText", query);
+        if(window.semPicState){ window.semPicState.page = 1; window.semPicState.lastPaginationSignature = ""; }
+        if(typeof window.renderSemPicTable === "function") window.renderSemPicTable();
+      }
+    }
+
+    function clearLocalSearch(section){
+      if(section === "cases"){
+        setInputValue("casesQuickSearch", "");
+        setInputValue("casesFilterText", "");
+        if(window.state){ window.state.casesPage = 1; window.state.casesLastPaginationSignature = ""; }
+        if(typeof window.renderCasesTable === "function") window.renderCasesTable();
+        return;
+      }
+      if(section === "envios"){
+        setInputValue("enviosQuickSearch", "");
+        setInputValue("enviosFilterText", "");
+        if(window.enviosState){ window.enviosState.page = 1; window.enviosState.lastPaginationSignature = ""; }
+        if(typeof window.renderEnviosTable === "function") window.renderEnviosTable();
+        return;
+      }
+      if(section === "semPic"){
+        setInputValue("semPicQuickSearch", "");
+        setInputValue("semPicFilterText", "");
+        if(window.semPicState){ window.semPicState.page = 1; window.semPicState.lastPaginationSignature = ""; }
+        if(typeof window.renderSemPicTable === "function") window.renderSemPicTable();
+      }
+    }
+
+    function caseRowsForSearch(){
+      try{
+        if(typeof window.activeCaseRecords === "function") return window.activeCaseRecords((window.state && window.state.records) || []);
+      }catch(e){}
+      return ((window.state && window.state.records) || []).filter(function(r){ return r && !r.deleted; });
+    }
+
+    function caseSearchValues(r){
+      var fields = (r && r.fields) || {};
+      var fd = (r && r.firebaseData) || {};
+      return [
+        r && r.id,
+        fields.trackingId,
+        fields.trackingTroca,
+        fields.tracking,
+        fd.tracking,
+        fd.trackingId,
+        fd.packingTracking,
+        fd.returnTracking,
+        fd.refundTracking,
+        fd.batchKey,
+        JSON.stringify(fd)
+      ];
+    }
+    function enviosSearchValues(r){ return [r && r.id, r && r.tracking, r && r.batch, r && r.carrier]; }
+    function semPicSearchValues(r){ return [r && r.id, r && r.tracking, r && r.batch, r && r.expectedCarrier, r && r.packingCarrier]; }
+
+    function caseTrackingLabel(r){
+      var fields = (r && r.fields) || {};
+      var fd = (r && r.firebaseData) || {};
+      return fields.trackingId || fields.trackingTroca || fields.tracking || fd.tracking || fd.trackingId || fd.packingTracking || fd.returnTracking || fd.refundTracking || "—";
+    }
+    function enviosListLabel(r){
+      try{ if(typeof window.envioList === "function") return window.envioList(r); }catch(e){}
+      return r && r.list || "—";
+    }
+    function semPicListLabel(r){
+      try{ if(typeof window.semPicList === "function") return window.semPicList(r); }catch(e){}
+      return r && r.list || "—";
+    }
+
+    function getGlobalSearchResults(query){
+      var results = [];
+      caseRowsForSearch().forEach(function(r){
+        if(!containsQuery(caseSearchValues(r), query)) return;
+        results.push({
+          section:"Broken / Swipe / Lost",
+          sectionKey:"cases",
+          id:r && r.id,
+          tracking:caseTrackingLabel(r),
+          status:(r && r.type) || "—",
+          extra:(r && r.carrier ? "Transportadora: " + r.carrier : ""),
+          raw:r
+        });
+      });
+      (((window.enviosState && window.enviosState.rows) || [])).forEach(function(r){
+        if(!containsQuery(enviosSearchValues(r), query)) return;
+        results.push({
+          section:"Envios em Análise",
+          sectionKey:"envios",
+          id:r && r.id,
+          tracking:(r && r.tracking) || "—",
+          status:enviosListLabel(r),
+          extra:(r && r.carrier ? "Transportadora: " + r.carrier : "") + (r && r.verificacao ? " · " + r.verificacao : ""),
+          raw:r
+        });
+      });
+      (((window.semPicState && window.semPicState.rows) || [])).forEach(function(r){
+        if(!containsQuery(semPicSearchValues(r), query)) return;
+        results.push({
+          section:"IDs sem picagem",
+          sectionKey:"semPic",
+          id:r && r.id,
+          tracking:(r && r.tracking) || "—",
+          status:semPicListLabel(r),
+          extra:(r && r.expectedCarrier ? "Transportadora esperada: " + r.expectedCarrier : ""),
+          raw:r
+        });
+      });
+      return results;
+    }
+
+    function openGlobalSearch(query){
+      var results = getGlobalSearchResults(query);
+      var body = document.getElementById("detailBody");
+      var modal = document.getElementById("detailModal");
+      var title = document.getElementById("detailTitle");
+      if(title) title.textContent = "Pesquisa global";
+      if(!body || !modal) return;
+      var counts = results.reduce(function(acc, r){ acc[r.section] = (acc[r.section] || 0) + 1; return acc; }, {});
+      var badges = ["Broken / Swipe / Lost", "Envios em Análise", "IDs sem picagem"].map(function(name){
+        return '<span class="globalSearchBadge">' + ehtml(name) + ': ' + ehtml(counts[name] || 0) + '</span>';
+      }).join("");
+      if(!query){
+        body.innerHTML = '<div class="muted" style="padding:12px;">Escreve um Order ID ou tracking para pesquisar.</div>';
+      } else if(!results.length){
+        body.innerHTML = '<div class="globalSearchSummary"><span class="globalSearchBadge">Pesquisa: ' + ehtml(query) + '</span>' + badges + '</div><div class="muted" style="padding:12px;">Sem resultados nos três separadores carregados.</div>';
+      } else {
+        body.innerHTML = '<div class="globalSearchSummary"><span class="globalSearchBadge">Pesquisa: ' + ehtml(query) + '</span><span class="globalSearchBadge">Total: ' + results.length + '</span>' + badges + '</div>' +
+          '<div class="tableWrap"><table class="globalSearchTable"><thead><tr><th>Separador</th><th>Order ID</th><th>Tracking</th><th>Lista / Tipo / Estado</th><th>Detalhes</th><th>Ação</th></tr></thead><tbody>' +
+          results.map(function(r){
+            return '<tr><td><b>' + ehtml(r.section) + '</b></td><td class="mono">' + ehtml(r.id || "—") + '</td><td class="mono">' + ehtml(r.tracking || "—") + '</td><td>' + ehtml(r.status || "—") + '</td><td>' + ehtml(r.extra || "") + '</td><td><button class="btn" type="button" onclick="openSearchResultInSection(\'' + ehtml(r.sectionKey) + '\', \'' + ehtml(query).replace(/'/g,"&#39;") + '\')">Abrir</button></td></tr>';
+          }).join("") + '</tbody></table></div>';
+      }
+      modal.style.display = "flex";
+    }
+
+    window.openSearchResultInSection = function(section, query){
+      try{ if(typeof window.switchTab === "function") window.switchTab(section === "semPic" ? "sempic" : (section === "cases" ? "cases" : "envios")); }catch(e){}
+      setTimeout(function(){ localSearch(section, query); }, 50);
+      var modal = document.getElementById("detailModal"); if(modal) modal.style.display = "none";
+    };
+
+    window.runSectionSearch = function(section){
+      var inputId = section === "cases" ? "casesQuickSearch" : (section === "envios" ? "enviosQuickSearch" : "semPicQuickSearch");
+      var scopeId = section === "cases" ? "casesQuickSearchScope" : (section === "envios" ? "enviosQuickSearchScope" : "semPicQuickSearchScope");
+      var query = getInputValue(inputId);
+      var scope = getInputValue(scopeId) || "local";
+      if(!query){
+        clearLocalSearch(section);
+        return;
+      }
+      if(scope === "global") openGlobalSearch(query);
+      else localSearch(section, query);
+    };
+
+    window.clearSectionSearch = function(section){ clearLocalSearch(section); };
   })();
   </script>
 
