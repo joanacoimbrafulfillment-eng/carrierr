@@ -12518,5 +12518,73 @@ Esta ação remove estes registos guardados na Firebase.`);
   })();
   </script>
 
+
+
+  <!-- v68: abrir Broken / Swipe / Lost com filtros limpos por defeito -->
+  <script>
+  (function(){
+    function setCaseValue(id, value){
+      var el = document.getElementById(id);
+      if(el) el.value = value;
+    }
+    function clearCaseDefaultFiltersForOpen(){
+      try{
+        setCaseValue("casesFilterText", "");
+        setCaseValue("casesFilterType", "ALL");
+        setCaseValue("casesFilterStatus", "");
+        setCaseValue("casesFilterCarrier", "");
+        setCaseValue("casesSummaryFilterType", "ALL");
+        setCaseValue("casesSummaryFilterCarrier", "");
+        if(window.state){ window.state.columnFilters = {}; }
+        document.querySelectorAll(".casesMultiFilter[open]").forEach(function(el){
+          try{ el.removeAttribute("open"); }catch(e){}
+        });
+        document.querySelectorAll(".casesFilterOpenCell").forEach(function(el){
+          try{ el.classList.remove("casesFilterOpenCell"); }catch(e){}
+        });
+      }catch(e){ console.warn("clear cases default filters", e); }
+    }
+    window.clearCaseDefaultFiltersForOpen = clearCaseDefaultFiltersForOpen;
+
+    function installCasesDefaultClearWrapper(){
+      if(!window.switchTab || window.switchTab._v68CasesDefaultClear) return;
+      var previous = window.switchTab;
+      var wrapped = function(tab){
+        if(tab === "cases") clearCaseDefaultFiltersForOpen();
+        var result = previous.apply(this, arguments);
+        if(tab === "cases"){
+          try{
+            if(typeof window.renderCasesTable === "function") window.renderCasesTable();
+          }catch(e){ console.warn("render cases after clearing filters", e); }
+        }
+        return result;
+      };
+      wrapped._v68CasesDefaultClear = true;
+      wrapped._previousSwitchTab = previous;
+      window.switchTab = wrapped;
+      try{ Function("fn", "switchTab = fn;")(wrapped); }catch(e){}
+    }
+
+    if(document.readyState === "loading"){
+      document.addEventListener("DOMContentLoaded", function(){
+        installCasesDefaultClearWrapper();
+        var panel = document.getElementById("tabCases");
+        if(panel && panel.classList.contains("active")){
+          clearCaseDefaultFiltersForOpen();
+          try{ if(typeof window.renderCasesTable === "function") window.renderCasesTable(); }catch(e){}
+        }
+      });
+    } else {
+      installCasesDefaultClearWrapper();
+      var panel = document.getElementById("tabCases");
+      if(panel && panel.classList.contains("active")){
+        clearCaseDefaultFiltersForOpen();
+        try{ if(typeof window.renderCasesTable === "function") window.renderCasesTable(); }catch(e){}
+      }
+    }
+    window.addEventListener("load", installCasesDefaultClearWrapper);
+  })();
+  </script>
+
 </body>
 </html>
