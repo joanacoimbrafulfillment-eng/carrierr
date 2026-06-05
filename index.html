@@ -661,6 +661,16 @@
     .casesTable th:last-child{z-index:12; background:#f1f3f5;}
     .casesTopScroll{display:none; max-width:100%; height:18px; overflow-x:auto; overflow-y:hidden; border:1px solid #dbe3ef; border-radius:12px; background:#f8fafc; margin:0 0 8px; scrollbar-gutter:stable;}
     .casesTopScrollInner{height:1px;}
+    .casesPaginationBar{display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin:10px 0 8px; padding:10px 12px; border:1px solid #e2e8f0; background:#f8fafc; border-radius:12px; color:#334155;}
+    .casesPagerControls,.casesPagerSize{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+    .casesPageBtn{border:0; border-radius:8px; padding:7px 10px; font-size:11px; font-weight:900; text-transform:uppercase; background:#334155; color:#fff; cursor:pointer;}
+    .casesPageBtn:hover:not(:disabled){background:#0f172a; transform:translateY(-1px);}
+    .casesPageBtn:disabled{opacity:.45; cursor:not-allowed; transform:none!important;}
+    .casesPageSelect{width:auto; min-width:74px; padding:7px 9px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; color:#111827; font-size:12px; font-weight:800;}
+    .casesPagerSize label{margin:0; color:#475569; font-size:11px; font-weight:900; text-transform:uppercase;}
+    #casesPageInfo,#casesPageInfoBottom,#enviosPageInfo,#enviosPageInfoBottom,#semPicPageInfo,#semPicPageInfoBottom{background:#fff; color:#0f172a; border-color:#cbd5e1;}
+    .casesPaginationBarBottom{margin:10px 0 0;}
+
     #tabCases .resultsCard .tableWrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
     #tabCases .casesColClearBtn{width:100%; white-space:normal; line-height:1.05;}
     .casesMiniGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px;}
@@ -741,6 +751,8 @@
     .casesTable thead th.casesFilterOpenCell{z-index:2147482999!important; overflow:visible!important;}
     .casesMultiOption{display:flex; gap:7px; align-items:flex-start; padding:5px 4px; border-radius:7px; font-size:11px; font-weight:750; line-height:1.2; text-transform:none; cursor:pointer;}
     .casesMultiOption:hover{background:#f1f5f9;}
+    .casesMultiOptionText{flex:1; min-width:0; overflow-wrap:anywhere;}
+    .casesMultiOptionCount{flex:0 0 auto; min-width:28px; padding:2px 6px; border-radius:999px; background:#eef2ff; color:#334155; border:1px solid #cbd5e1; font-size:10px; font-weight:900; text-align:center; line-height:1.1;}
     .casesMultiOption input{width:auto; margin:1px 0 0; padding:0; border:0; box-shadow:none;}
     .casesMultiActions{display:flex; gap:6px; position:sticky; bottom:0; z-index:2147483001; background:#fff; border-top:1px solid #e5e7eb; padding:8px 0 0; margin:6px 0 0; box-shadow:0 -8px 14px rgba(255,255,255,.96);}
     .casesMultiActions button{flex:1; border:0; border-radius:7px; padding:7px 7px; font-size:9.5px; font-weight:900; cursor:pointer; text-transform:uppercase; color:#fff; background:#2563eb; position:relative; z-index:2147483002;}
@@ -1566,6 +1578,24 @@
           <button class="btn" type="button" onclick="clearCasesFilters()">Limpar filtros</button>
           <span id="casesActiveFilters" class="pill">Sem filtros</span>
         </div>
+        <div id="casesPaginationBar" class="casesPaginationBar" aria-label="Paginação dos registos Broken / Swipe / Lost">
+          <div class="casesPagerControls">
+            <button id="casesFirstPageBtn" class="casesPageBtn" type="button" onclick="setCasesPage(1)">Primeira</button>
+            <button id="casesPrevPageBtn" class="casesPageBtn" type="button" onclick="changeCasesPage(-1)">Anterior</button>
+            <span id="casesPageInfo" class="pill">0/0</span>
+            <button id="casesNextPageBtn" class="casesPageBtn" type="button" onclick="changeCasesPage(1)">Seguinte</button>
+            <button id="casesLastPageBtn" class="casesPageBtn" type="button" onclick="setCasesPage('last')">Última</button>
+          </div>
+          <div class="casesPagerSize">
+            <label for="casesPageSize">Por página</label>
+            <select id="casesPageSize" class="casesPageSelect" onchange="setCasesPageSize(this.value)">
+              <option value="25" selected>25</option>
+              <option value="30">30</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+        </div>
         <div class="hr"></div>
         <div id="casesTopScroll" class="casesTopScroll" aria-label="Barra horizontal superior da tabela Broken / Swipe / Lost">
           <div id="casesTopScrollInner" class="casesTopScrollInner"></div>
@@ -1575,6 +1605,24 @@
             <thead id="casesThead"></thead>
             <tbody id="casesTbody"><tr><td colspan="8" class="muted" style="padding:16px;">Ainda não há registos.</td></tr></tbody>
           </table>
+        </div>
+        <div id="casesPaginationBarBottom" class="casesPaginationBar casesPaginationBarBottom" aria-label="Paginação inferior dos registos Broken / Swipe / Lost">
+          <div class="casesPagerControls">
+            <button id="casesFirstPageBtnBottom" class="casesPageBtn" type="button" onclick="setCasesPage(1)">Primeira</button>
+            <button id="casesPrevPageBtnBottom" class="casesPageBtn" type="button" onclick="changeCasesPage(-1)">Anterior</button>
+            <span id="casesPageInfoBottom" class="pill">0/0</span>
+            <button id="casesNextPageBtnBottom" class="casesPageBtn" type="button" onclick="changeCasesPage(1)">Seguinte</button>
+            <button id="casesLastPageBtnBottom" class="casesPageBtn" type="button" onclick="setCasesPage('last')">Última</button>
+          </div>
+          <div class="casesPagerSize">
+            <label for="casesPageSizeBottom">Por página</label>
+            <select id="casesPageSizeBottom" class="casesPageSelect" onchange="setCasesPageSize(this.value)">
+              <option value="25" selected>25</option>
+              <option value="30">30</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
@@ -1778,6 +1826,24 @@
           <button class="enviosCopyBtn" type="button" onclick="copyEnviosIds('NO_RECORD')">Sem registo</button>
           <button class="enviosCopyBtn" type="button" onclick="copyEnviosIds('ALL')">Todos</button>
         </div>
+        <div id="enviosPaginationBar" class="casesPaginationBar" aria-label="Paginação dos Envios em Análise">
+          <div class="casesPagerControls">
+            <button id="enviosFirstPageBtn" class="casesPageBtn" type="button" onclick="setEnviosPage(1)">Primeira</button>
+            <button id="enviosPrevPageBtn" class="casesPageBtn" type="button" onclick="changeEnviosPage(-1)">Anterior</button>
+            <span id="enviosPageInfo" class="pill">0/0</span>
+            <button id="enviosNextPageBtn" class="casesPageBtn" type="button" onclick="changeEnviosPage(1)">Seguinte</button>
+            <button id="enviosLastPageBtn" class="casesPageBtn" type="button" onclick="setEnviosPage('last')">Última</button>
+          </div>
+          <div class="casesPagerSize">
+            <label for="enviosPageSize">Por página</label>
+            <select id="enviosPageSize" class="casesPageSelect" onchange="setEnviosPageSize(this.value)">
+              <option value="25" selected>25</option>
+              <option value="30">30</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+        </div>
         <div class="tableWrap">
           <table class="envios-results-table">
             <thead>
@@ -1798,6 +1864,24 @@
               <tr><td colspan="10" class="muted" style="padding:16px;">Cola IDs: a data de inserção fica registada automaticamente no dia em que guardas.</td></tr>
             </tbody>
           </table>
+        </div>
+        <div id="enviosPaginationBarBottom" class="casesPaginationBar casesPaginationBarBottom" aria-label="Paginação inferior dos Envios em Análise">
+          <div class="casesPagerControls">
+            <button id="enviosFirstPageBtnBottom" class="casesPageBtn" type="button" onclick="setEnviosPage(1)">Primeira</button>
+            <button id="enviosPrevPageBtnBottom" class="casesPageBtn" type="button" onclick="changeEnviosPage(-1)">Anterior</button>
+            <span id="enviosPageInfoBottom" class="pill">0/0</span>
+            <button id="enviosNextPageBtnBottom" class="casesPageBtn" type="button" onclick="changeEnviosPage(1)">Seguinte</button>
+            <button id="enviosLastPageBtnBottom" class="casesPageBtn" type="button" onclick="setEnviosPage('last')">Última</button>
+          </div>
+          <div class="casesPagerSize">
+            <label for="enviosPageSizeBottom">Por página</label>
+            <select id="enviosPageSizeBottom" class="casesPageSelect" onchange="setEnviosPageSize(this.value)">
+              <option value="25" selected>25</option>
+              <option value="30">30</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
@@ -1908,6 +1992,24 @@
           <button id="semPicListBtnRESOLUTION" class="semPicListBtn resolution" type="button" onclick="setSemPicListFilter('RESOLUTION')">Outra resolução <span class="count" id="semPicListCountRESOLUTION">0</span></button>
           <button id="semPicListBtnALL" class="semPicListBtn" type="button" onclick="setSemPicListFilter('ALL')">Todos <span class="count" id="semPicListCountALL">0</span></button>
         </div>
+        <div id="semPicPaginationBar" class="casesPaginationBar" aria-label="Paginação dos IDs sem picagens da transportadora">
+          <div class="casesPagerControls">
+            <button id="semPicFirstPageBtn" class="casesPageBtn" type="button" onclick="setSemPicPage(1)">Primeira</button>
+            <button id="semPicPrevPageBtn" class="casesPageBtn" type="button" onclick="changeSemPicPage(-1)">Anterior</button>
+            <span id="semPicPageInfo" class="pill">0/0</span>
+            <button id="semPicNextPageBtn" class="casesPageBtn" type="button" onclick="changeSemPicPage(1)">Seguinte</button>
+            <button id="semPicLastPageBtn" class="casesPageBtn" type="button" onclick="setSemPicPage('last')">Última</button>
+          </div>
+          <div class="casesPagerSize">
+            <label for="semPicPageSize">Por página</label>
+            <select id="semPicPageSize" class="casesPageSelect" onchange="setSemPicPageSize(this.value)">
+              <option value="25" selected>25</option>
+              <option value="30">30</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+        </div>
         <div class="tableWrap">
           <table class="semPic-results-table">
             <thead>
@@ -1925,6 +2027,24 @@
               <tr><td colspan="7" class="muted" style="padding:16px;">Cola IDs, escolhe a transportadora e clica em Guardar IDs e pesquisar.</td></tr>
             </tbody>
           </table>
+        </div>
+        <div id="semPicPaginationBarBottom" class="casesPaginationBar casesPaginationBarBottom" aria-label="Paginação inferior dos IDs sem picagens da transportadora">
+          <div class="casesPagerControls">
+            <button id="semPicFirstPageBtnBottom" class="casesPageBtn" type="button" onclick="setSemPicPage(1)">Primeira</button>
+            <button id="semPicPrevPageBtnBottom" class="casesPageBtn" type="button" onclick="changeSemPicPage(-1)">Anterior</button>
+            <span id="semPicPageInfoBottom" class="pill">0/0</span>
+            <button id="semPicNextPageBtnBottom" class="casesPageBtn" type="button" onclick="changeSemPicPage(1)">Seguinte</button>
+            <button id="semPicLastPageBtnBottom" class="casesPageBtn" type="button" onclick="setSemPicPage('last')">Última</button>
+          </div>
+          <div class="casesPagerSize">
+            <label for="semPicPageSizeBottom">Por página</label>
+            <select id="semPicPageSizeBottom" class="casesPageSelect" onchange="setSemPicPageSize(this.value)">
+              <option value="25" selected>25</option>
+              <option value="30">30</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
@@ -2114,7 +2234,10 @@
     firebaseLoaded: false,
     savedIdsSignature: "",
     realtimeTimer: null,
-    realtimeListening: false
+    realtimeListening: false,
+    page: 1,
+    pageSize: 25,
+    lastPaginationSignature: ""
   };
 
   const ENVIOS_DB_PATH = "envios_analise/items";
@@ -2130,7 +2253,10 @@
     firebaseLoaded: false,
     savedEntriesSignature: "",
     realtimeTimer: null,
-    realtimeListening: false
+    realtimeListening: false,
+    page: 1,
+    pageSize: 25,
+    lastPaginationSignature: ""
   };
 
   const retCrossState = {
@@ -5194,6 +5320,7 @@
 
   function setEnviosListFilter(list){
     enviosState.listFilter = list || "ACTIVE";
+    enviosState.page = 1;
     renderEnviosTable();
   }
   window.setEnviosListFilter = setEnviosListFilter;
@@ -5327,22 +5454,91 @@
     });
   }
 
+  function enviosPaginationSignature(){
+    return JSON.stringify({
+      list: enviosState.listFilter || "ACTIVE",
+      text: $("enviosFilterText") ? $("enviosFilterText").value : "",
+      kind: $("enviosFilterKind") ? $("enviosFilterKind").value : "ALL",
+      carrier: $("enviosCarrierFilter") ? $("enviosCarrierFilter").value : "ALL"
+    });
+  }
+
+  function getEnviosPageSize(){
+    const top = $("enviosPageSize");
+    const bottom = $("enviosPageSizeBottom");
+    const raw = Number(top ? top.value : (bottom ? bottom.value : (enviosState.pageSize || 25)));
+    return [25,30,50,100].includes(raw) ? raw : 25;
+  }
+
+  function ensureEnviosPagination(totalRows){
+    const signature = enviosPaginationSignature();
+    const pageSize = getEnviosPageSize();
+    enviosState.pageSize = pageSize;
+    if(enviosState.lastPaginationSignature !== signature){
+      enviosState.page = 1;
+      enviosState.lastPaginationSignature = signature;
+    }
+    const totalPages = Math.max(1, Math.ceil(Number(totalRows || 0) / pageSize));
+    let page = Number(enviosState.page || 1);
+    if(!Number.isFinite(page) || page < 1) page = 1;
+    if(page > totalPages) page = totalPages;
+    enviosState.page = page;
+    const start = (page - 1) * pageSize;
+    const end = Math.min(Number(totalRows || 0), start + pageSize);
+    return {page, pageSize, totalPages, start, end};
+  }
+
+  function updateEnviosPaginationControls(totalRows, shownRows, pageInfo){
+    const total = Number(totalRows || 0);
+    const shown = Number(shownRows || 0);
+    const info = pageInfo || ensureEnviosPagination(total);
+    if($("enviosRowsShown")) $("enviosRowsShown").textContent = shown + "/" + total + " envio(s)";
+    const rangeText = total ? ((info.start + 1) + "-" + info.end + " de " + total) : "0 de 0";
+    const pageText = shown + "/" + total + " · Página " + info.page + "/" + info.totalPages + " · " + rangeText;
+    ["enviosPageInfo","enviosPageInfoBottom"].forEach(id=>{ const el = $(id); if(el) el.textContent = pageText; });
+    ["enviosPageSize","enviosPageSizeBottom"].forEach(id=>{ const el = $(id); if(el && String(el.value) !== String(info.pageSize)) el.value = String(info.pageSize); });
+    const disablePrev = info.page <= 1 || total === 0;
+    const disableNext = info.page >= info.totalPages || total === 0;
+    ["enviosFirstPageBtn","enviosPrevPageBtn","enviosFirstPageBtnBottom","enviosPrevPageBtnBottom"].forEach(id=>{ const el=$(id); if(el) el.disabled = disablePrev; });
+    ["enviosNextPageBtn","enviosLastPageBtn","enviosNextPageBtnBottom","enviosLastPageBtnBottom"].forEach(id=>{ const el=$(id); if(el) el.disabled = disableNext; });
+  }
+
+  function setEnviosPage(page){
+    const total = sortEnviosByPackingDateAsc((enviosState.rows || []).filter(enviosPassFilters)).length;
+    const pageSize = getEnviosPageSize();
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    if(page === "last") enviosState.page = totalPages;
+    else enviosState.page = Math.max(1, Math.min(totalPages, Number(page || 1)));
+    enviosState.lastPaginationSignature = enviosPaginationSignature();
+    renderEnviosTable();
+  }
+  window.setEnviosPage = setEnviosPage;
+
+  function changeEnviosPage(delta){ setEnviosPage(Number(enviosState.page || 1) + Number(delta || 0)); }
+  window.changeEnviosPage = changeEnviosPage;
+
+  function setEnviosPageSize(value){
+    const n = Number(value || 25);
+    enviosState.pageSize = [25,30,50,100].includes(n) ? n : 25;
+    enviosState.page = 1;
+    enviosState.lastPaginationSignature = enviosPaginationSignature();
+    renderEnviosTable();
+  }
+  window.setEnviosPageSize = setEnviosPageSize;
+
   function renderEnviosTable(){
     updateEnviosCarrierFilterOptions();
     updateEnviosActiveFilters();
     updateEnviosListTabs();
     const tbody = $("enviosTbody");
     if(!tbody) return;
-    const limit = parseInt($("enviosLimit") ? $("enviosLimit").value : "800", 10) || 800;
     const allRows = sortEnviosByPackingDateAsc((enviosState.rows || []).filter(enviosPassFilters));
-    const rows = allRows.slice(0, limit);
-
-    if($("enviosRowsShown")){
-      $("enviosRowsShown").textContent = `${rows.length}${allRows.length > rows.length ? " / " + allRows.length : ""} linhas`;
-    }
+    const pageInfo = ensureEnviosPagination(allRows.length);
+    const rows = allRows.slice(pageInfo.start, pageInfo.end);
 
     if(!rows.length){
       tbody.innerHTML = `<tr><td colspan="10" class="muted" style="padding:16px;">Sem linhas para mostrar.</td></tr>`;
+      updateEnviosPaginationControls(allRows.length, rows.length, pageInfo);
       updateEnviosKPIs();
       return;
     }
@@ -5408,6 +5604,7 @@
         </tr>`;
     }).join("");
 
+    updateEnviosPaginationControls(allRows.length, rows.length, pageInfo);
     updateEnviosKPIs();
   }
   window.renderEnviosTable = renderEnviosTable;
@@ -5417,6 +5614,7 @@
     if($("enviosFilterKind")) $("enviosFilterKind").value = "ALL";
     if($("enviosCarrierFilter")) $("enviosCarrierFilter").value = "ALL";
     enviosState.listFilter = "ACTIVE";
+    enviosState.page = 1;
     renderEnviosTable();
   }
   window.clearEnviosFilters = clearEnviosFilters;
@@ -6288,7 +6486,7 @@
     });
   }
 
-  function setSemPicListFilter(list){ semPicState.listFilter = list || "OPEN"; renderSemPicTable(); }
+  function setSemPicListFilter(list){ semPicState.listFilter = list || "OPEN"; semPicState.page = 1; renderSemPicTable(); }
   window.setSemPicListFilter = setSemPicListFilter;
 
   function updateSemPicListTabs(){
@@ -6348,15 +6546,92 @@
     if($("semPicActiveFilters")) $("semPicActiveFilters").textContent = parts.length ? ("Filtro ativo -> " + parts.join(" | ")) : "Sem filtros";
   }
 
+  function semPicPaginationSignature(){
+    return JSON.stringify({
+      list: semPicState.listFilter || "OPEN",
+      text: $("semPicFilterText") ? $("semPicFilterText").value : "",
+      kind: $("semPicFilterKind") ? $("semPicFilterKind").value : "ALL",
+      carrier: $("semPicCarrierFilter") ? $("semPicCarrierFilter").value : "ALL"
+    });
+  }
+
+  function getSemPicPageSize(){
+    const top = $("semPicPageSize");
+    const bottom = $("semPicPageSizeBottom");
+    const raw = Number(top ? top.value : (bottom ? bottom.value : (semPicState.pageSize || 25)));
+    return [25,30,50,100].includes(raw) ? raw : 25;
+  }
+
+  function ensureSemPicPagination(totalRows){
+    const signature = semPicPaginationSignature();
+    const pageSize = getSemPicPageSize();
+    semPicState.pageSize = pageSize;
+    if(semPicState.lastPaginationSignature !== signature){
+      semPicState.page = 1;
+      semPicState.lastPaginationSignature = signature;
+    }
+    const totalPages = Math.max(1, Math.ceil(Number(totalRows || 0) / pageSize));
+    let page = Number(semPicState.page || 1);
+    if(!Number.isFinite(page) || page < 1) page = 1;
+    if(page > totalPages) page = totalPages;
+    semPicState.page = page;
+    const start = (page - 1) * pageSize;
+    const end = Math.min(Number(totalRows || 0), start + pageSize);
+    return {page, pageSize, totalPages, start, end};
+  }
+
+  function updateSemPicPaginationControls(totalRows, shownRows, pageInfo){
+    const total = Number(totalRows || 0);
+    const shown = Number(shownRows || 0);
+    const info = pageInfo || ensureSemPicPagination(total);
+    if($("semPicRowsShown")) $("semPicRowsShown").textContent = shown + "/" + total + " ID(s)";
+    const rangeText = total ? ((info.start + 1) + "-" + info.end + " de " + total) : "0 de 0";
+    const pageText = shown + "/" + total + " · Página " + info.page + "/" + info.totalPages + " · " + rangeText;
+    ["semPicPageInfo","semPicPageInfoBottom"].forEach(id=>{ const el = $(id); if(el) el.textContent = pageText; });
+    ["semPicPageSize","semPicPageSizeBottom"].forEach(id=>{ const el = $(id); if(el && String(el.value) !== String(info.pageSize)) el.value = String(info.pageSize); });
+    const disablePrev = info.page <= 1 || total === 0;
+    const disableNext = info.page >= info.totalPages || total === 0;
+    ["semPicFirstPageBtn","semPicPrevPageBtn","semPicFirstPageBtnBottom","semPicPrevPageBtnBottom"].forEach(id=>{ const el=$(id); if(el) el.disabled = disablePrev; });
+    ["semPicNextPageBtn","semPicLastPageBtn","semPicNextPageBtnBottom","semPicLastPageBtnBottom"].forEach(id=>{ const el=$(id); if(el) el.disabled = disableNext; });
+  }
+
+  function setSemPicPage(page){
+    const total = sortSemPicRows((semPicState.rows || []).filter(semPicPassFilters)).length;
+    const pageSize = getSemPicPageSize();
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    if(page === "last") semPicState.page = totalPages;
+    else semPicState.page = Math.max(1, Math.min(totalPages, Number(page || 1)));
+    semPicState.lastPaginationSignature = semPicPaginationSignature();
+    renderSemPicTable();
+  }
+  window.setSemPicPage = setSemPicPage;
+
+  function changeSemPicPage(delta){ setSemPicPage(Number(semPicState.page || 1) + Number(delta || 0)); }
+  window.changeSemPicPage = changeSemPicPage;
+
+  function setSemPicPageSize(value){
+    const n = Number(value || 25);
+    semPicState.pageSize = [25,30,50,100].includes(n) ? n : 25;
+    semPicState.page = 1;
+    semPicState.lastPaginationSignature = semPicPaginationSignature();
+    renderSemPicTable();
+  }
+  window.setSemPicPageSize = setSemPicPageSize;
+
   function renderSemPicTable(){
     updateSemPicCarrierFilterOptions();
     updateSemPicActiveFilters();
     updateSemPicListTabs();
     const tbody = $("semPicTbody"); if(!tbody) return;
     const allRows = sortSemPicRows((semPicState.rows || []).filter(semPicPassFilters));
-    const rows = allRows.slice(0, 1000);
-    if($("semPicRowsShown")) $("semPicRowsShown").textContent = `${rows.length}${allRows.length > rows.length ? " / " + allRows.length : ""} linhas`;
-    if(!rows.length){ tbody.innerHTML = `<tr><td colspan="7" class="muted" style="padding:16px;">Sem linhas para mostrar.</td></tr>`; updateSemPicKPIs(); return; }
+    const pageInfo = ensureSemPicPagination(allRows.length);
+    const rows = allRows.slice(pageInfo.start, pageInfo.end);
+    if(!rows.length){
+      tbody.innerHTML = `<tr><td colspan="7" class="muted" style="padding:16px;">Sem linhas para mostrar.</td></tr>`;
+      updateSemPicPaginationControls(allRows.length, rows.length, pageInfo);
+      updateSemPicKPIs();
+      return;
+    }
     tbody.innerHTML = rows.map(r=>{
       const list = semPicList(r);
       const rowClass = list === "DONE" ? "envio-row-verified" : ((r.diffCarrier || list === "RESOLUTION") ? "envio-row-issue" : "");
@@ -6386,6 +6661,7 @@
         <td><div class="btn-row"><button class="btn-mini info" type="button" onclick="openSemPicDetail('${escapeJs(r.id)}','${escapeJs(r.expectedCarrier)}')">Historico</button>${actions}<button class="btn-mini danger" type="button" onclick="deleteSemPicId('${escapeJs(r.id)}','${escapeJs(r.expectedCarrier)}')">Eliminar</button></div></td>
       </tr>`;
     }).join("");
+    updateSemPicPaginationControls(allRows.length, rows.length, pageInfo);
     updateSemPicKPIs();
   }
   window.renderSemPicTable = renderSemPicTable;
@@ -6395,6 +6671,7 @@
     if($("semPicFilterKind")) $("semPicFilterKind").value = "ALL";
     if($("semPicCarrierFilter")) $("semPicCarrierFilter").value = "ALL";
     semPicState.listFilter = "OPEN";
+    semPicState.page = 1;
     renderSemPicTable();
   }
   window.clearSemPicFilters = clearSemPicFilters;
@@ -9422,6 +9699,9 @@ Esta ação remove estes registos guardados na Firebase.`);
       crosscheckFetchTimer: null,
       inlineEditingKey: "",
       columnFilters: {},
+      casesPage: 1,
+      casesPageSize: 25,
+      casesLastPaginationSignature: "",
       realtime: {started:false, refs:[], lastUpdateAt:"", applying:false}
     };
 
@@ -10379,11 +10659,43 @@ Esta ação remove estes registos guardados na Firebase.`);
     function itemDate(item){ return String(item.insertedDate || item.entryDate || item.createdDate || item.dateClean || item.createdAt || item.updatedAt || "").slice(0,10); }
     function itemCarrier(item){ return String(item.carrier || item.expectedCarrier || item.transportadora || item.packingCarrier || "").trim(); }
     function itemTracking(item){ return String(item.tracking || item.track || item.trackingId || item.trackingID || item.packingTracking || "").trim(); }
+    function caseEnviosListCode(item){
+      const it = item || {};
+      const terminal = (typeof envioTerminalList === "function") ? envioTerminalList(it) : "";
+      if(terminal) return terminal;
+      const lastStatus = String(it.lastStatus || it.closedReason || it.listState || "").toUpperCase();
+      if(lastStatus === "ENTREGUE_PAID" || lastStatus === "ENTREGUE" || lastStatus === "VERIFIED") return lastStatus;
+      if(lastStatus === "RETURN_OR_REFUND" || lastStatus === "NO_RECORD" || lastStatus === "ACTIVE") return lastStatus;
+      if(it.hasRefund || it.refund || it.refundFound || it.refundDate) return "RETURN_OR_REFUND";
+      if(it.hasReturn || it.return || it.returnFound || it.returnDate) return "RETURN_OR_REFUND";
+      if(it.noRecord || it.resultKind === "NO_RECORD") return "NO_RECORD";
+      if(Array.isArray(it.lastRecords) && !it.lastRecords.length) return "NO_RECORD";
+      return "ACTIVE";
+    }
+    function caseEnviosListLabel(item){
+      const code = caseEnviosListCode(item);
+      if(code === "ENTREGUE_PAID") return "Entregue/Paid";
+      if(code === "ENTREGUE") return "Entregue";
+      if(code === "VERIFIED") return "Verificados";
+      if(code === "RETURN_OR_REFUND"){
+        if(item && (item.hasRefund || item.refund || item.refundFound || item.refundDate)) return "Returns/Refunds - Refund";
+        if(item && (item.hasReturn || item.return || item.returnFound || item.returnDate)) return "Returns/Refunds - Return";
+        return "Returns/Refunds";
+      }
+      if(code === "NO_RECORD") return "Sem registo";
+      return "Em análise";
+    }
+    function caseEnviosListSummary(matches){
+      const labels = sortedUnique((matches || [])
+        .map(m => String(m && (m.enviosListLabel || (m.raw ? caseEnviosListLabel(m.raw) : "")) || "").trim())
+        .filter(Boolean));
+      return labels.join(", ");
+    }
     function itemStatusBits(item){
       const bits = [];
-      if(item.hasReturn || item.returnFound || item.returnDate) bits.push("RETURN");
-      if(item.hasRefund || item.refundFound || item.refundDate) bits.push("REFUND");
-      if(item.isVerified || item.verified) bits.push("VERIFICADO");
+      if(item.hasReturn || item.return || item.returnFound || item.returnDate) bits.push("RETURN");
+      if(item.hasRefund || item.refund || item.refundFound || item.refundDate) bits.push("REFUND");
+      if(item.isVerified || item.verified || item.seen || item.seenAt) bits.push("VERIFICADO");
       if(item.manualSaiu || item.manualSaiuNote) bits.push("SAIU MANUAL");
       if(item.resolutionStatus) bits.push(String(item.resolutionStatus));
       if(item.status) bits.push(String(item.status));
@@ -10393,6 +10705,15 @@ Esta ação remove estes registos guardados na Firebase.`);
     }
     function buildCaseMatch(source, key, item){
       const label = source === "envios" ? "Envios em Análise" : "IDs sem picagem";
+      const statusBits = itemStatusBits(item);
+      const enviosListLabel = source === "envios" ? caseEnviosListLabel(item || {}) : "";
+      const status = source === "envios"
+        ? (enviosListLabel + (statusBits ? " · " + statusBits : ""))
+        : statusBits;
+      const noteBits = [];
+      if(source === "envios" && enviosListLabel) noteBits.push("Lista: " + enviosListLabel);
+      const baseNote = String(item.manualSaiuNote || item.resolutionNote || item.note || item.notes || item.lastResult || item.resultKind || "").trim();
+      if(baseNote) noteBits.push(baseNote);
       return {
         source,
         label,
@@ -10401,8 +10722,10 @@ Esta ação remove estes registos guardados na Firebase.`);
         carrier: itemCarrier(item),
         insertedDate: itemDate(item),
         tracking: itemTracking(item),
-        status: itemStatusBits(item),
-        note: String(item.manualSaiuNote || item.resolutionNote || item.note || item.notes || item.lastResult || item.resultKind || "").trim(),
+        status,
+        note: noteBits.join(" · "),
+        enviosList: source === "envios" ? caseEnviosListCode(item || {}) : "",
+        enviosListLabel,
         raw: item
       };
     }
@@ -10441,7 +10764,10 @@ Esta ação remove estes registos guardados na Firebase.`);
       const sp = (data.semPic || []).length;
       const ca = (data.cases || []).length;
       const parts = [];
-      if(env) parts.push(env + " em Envios em Análise");
+      if(env){
+        const envLists = caseEnviosListSummary(data.envios || []);
+        parts.push(env + " em Envios em Análise" + (envLists ? " (" + envLists + ")" : ""));
+      }
       if(sp) parts.push(sp + " em IDs sem picagem");
       if(ca){
         const types = sortedUnique((data.cases || []).map(m=>String(m.matchedType || m.type || "").toUpperCase()).filter(Boolean)).join("/");
@@ -10455,8 +10781,9 @@ Esta ação remove estes registos guardados na Firebase.`);
       const sp = (data.semPic || []).length;
       const ca = (data.cases || []).length;
       if(!env && !sp && !ca) return '<span class="casesCrossBadge ok">Sem coincidências</span>';
+      const envLists = env ? caseEnviosListSummary(data.envios || []) : "";
       return `<span class="casesCrossBadge bad">${esc(env + sp + ca)} coincidência(s)</span>` +
-        (env ? `<span class="casesCrossBadge warn">Envios: ${esc(env)}</span>` : "") +
+        (env ? `<span class="casesCrossBadge warn">Envios: ${esc(env)}${envLists ? " · " + esc(envLists) : ""}</span>` : "") +
         (sp ? `<span class="casesCrossBadge warn">Sem picagem: ${esc(sp)}</span>` : "") +
         (ca ? `<span class="casesCrossBadge warn">Broken/Swipe/Lost: ${esc(ca)}</span>` : "");
     }
@@ -10472,7 +10799,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       const ca = data.cases || [];
       const total = env.length + sp.length + ca.length;
       const stateText = total ? `${total} coincidência(s) encontrada(s)` : "Sem coincidências";
-      const preview = (arr)=> arr.length ? arr.slice(0,3).map(m=>`${m.carrier || m.matchedType || "sem carrier"}${m.status ? " · " + m.status : ""}${m.insertedDate ? " · " + m.insertedDate : ""}`).join(" | ") : "—";
+      const preview = (arr)=> arr.length ? arr.slice(0,3).map(m=>`${m.enviosListLabel ? m.enviosListLabel + " · " : ""}${m.carrier || m.matchedType || "sem carrier"}${m.status ? " · " + m.status : ""}${m.insertedDate ? " · " + m.insertedDate : ""}`).join(" | ") : "—";
       box.innerHTML = `
         <div class="casesCrossItem"><b>Estado</b>${esc(stateText)}</div>
         <div class="casesCrossItem"><b>Envios em Análise</b>${esc(env.length)}${env.length ? `<div class="casesCrossBox">${esc(preview(env))}</div>` : ""}</div>
@@ -11212,14 +11539,60 @@ Esta ação remove estes registos guardados na Firebase.`);
       return `<input class="casesColFilter" value="${v}"${listAttr} placeholder="${esc(placeholder || 'Filtrar')}" onchange="setCaseColumnFilter('${esc(key)}', this.value)" onkeydown="if(event.key==='Enter'){this.blur();}">`;
     }
 
+    function caseFilterTokenKey(value){
+      return String(value || "").trim().toUpperCase();
+    }
+
+    function caseTokensForFilterKey(r, key){
+      if(key === "__type") return [r && r.type || ""].filter(Boolean);
+      if(key === "__carrier") return [r && r.carrier || ""].filter(Boolean);
+      if(key === "__firebase") return caseFirebaseFilterTokens(r);
+      if(key === "__crosscheck") return caseCrosscheckFilterTokens(r);
+      const raw = ((r && r.fields || {})[key] || "");
+      if(key === "product") return splitCaseProducts(raw);
+      return String(raw || "").split(/\n+/g).map(v=>v.trim()).filter(Boolean);
+    }
+
+    function recordMatchesMainCaseFilters(r){
+      const q = val("casesFilterText").toLowerCase();
+      const type = val("casesFilterType") || "ALL";
+      const carrier = val("casesFilterCarrier").toLowerCase();
+      const status = val("casesFilterStatus").toLowerCase();
+      if(type !== "ALL" && r.type !== type) return false;
+      if(carrier && String(r.carrier || "").toLowerCase() !== carrier) return false;
+      if(status){
+        const statusText = caseStatusValues(r).join(" ").toLowerCase();
+        if(!statusText.includes(status)) return false;
+      }
+      if(q && !recordSearchText(r).includes(q)) return false;
+      return true;
+    }
+
+    function getCaseFilterOptionCounts(key, options){
+      const counts = {};
+      (options || []).forEach(o=>{ counts[String(o)] = 0; });
+      const optionKeyMap = new Map((options || []).map(o=>[caseFilterTokenKey(o), String(o)]));
+      const rows = activeCaseRecords(state.records || []).filter(r=>recordMatchesMainCaseFilters(r) && recordMatchesColumnFilters(r, key));
+      rows.forEach(r=>{
+        const seenInRow = new Set(caseTokensForFilterKey(r, key).map(caseFilterTokenKey).filter(Boolean));
+        seenInRow.forEach(token=>{
+          const original = optionKeyMap.get(token);
+          if(original !== undefined) counts[original] = (counts[original] || 0) + 1;
+        });
+      });
+      return counts;
+    }
+
     function caseFilterMultiHtml(key, options){
       const selected = getCaseColumnFilterValues(key);
       const selectedSet = new Set(selected.map(x=>String(x)));
       const opts = sortedUnique(options || []);
+      const counts = getCaseFilterOptionCounts(key, opts);
       const summary = selected.length ? (selected.length === 1 ? selected[0] : selected.length + " selecionados") : "Todos";
       const html = opts.length ? opts.map(o=>{
         const checked = selectedSet.has(String(o)) ? " checked" : "";
-        return `<label class="casesMultiOption"><input type="checkbox" value="${esc(o)}"${checked}> <span>${esc(o)}</span></label>`;
+        const count = counts[String(o)] || 0;
+        return `<label class="casesMultiOption"><input type="checkbox" value="${esc(o)}"${checked}> <span class="casesMultiOptionText">${esc(o)}</span><span class="casesMultiOptionCount" title="${count} registo(s)">${count}</span></label>`;
       }).join("") : `<div class="muted" style="font-size:11px;padding:6px 4px;">Sem opções.</div>`;
       return `<details class="casesMultiFilter" ontoggle="positionCaseMultiFilterMenu(this)"><summary title="${esc(selected.join(', ') || 'Todos')}">${esc(summary)}</summary><div class="casesMultiMenu" data-cases-multi-key="${esc(key)}">${html}<div class="casesMultiActions"><button type="button" onclick="applyCaseColumnMultiFilterFromButton(this)">Aplicar</button><button class="secondary" type="button" onclick="clearCaseColumnFilterFromButton(this)">Limpar</button><button class="dangerLight" type="button" onclick="clearAllCaseColumnFiltersFromButton(this)">Limpar tudo</button></div></div></details>`;
     }
@@ -11245,7 +11618,18 @@ Esta ação remove estes registos guardados na Firebase.`);
     function caseCrosscheckFilterTokens(r){
       const data = r && r.crosscheckData || {};
       if(!data || !data.id) return ["NÃO VERIFICADO"];
-      return hasCrossMatches(data) ? ["COM COINCIDÊNCIAS"] : ["SEM COINCIDÊNCIAS"];
+      const tokens = hasCrossMatches(data) ? ["COM COINCIDÊNCIAS"] : ["SEM COINCIDÊNCIAS"];
+      (data.envios || []).forEach(m=>{
+        const label = String(m && (m.enviosListLabel || (m.raw ? caseEnviosListLabel(m.raw) : "")) || "").trim();
+        if(label){
+          const up = label.toUpperCase();
+          tokens.push(up);
+          if(up.indexOf("RETURNS/REFUNDS") === 0) tokens.push("RETURNS/REFUNDS");
+        }
+      });
+      if((data.semPic || []).length) tokens.push("IDS SEM PICAGEM");
+      if((data.cases || []).length) tokens.push("BROKEN/SWIPE/LOST");
+      return sortedUnique(tokens);
     }
 
     function caseColumnValue(r, key){
@@ -11257,9 +11641,10 @@ Esta ação remove estes registos guardados na Firebase.`);
       return ((r.fields || {})[key] || "");
     }
 
-    function recordMatchesColumnFilters(r){
+    function recordMatchesColumnFilters(r, ignoreKey){
       const filters = state.columnFilters || {};
       return Object.entries(filters).every(([key, value])=>{
+        if(ignoreKey && key === ignoreKey) return true;
         const values = Array.isArray(value) ? value.map(x=>String(x || "").trim()).filter(Boolean) : [String(value || "").trim()].filter(Boolean);
         if(!values.length) return true;
         if(key === "__firebase"){
@@ -11286,13 +11671,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       const carrier = val("casesFilterCarrier").toLowerCase();
       const status = val("casesFilterStatus").toLowerCase();
       return activeCaseRecords(state.records || []).filter(r=>{
-        if(type !== "ALL" && r.type !== type) return false;
-        if(carrier && String(r.carrier || "").toLowerCase() !== carrier) return false;
-        if(status){
-          const statusText = caseStatusValues(r).join(" ").toLowerCase();
-          if(!statusText.includes(status)) return false;
-        }
-        if(q && !recordSearchText(r).includes(q)) return false;
+        if(!recordMatchesMainCaseFilters(r)) return false;
         if(!recordMatchesColumnFilters(r)) return false;
         return true;
       }).sort((a,b)=>(b.updatedAt || "").localeCompare(a.updatedAt || ""));
@@ -11376,10 +11755,101 @@ Esta ação remove estes registos guardados na Firebase.`);
     }
     window.updateCasesTopScrollbar = updateCasesTopScrollbar;
 
+    function casePaginationSignature(){
+      let col = {};
+      try{
+        Object.keys(state.columnFilters || {}).sort().forEach(k=>{
+          const v = state.columnFilters[k];
+          col[k] = Array.isArray(v) ? v.map(x=>String(x || "")).sort() : String(v || "");
+        });
+      }catch(e){ col = state.columnFilters || {}; }
+      return JSON.stringify({
+        text: val("casesFilterText"),
+        type: val("casesFilterType") || "ALL",
+        status: val("casesFilterStatus"),
+        carrier: val("casesFilterCarrier"),
+        columns: col
+      });
+    }
+
+    function getCasesPageSize(){
+      const select = byId("casesPageSize");
+      const bottomSelect = byId("casesPageSizeBottom");
+      const raw = Number(select ? select.value : (bottomSelect ? bottomSelect.value : (state.casesPageSize || 25)));
+      return [25,30,50,100].includes(raw) ? raw : 25;
+    }
+
+    function ensureCasesPagination(totalRows){
+      const signature = casePaginationSignature();
+      const pageSize = getCasesPageSize();
+      state.casesPageSize = pageSize;
+      if(state.casesLastPaginationSignature !== signature){
+        state.casesPage = 1;
+        state.casesLastPaginationSignature = signature;
+      }
+      const totalPages = Math.max(1, Math.ceil(Number(totalRows || 0) / pageSize));
+      let page = Number(state.casesPage || 1);
+      if(!Number.isFinite(page) || page < 1) page = 1;
+      if(page > totalPages) page = totalPages;
+      state.casesPage = page;
+      const start = (page - 1) * pageSize;
+      const end = Math.min(Number(totalRows || 0), start + pageSize);
+      return {page, pageSize, totalPages, start, end};
+    }
+
+    function updateCasesPaginationControls(totalRows, shownRows, pageInfo){
+      const total = Number(totalRows || 0);
+      const shown = Number(shownRows || 0);
+      const info = pageInfo || ensureCasesPagination(total);
+      const rowsShown = byId("casesRowsShown");
+      if(rowsShown) rowsShown.textContent = shown + "/" + total + " registo(s)";
+      const rangeText = total ? ((info.start + 1) + "-" + info.end + " de " + total) : "0 de 0";
+      const pageText = shown + "/" + total + " · Página " + info.page + "/" + info.totalPages + " · " + rangeText;
+      ["casesPageInfo","casesPageInfoBottom"].forEach(id=>{
+        const pageInfoEl = byId(id);
+        if(pageInfoEl) pageInfoEl.textContent = pageText;
+      });
+      ["casesPageSize","casesPageSizeBottom"].forEach(id=>{
+        const select = byId(id);
+        if(select && String(select.value) !== String(info.pageSize)) select.value = String(info.pageSize);
+      });
+      const disablePrev = info.page <= 1 || total === 0;
+      const disableNext = info.page >= info.totalPages || total === 0;
+      ["casesFirstPageBtn","casesPrevPageBtn","casesFirstPageBtnBottom","casesPrevPageBtnBottom"].forEach(id=>{ const el = byId(id); if(el) el.disabled = disablePrev; });
+      ["casesNextPageBtn","casesLastPageBtn","casesNextPageBtnBottom","casesLastPageBtnBottom"].forEach(id=>{ const el = byId(id); if(el) el.disabled = disableNext; });
+    }
+
+    function setCasesPage(page){
+      const total = getFilteredRecords().length;
+      const pageSize = getCasesPageSize();
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if(page === "last") state.casesPage = totalPages;
+      else state.casesPage = Math.max(1, Math.min(totalPages, Number(page || 1)));
+      state.casesLastPaginationSignature = casePaginationSignature();
+      renderCasesTable();
+    }
+    window.setCasesPage = setCasesPage;
+
+    function changeCasesPage(delta){
+      setCasesPage(Number(state.casesPage || 1) + Number(delta || 0));
+    }
+    window.changeCasesPage = changeCasesPage;
+
+    function setCasesPageSize(value){
+      const n = Number(value || 25);
+      state.casesPageSize = [25,30,50,100].includes(n) ? n : 25;
+      state.casesPage = 1;
+      state.casesLastPaginationSignature = casePaginationSignature();
+      renderCasesTable();
+    }
+    window.setCasesPageSize = setCasesPageSize;
+
     function renderCasesTable(){
       const thead = byId("casesThead"), tbody = byId("casesTbody");
       if(!thead || !tbody) return;
       const rows = getFilteredRecords();
+      const pageInfo = ensureCasesPagination(rows.length);
+      const pageRows = rows.slice(pageInfo.start, pageInfo.end);
       const fields = visibleFieldSet(rows);
       const casesTableEl = thead.closest("table");
       if(casesTableEl){
@@ -11395,14 +11865,14 @@ Esta ação remove estes registos guardados na Firebase.`);
         ${caseHeaderCell("ID / Entrada", caseFilterInputHtml("__id", "ID/data"))}
         ${caseHeaderCell("Transportadora", caseFilterMultiHtml("__carrier", state.options.carriers || []))}
         ${caseHeaderCell("Firebase", caseFilterSelectHtml("__firebase", ["PACKED","RETURN","REFUND","SEM REGISTO"]))}
-        ${caseHeaderCell("Cruzamento", caseFilterSelectHtml("__crosscheck", ["COM COINCIDÊNCIAS","SEM COINCIDÊNCIAS","NÃO VERIFICADO"]))}
+        ${caseHeaderCell("Cruzamento", caseFilterSelectHtml("__crosscheck", ["COM COINCIDÊNCIAS","SEM COINCIDÊNCIAS","NÃO VERIFICADO","EM ANÁLISE","SEM REGISTO","RETURNS/REFUNDS","RETURNS/REFUNDS - RETURN","RETURNS/REFUNDS - REFUND","ENTREGUE","ENTREGUE/PAID","VERIFICADOS","IDS SEM PICAGEM","BROKEN/SWIPE/LOST"]))}
         ${fields.map(f=>caseHeaderCell(f.label, f.selectable ? caseFilterMultiHtml(f.key, state.options[f.optionKey] || []) : caseFilterInputHtml(f.key, "Filtrar", ""), f.label.toUpperCase().includes("AMSPED") ? "Filtro próprio" : "")).join("")}
         <th><span class="casesThLabel">Ações</span><button class="casesColClearBtn" type="button" onclick="clearCaseColumnFilters()">Limpar filtros</button></th>
       </tr>`;
       if(!rows.length){
         tbody.innerHTML = `<tr><td colspan="${6+fields.length}" class="muted" style="padding:16px;">Sem registos para estes filtros.</td></tr>`;
       } else {
-        tbody.innerHTML = rows.map(r=>{
+        tbody.innerHTML = pageRows.map(r=>{
           const fd = r.firebaseData || {};
           const fb = caseRecordFirebaseSummary(r) || "Sem dados Firebase guardados";
           const isInlineEditing = state.inlineEditingKey === r.key;
@@ -11418,7 +11888,7 @@ Esta ação remove estes registos guardados na Firebase.`);
           return mainRow + (isInlineEditing ? renderCaseInlineEditorRow(r, 6 + fields.length) : "");
         }).join("");
       }
-      const shown = byId("casesRowsShown"); if(shown) shown.textContent = rows.length + " linha(s)";
+      updateCasesPaginationControls(rows.length, pageRows.length, pageInfo);
       renderCasesSummaryFilterControls();
       updateCasesKpis();
       updateCasesActiveFilters();
