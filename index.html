@@ -4698,6 +4698,59 @@
     return dt(dc, time);
   }
 
+  function rrStatusText(v){
+    try{
+      return String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+    }catch(e){
+      return String(v || "").toUpperCase().trim();
+    }
+  }
+
+  function returnRefundCloseKeyFromAny(r){
+    r = r || {};
+    const mode = rrStatusText(r.mode || r.Mode || r.type || r.Type || "");
+    const statusText = rrStatusText([
+      r.returnStatus,
+      r.ReturnStatus,
+      r.closeStatus,
+      r.closedWith,
+      r.closeWith,
+      r.refundReason,
+      r.reason,
+      r.status,
+      r.Status,
+      r.button,
+      r.buttonLabel
+    ].filter(x => x !== undefined && x !== null).join(" "));
+    const productText = rrStatusText(r.prods || r.items || r.Items || r.content || r.Items_or_Content || "");
+    const combined = (statusText + " " + productText).trim();
+
+    if(combined.includes("SWIPE")) return "SWIPE";
+    if(combined.includes("NO_PRODUCT") || combined.includes("NO PRODUCT") || combined.includes("SEM PRODUTO") || combined.includes("PRODUTO DANIFICADO") || combined.includes("DANIFICADO") || combined.includes("DAMAGED")) return "NO_PRODUCT_DAMAGED";
+    if(combined.includes("INCOMPLETE") || combined.includes("INCOMPLETO")) return "INCOMPLETE";
+    if(combined.includes("COMPLETE") || combined.includes("COMPLETO")) return "COMPLETE";
+
+    if(mode.includes("RETURN") || mode.includes("REFUND")){
+      const cleanProducts = productText.replace(/\s+/g, " ").trim();
+      if(cleanProducts && cleanProducts !== "NO ITEMS") return "COMPLETE";
+    }
+    return "";
+  }
+
+  function returnRefundCloseLabel(key){
+    const k = String(key || "").toUpperCase();
+    if(k === "SWIPE") return "SWIPE";
+    if(k === "NO_PRODUCT_DAMAGED") return "Sem produto/produto danificado";
+    if(k === "INCOMPLETE") return "Incompleto";
+    if(k === "COMPLETE") return "Completo";
+    if(k === "MANUAL") return "Manual";
+    return "";
+  }
+
+  function returnRefundCloseLabelFromAny(r){
+    return returnRefundCloseLabel(returnRefundCloseKeyFromAny(r));
+  }
+
   function normalizeRegistoRecord(key, r){
     const mode = String(r.mode || r.Mode || r.type || r.Type || "").trim().toUpperCase();
     const tracking = fmt(r.track || r.tracking || r.Tracking || "");
@@ -4714,6 +4767,9 @@
       dateClean: getRegistoDateClean(r),
       dateTime: getRegistoDateTime(r),
       source: "registos",
+      returnStatus: fmt(r.returnStatus || r.ReturnStatus || r.closeStatus || r.closedWith || r.status || ""),
+      closeKey: returnRefundCloseKeyFromAny(r),
+      closeLabel: returnRefundCloseLabelFromAny(r),
       raw: r
     };
   }
@@ -4830,7 +4886,10 @@
           dateClean,
           dateTime,
           raw: e,
-          source: "id_history"
+          source: "id_history",
+          returnStatus: fmt(e.returnStatus || e.ReturnStatus || e.closeStatus || e.closedWith || e.status || ""),
+          closeKey: returnRefundCloseKeyFromAny(e),
+          closeLabel: returnRefundCloseLabelFromAny(e)
         };
       }).filter(r=>enviosDateInRange(r.dateClean)).sort((a,b)=> (a.dateTime || "").localeCompare(b.dateTime || ""));
     }catch(e){
@@ -5005,19 +5064,28 @@
     const seen = !!saved.seen || savedTerminal === "VERIFIED";
     const packedEffective = !!packing || !!manualSaiu;
 
+    const returnCloseKey = ret ? (ret.closeKey || returnRefundCloseKeyFromAny(ret.raw || ret)) : (manualReturn ? "MANUAL" : "");
+    const refundCloseKey = refund ? (refund.closeKey || returnRefundCloseKeyFromAny(refund.raw || refund)) : (manualRefund ? "MANUAL" : "");
+    const returnCloseLabel = ret ? (ret.closeLabel || returnRefundCloseLabel(returnCloseKey)) : (manualReturn ? "Manual" : "");
+    const refundCloseLabel = refund ? (refund.closeLabel || returnRefundCloseLabel(refundCloseKey)) : (manualRefund ? "Manual" : "");
+    const returnRefundCloseKey = refund ? refundCloseKey : (ret ? returnCloseKey : (manualReturnRefund ? "MANUAL" : ""));
+    const returnRefundCloseLabelText = refund ? refundCloseLabel : (ret ? returnCloseLabel : (manualReturnRefund ? "Manual" : ""));
+    const returnCloseText = returnCloseLabel ? " · Fechado com: " + returnCloseLabel : "";
+    const refundCloseText = refundCloseLabel ? " · Fechado com: " + refundCloseLabel : "";
+
     let verificacao = "";
     let statusClass = "ENVIO_INFO";
     if(refund){
-      verificacao = packing ? "Embalado + já está em REFUND" : (manualSaiu ? "SAIU manual + já está em REFUND" : "REFUND encontrado, mas sem PACKING");
+      verificacao = (packing ? "Embalado + já está em REFUND" : (manualSaiu ? "SAIU manual + já está em REFUND" : "REFUND encontrado, mas sem PACKING")) + refundCloseText;
       statusClass = "ENVIO_BAD";
     } else if(ret){
-      verificacao = packing ? "Embalado + já está em RETURN" : (manualSaiu ? "SAIU manual + já está em RETURN" : "RETURN encontrado, mas sem PACKING");
+      verificacao = (packing ? "Embalado + já está em RETURN" : (manualSaiu ? "SAIU manual + já está em RETURN" : "RETURN encontrado, mas sem PACKING")) + returnCloseText;
       statusClass = "ENVIO_WARN";
     } else if(manualRefund){
-      verificacao = packing ? "Embalado + REFUND manual" : (manualSaiu ? "SAIU manual + REFUND manual" : "REFUND manual, mas sem PACKING");
+      verificacao = (packing ? "Embalado + REFUND manual" : (manualSaiu ? "SAIU manual + REFUND manual" : "REFUND manual, mas sem PACKING")) + refundCloseText;
       statusClass = "ENVIO_BAD";
     } else if(manualReturn){
-      verificacao = packing ? "Embalado + RETURN manual" : (manualSaiu ? "SAIU manual + RETURN manual" : "RETURN manual, mas sem PACKING");
+      verificacao = (packing ? "Embalado + RETURN manual" : (manualSaiu ? "SAIU manual + RETURN manual" : "RETURN manual, mas sem PACKING")) + returnCloseText;
       statusClass = "ENVIO_WARN";
     } else if(packing){
       verificacao = "OK — embalado e sem return/refund encontrado";
@@ -5067,6 +5135,12 @@
       manualReturnRefundAt: fmt(saved.manualReturnRefundAt || ""),
       manualReturnRefundBy: fmt(saved.manualReturnRefundBy || ""),
       manualReturnRefundNote: fmt(saved.manualReturnRefundNote || ""),
+      returnCloseKey,
+      returnCloseLabel,
+      refundCloseKey,
+      refundCloseLabel,
+      returnRefundCloseKey,
+      returnRefundCloseLabel: returnRefundCloseLabelText,
       seen,
       seenAt: fmt(saved.seenAt || terminalAt || ""),
       seenBy: fmt(saved.seenBy || terminalBy || ""),
@@ -5098,7 +5172,10 @@
       user: fmt(r.user || ""),
       batchKey: fmt(r.batchKey || ""),
       batchName: fmt(r.batchName || ""),
-      items: fmt(r.items || "")
+      items: fmt(r.items || ""),
+      returnStatus: fmt(r.returnStatus || ""),
+      closeKey: fmt(r.closeKey || returnRefundCloseKeyFromAny(r.raw || r)),
+      closeLabel: fmt(r.closeLabel || returnRefundCloseLabelFromAny(r.raw || r))
     };
   }
 
@@ -5224,6 +5301,12 @@
         carrier: fmt(r.carrier || ""),
         packingDate: fmt(r.packingDate || ""),
         returnRefundDate: fmt(r.returnRefundDate || ""),
+        returnCloseKey: fmt(r.returnCloseKey || ""),
+        returnCloseLabel: fmt(r.returnCloseLabel || ""),
+        refundCloseKey: fmt(r.refundCloseKey || ""),
+        refundCloseLabel: fmt(r.refundCloseLabel || ""),
+        returnRefundCloseKey: fmt(r.returnRefundCloseKey || ""),
+        returnRefundCloseLabel: fmt(r.returnRefundCloseLabel || ""),
         verificacao: fmt(r.verificacao || ""),
         user: fmt(r.user || ""),
         items: fmt(r.items || ""),
@@ -5511,6 +5594,9 @@
         r && r.verificacao,
         r && r.packingDate,
         r && r.returnRefundDate,
+        r && r.returnCloseLabel,
+        r && r.refundCloseLabel,
+        r && r.returnRefundCloseLabel,
         r && r.user,
         r && r.items,
         r && r.manualSaiu,
@@ -5545,7 +5631,7 @@
 
     const q = ($("enviosFilterText") ? $("enviosFilterText").value : "").trim().toLowerCase();
     if(!q) return true;
-    const hay = [r.id, r.tracking, r.carrier, r.verificacao, r.packingDate, r.returnRefundDate, r.user, r.items, r.manualSaiu, r.seenBy, r.observacoes]
+    const hay = [r.id, r.tracking, r.carrier, r.verificacao, r.packingDate, r.returnRefundDate, r.returnCloseLabel, r.refundCloseLabel, r.returnRefundCloseLabel, r.user, r.items, r.manualSaiu, r.seenBy, r.observacoes]
       .join(" ").toLowerCase();
     return hay.includes(q);
   }
@@ -5706,6 +5792,8 @@
       const refundLabel = r.refund ? (r.manualReturnRefundMode === "REFUND" ? "SIM (MANUAL)" : "SIM") : "NÃO";
       const manualRRModeText = String(r.manualReturnRefundMode || "").toUpperCase();
       const manualRRBox = r.manualReturnRefund ? `<div class="envio-manual-rr-box"><b>${escapeHtml(manualRRModeText)} MANUAL</b>${r.manualReturnRefundDate ? `Data manual: ${escapeHtml(r.manualReturnRefundDate)}<br>` : ""}${r.manualReturnRefundBy ? `Feito por: ${escapeHtml(r.manualReturnRefundBy)}<br>` : ""}${r.manualReturnRefundAt ? `Registado em: ${escapeHtml(String(r.manualReturnRefundAt).replace("T"," ").slice(0,16))}<br>` : ""}${r.manualReturnRefundNote ? `Nota: ${escapeHtml(r.manualReturnRefundNote)}` : ""}</div>` : "";
+      const returnClosedLine = r.return && r.returnCloseLabel ? `<span class="envio-subline"><b>Return fechado com:</b> ${escapeHtml(r.returnCloseLabel)}</span>` : "";
+      const refundClosedLine = r.refund && r.refundCloseLabel ? `<span class="envio-subline"><b>Refund fechado com:</b> ${escapeHtml(r.refundCloseLabel)}</span>` : "";
       const vistoBy = r.terminalBy || r.seenBy || "";
       const vistoAt = r.terminalAt || r.seenAt || "";
       const seenText = isEnvioTerminal(r)
@@ -5736,7 +5824,9 @@
           <td><input class="manual-saiu-input" value="${manual}" placeholder="ex: Saiu antes do sistema" onblur="saveManualSaiu('${escapeJs(r.id)}', this.value)" onkeydown="if(event.key==='Enter'){this.blur();}"></td>
           <td>
             <span class="envio-status-line">Return: <b class="${r.return ? "warn" : "muted"}">${escapeHtml(returnLabel)}</b></span>
+            ${returnClosedLine}
             <span class="envio-status-line">Refund: <b class="${r.refund ? "bad" : "muted"}">${escapeHtml(refundLabel)}</b></span>
+            ${refundClosedLine}
             ${manualRRBox}
             ${isEnvioTerminal(r) && (r.return || r.refund) ? `<span class="envio-subline"><b>Encerrado:</b> não entra na lista Returns/Refunds.</span>` : ""}
           </td>
@@ -6140,12 +6230,13 @@
   function exportEnviosCsv(){
     const rows = sortEnviosByPackingDateAsc(enviosState.rows || []);
     if(!rows.length){ enviosSetStatus("Não há resultados para exportar.", "bad"); return; }
-    const header = ["order_id","data_insercao","inserido_por","lista","tracking","transportadora","embalado_sistema","saiu_manual","embalado_final","return","refund","return_refund_manual","return_refund_manual_tipo","return_refund_manual_data","return_refund_manual_user","visto","visto_por","visto_em","verificacao","data_packing","data_return_refund","user","items","observacoes"];
+    const header = ["order_id","data_insercao","inserido_por","lista","tracking","transportadora","embalado_sistema","saiu_manual","embalado_final","return","refund","return_fechado_com","refund_fechado_com","return_refund_fechado_com","return_refund_manual","return_refund_manual_tipo","return_refund_manual_data","return_refund_manual_user","visto","visto_por","visto_em","verificacao","data_packing","data_return_refund","user","items","observacoes"];
     const delimiter = ";";
     const lines = [header.map(csvCell).join(delimiter)];
     rows.forEach(r=>{
       lines.push([
         r.id, r.insertedDate, r.createdBy, envioListLabel(r), r.tracking, r.carrier, enviosYesNo(r.packed), r.manualSaiu, enviosYesNo(r.packedEffective), enviosYesNo(r.return), enviosYesNo(r.refund),
+        r.returnCloseLabel || "", r.refundCloseLabel || "", r.returnRefundCloseLabel || "",
         enviosYesNo(r.manualReturnRefund), r.manualReturnRefundMode || "", r.manualReturnRefundDate || "", r.manualReturnRefundBy || "",
         enviosYesNo(r.seen), r.seenBy, r.seenAt, r.verificacao, r.packingDate, r.returnRefundDate, r.user, r.items, r.observacoes || ""
       ].map(csvCell).join(delimiter));
@@ -6211,13 +6302,14 @@
       <div class="tableWrap">
         <table style="min-width:900px;">
           <thead>
-            <tr><th>Data/Hora</th><th>Mode</th><th>Tracking</th><th>Carrier</th><th>User</th><th>Batch</th><th>Items</th><th>Origem</th></tr>
+            <tr><th>Data/Hora</th><th>Mode</th><th>Fechado com</th><th>Tracking</th><th>Carrier</th><th>User</th><th>Batch</th><th>Items</th><th>Origem</th></tr>
           </thead>
           <tbody>
             ${rows.map(r=>`
               <tr>
                 <td class="mono">${escapeHtml(r.dateTime || r.dateClean || "")}</td>
                 <td><b>${escapeHtml(r.mode || "")}</b></td>
+                <td>${escapeHtml(r.closeLabel || returnRefundCloseLabelFromAny(r.raw || r) || "")}</td>
                 <td class="mono">${escapeHtml(r.tracking || "")}</td>
                 <td>${escapeHtml(r.carrier || "")}</td>
                 <td>${escapeHtml(r.user || "")}</td>
@@ -6254,6 +6346,8 @@
     meta.push(`<div class="tag"><b>Saiu final:</b> ${enviosYesNo(updatedRow.packedEffective)}</div>`);
     meta.push(`<div class="tag"><b>Return:</b> ${enviosYesNo(updatedRow.return)}</div>`);
     meta.push(`<div class="tag"><b>Refund:</b> ${enviosYesNo(updatedRow.refund)}</div>`);
+    if(updatedRow.returnCloseLabel) meta.push(`<div class="tag"><b>Return fechado com:</b> ${escapeHtml(updatedRow.returnCloseLabel)}</div>`);
+    if(updatedRow.refundCloseLabel) meta.push(`<div class="tag"><b>Refund fechado com:</b> ${escapeHtml(updatedRow.refundCloseLabel)}</div>`);
     if(updatedRow.manualReturnRefund) meta.push(`<div class="tag" style="background:#fff7ed;border-color:#fdba74;color:#9a3412;"><b>${escapeHtml(String(updatedRow.manualReturnRefundMode || "").toUpperCase())} MANUAL:</b> ${updatedRow.manualReturnRefundDate ? escapeHtml(updatedRow.manualReturnRefundDate) : "sem data"}${updatedRow.manualReturnRefundBy ? " — feito por " + escapeHtml(updatedRow.manualReturnRefundBy) : ""}${updatedRow.manualReturnRefundNote ? " — " + escapeHtml(updatedRow.manualReturnRefundNote) : ""}</div>`);
     meta.push(`<div class="tag"><b>Visto:</b> ${enviosYesNo(updatedRow.seen)}</div>`);
     if(updatedRow.tracking) meta.push(`<div class="tag"><b>Tracking:</b> <span class="mono">${escapeHtml(updatedRow.tracking)}</span></div>`);
@@ -6265,6 +6359,7 @@
         <div class="card" style="padding:12px; margin-top:10px;">
           <h2 style="margin:0 0 8px 0;">Verificação</h2>
           <div class="status ${escapeHtml(updatedRow.statusClass)}"><b>${escapeHtml(updatedRow.verificacao)}</b></div>
+          ${updatedRow.returnCloseLabel || updatedRow.refundCloseLabel ? `<div class="mini" style="margin-top:8px;"><b>Fechado com:</b> ${escapeHtml(updatedRow.refundCloseLabel || updatedRow.returnCloseLabel)}</div>` : ""}
           ${updatedRow.items ? `<div class="mini" style="margin-top:8px;"><b>Items:</b> ${escapeHtml(updatedRow.items)}</div>` : ""}
           ${isEnvioTerminal(updatedRow) ? `<div class="mini" style="margin-top:8px;"><b>Visto por:</b> ${escapeHtml(updatedRow.terminalBy || updatedRow.seenBy || "-")} ${(updatedRow.terminalAt || updatedRow.seenAt) ? " — " + escapeHtml(String(updatedRow.terminalAt || updatedRow.seenAt).replace("T"," ").slice(0,16)) : ""}</div>` : ""}
         </div>
@@ -10509,7 +10604,7 @@ Esta ação remove estes registos guardados na Firebase.`);
     function recordSearchText(r){
       const fd = r.firebaseData || {};
       const cd = r.crosscheckData || {};
-      return [r.type,r.id,r.carrier,r.entryDate,fd.dateWarehouse,fd.returnRefundMode,fd.returnRefundDateTime,fd.returnRefundTracking,fd.returnDateTime,fd.refundDateTime,fd.returnTracking,fd.refundTracking,fd.packingDate,fd.packingDateTime,fd.packingItems,fd.packingTracking,crosscheckSummaryText(cd), ...(Object.values(r.fields || {}))].join(" ").toLowerCase();
+      return [r.type,r.id,r.carrier,r.entryDate,fd.dateWarehouse,fd.returnRefundMode,fd.returnRefundDateTime,fd.returnRefundTracking,fd.returnRefundCloseLabel,fd.returnCloseLabel,fd.refundCloseLabel,fd.returnDateTime,fd.refundDateTime,fd.returnTracking,fd.refundTracking,fd.packingDate,fd.packingDateTime,fd.packingItems,fd.packingTracking,crosscheckSummaryText(cd), ...(Object.values(r.fields || {}))].join(" ").toLowerCase();
     }
     function fieldLabelFor(type, fieldKey){
       if(fieldKey === "type") return "TIPO";
@@ -10543,7 +10638,7 @@ Esta ação remove estes registos guardados na Firebase.`);
     }
     function summarizeAutoData(data){
       if(!data) return "";
-      return [data.dateWarehouse || "", data.returnRefundMode || "", data.returnRefundDateTime || "", data.packingDateTime || "", data.packingItems || ""].join(" | ");
+      return [data.dateWarehouse || "", data.returnRefundMode || "", data.returnRefundDateTime || "", data.returnRefundCloseLabel || data.refundCloseLabel || data.returnCloseLabel || "", data.packingDateTime || "", data.packingItems || ""].join(" | ");
     }
     function renderCasesAutoData(data, msg){
       const box = byId("casesAutoData");
@@ -10554,11 +10649,13 @@ Esta ação remove estes registos guardados na Firebase.`);
       }
       const wh = data.dateWarehouse || "Não encontrado em RETURN/REFUND";
       const rr = data.returnRefundMode ? `${data.returnRefundMode} · ${data.returnRefundDateTime || "sem data"}` : "Sem RETURN/REFUND encontrado";
+      const closeLabel = data.refundCloseLabel || data.returnCloseLabel || data.returnRefundCloseLabel || "—";
       const pk = data.packingDateTime || data.packingDate || "Sem PACKING encontrado";
       const trk = data.returnRefundTracking || data.packingTracking || "—";
       box.innerHTML = `
         <div class="casesAutoItem"><b>DATE WAREHOUSE</b>${esc(wh)}</div>
         <div class="casesAutoItem"><b>RETURN / REFUND</b>${esc(rr)}</div>
+        <div class="casesAutoItem"><b>FECHADO COM</b>${esc(closeLabel)}</div>
         <div class="casesAutoItem"><b>PACKING DATE</b>${esc(pk)}</div>
         <div class="casesAutoItem"><b>TRACKING</b>${esc(trk)}</div>
         <div class="casesAutoItem"><b>PACKING CARRIER</b>${esc(data.packingCarrier || "—")}</div>
@@ -10609,6 +10706,12 @@ Esta ação remove estes registos guardados na Firebase.`);
           refundTracking: ref ? regTracking(ref) : "",
           refundCarrier: ref ? regCarrier(ref) : "",
           refundItems: ref ? regItems(ref) : "",
+          returnRefundCloseKey: rr ? returnRefundCloseKeyFromAny(rr) : "",
+          returnRefundCloseLabel: rr ? returnRefundCloseLabelFromAny(rr) : "",
+          returnCloseKey: ret ? returnRefundCloseKeyFromAny(ret) : "",
+          returnCloseLabel: ret ? returnRefundCloseLabelFromAny(ret) : "",
+          refundCloseKey: ref ? returnRefundCloseKeyFromAny(ref) : "",
+          refundCloseLabel: ref ? returnRefundCloseLabelFromAny(ref) : "",
           packingDate: pk ? (dateFromAny(pk.dateClean) || dateFromAny(fmtDateTimeFromReg(pk))) : "",
           packingDateTime: pk ? fmtDateTimeFromReg(pk) : "",
           packingTracking: pk ? regTracking(pk) : "",
@@ -10726,6 +10829,12 @@ Esta ação remove estes registos guardados na Firebase.`);
         returnRefundMode: fd.returnRefundMode || "",
         returnRefundDateTime: fd.returnRefundDateTime || "",
         returnRefundTracking: fd.returnRefundTracking || "",
+        returnRefundCloseKey: fd.returnRefundCloseKey || "",
+        returnRefundCloseLabel: fd.returnRefundCloseLabel || "",
+        returnCloseKey: fd.returnCloseKey || "",
+        returnCloseLabel: fd.returnCloseLabel || "",
+        refundCloseKey: fd.refundCloseKey || "",
+        refundCloseLabel: fd.refundCloseLabel || "",
         returnDateTime: fd.returnDateTime || "",
         returnTracking: fd.returnTracking || "",
         refundDateTime: fd.refundDateTime || "",
@@ -10777,6 +10886,12 @@ Esta ação remove estes registos guardados na Firebase.`);
         refundTracking: ref ? regTracking(ref) : "",
         refundCarrier: ref ? regCarrier(ref) : "",
         refundItems: ref ? regItems(ref) : "",
+          returnRefundCloseKey: rr ? returnRefundCloseKeyFromAny(rr) : "",
+          returnRefundCloseLabel: rr ? returnRefundCloseLabelFromAny(rr) : "",
+          returnCloseKey: ret ? returnRefundCloseKeyFromAny(ret) : "",
+          returnCloseLabel: ret ? returnRefundCloseLabelFromAny(ret) : "",
+          refundCloseKey: ref ? returnRefundCloseKeyFromAny(ref) : "",
+          refundCloseLabel: ref ? returnRefundCloseLabelFromAny(ref) : "",
         packingDate: pk ? (dateFromAny(pk.dateClean) || dateFromAny(fmtDateTimeFromReg(pk))) : "",
         packingDateTime: pk ? fmtDateTimeFromReg(pk) : "",
         packingTracking: pk ? regTracking(pk) : "",
@@ -10881,8 +10996,8 @@ Esta ação remove estes registos guardados na Firebase.`);
       const manualPackedDate = String(fields.packedDate || "").trim();
       if(pk) bits.push("PACKED: " + pk);
       else if(manualPackedDate) bits.push("PACKED DATE MANUAL: " + manualPackedDate);
-      if(caseFirebaseHasReturn(fd)) bits.push("RETURN: " + (ret || "sim"));
-      if(caseFirebaseHasRefund(fd)) bits.push("REFUND: " + (ref || "sim"));
+      if(caseFirebaseHasReturn(fd)) bits.push("RETURN: " + (ret || "sim") + (fd.returnCloseLabel ? " · Fechado com: " + fd.returnCloseLabel : ""));
+      if(caseFirebaseHasRefund(fd)) bits.push("REFUND: " + (ref || "sim") + (fd.refundCloseLabel ? " · Fechado com: " + fd.refundCloseLabel : ""));
       if(fd.dateWarehouse) bits.push("WH: " + fd.dateWarehouse);
       if(fd.packingItems) bits.push("Produtos PACKING guardados");
       return bits.join(" · ");
@@ -10892,7 +11007,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       const badges = [];
       if(caseFirebasePackingDate(fd) || fd.packingItems) badges.push('<span class="casesDbBadge">PACKED</span>');
       if(caseFirebaseHasReturn(fd)) badges.push('<span class="casesDbBadge return">RETURN</span>');
-      if(caseFirebaseHasRefund(fd)) badges.push('<span class="casesDbBadge refund">REFUND</span>');
+      if(caseFirebaseHasRefund(fd)) badges.push('<span class="casesDbBadge refund">REFUND' + (fd.refundCloseLabel ? ' · ' + esc(fd.refundCloseLabel) : '') + '</span>');
       return badges.length ? '<div class="casesFirebaseBadges">' + badges.join("") + '</div>' : '';
     }
 
@@ -10921,7 +11036,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       if(code === "ENTREGUE") return "Entregue";
       if(code === "VERIFIED") return "Verificados";
       if(code === "RETURN_OR_REFUND"){
-        if(item && (item.hasRefund || item.refund || item.refundFound || item.refundDate)) return "Returns/Refunds - Refund";
+        if(item && (item.hasRefund || item.refund || item.refundFound || item.refundDate)) return "Returns/Refunds - Refund" + (item.refundCloseLabel ? " · " + item.refundCloseLabel : "");
         if(item && (item.hasReturn || item.return || item.returnFound || item.returnDate)) return "Returns/Refunds - Return";
         return "Returns/Refunds";
       }
@@ -10937,7 +11052,7 @@ Esta ação remove estes registos guardados na Firebase.`);
     function itemStatusBits(item){
       const bits = [];
       if(item.hasReturn || item.return || item.returnFound || item.returnDate) bits.push("RETURN");
-      if(item.hasRefund || item.refund || item.refundFound || item.refundDate) bits.push("REFUND");
+      if(item.hasRefund || item.refund || item.refundFound || item.refundDate) bits.push("REFUND" + (item.refundCloseLabel ? " · " + item.refundCloseLabel : ""));
       if(item.isVerified || item.verified || item.seen || item.seenAt) bits.push("VERIFICADO");
       if(item.manualSaiu || item.manualSaiuNote) bits.push("SAIU MANUAL");
       if(item.resolutionStatus) bits.push(String(item.resolutionStatus));
@@ -12196,7 +12311,7 @@ Esta ação remove estes registos guardados na Firebase.`);
         (state.history[currentRecordKey] || []).forEach(e=>localHist.push(e));
       }
       localHist.sort((a,b)=>(b.changedAt || "").localeCompare(a.changedAt || ""));
-      const regHtml = registos.length ? `<div class="tableWrap"><table><thead><tr><th>Modo</th><th>Data</th><th>Tracking</th><th>Carrier</th><th>Batch</th><th>User</th><th>Items</th></tr></thead><tbody>${registos.map(r=>`<tr><td><b>${esc(regMode(r))}</b></td><td class="mono">${esc(fmtDateTimeFromReg(r))}</td><td class="mono">${esc(regTracking(r))}</td><td>${esc(regCarrier(r))}</td><td>${esc(regBatch(r))}</td><td>${esc(regUser(r))}</td><td><div class="envio-items-cell">${esc(regItems(r))}</div></td></tr>`).join("")}</tbody></table></div>` : `<div class="muted">Sem registos PACKING/RETURN/REFUND encontrados em registos para este ID.</div>`;
+      const regHtml = registos.length ? `<div class="tableWrap"><table><thead><tr><th>Modo</th><th>Data</th><th>Fechado com</th><th>Tracking</th><th>Carrier</th><th>Batch</th><th>User</th><th>Items</th></tr></thead><tbody>${registos.map(r=>`<tr><td><b>${esc(regMode(r))}</b></td><td class="mono">${esc(fmtDateTimeFromReg(r))}</td><td>${esc(returnRefundCloseLabelFromAny(r))}</td><td class="mono">${esc(regTracking(r))}</td><td>${esc(regCarrier(r))}</td><td>${esc(regBatch(r))}</td><td>${esc(regUser(r))}</td><td><div class="envio-items-cell">${esc(regItems(r))}</div></td></tr>`).join("")}</tbody></table></div>` : `<div class="muted">Sem registos PACKING/RETURN/REFUND encontrados em registos para este ID.</div>`;
       const idHistHtml = histEvents.length ? `<div class="tableWrap"><table><thead><tr><th>Tipo</th><th>Data</th><th>Batch</th><th>Carrier</th><th>User</th><th>Tracking</th><th>Conteúdo</th></tr></thead><tbody>${histEvents.map(e=>`<tr><td><b>${esc(e.Type || e.type || "")}</b></td><td class="mono">${esc(e.DateTime || e.dateTime || "")}</td><td>${esc(e.Batch || e.batch || "")}</td><td>${esc(e.Carrier || e.carrier || "")}</td><td>${esc(e.User || e.user || "")}</td><td>${esc(e.Tracking || e.tracking || "")}</td><td><div class="envio-items-cell">${esc(e.Items_or_Content || e.items || e.content || e.Details || "")}</div></td></tr>`).join("")}</tbody></table></div>` : `<div class="muted">Sem id_history encontrado ou sem permissão de leitura.</div>`;
       const localHtml = localHist.length ? localHist.map(entry=>`<div class="casesHistoryItem"><div class="casesHistoryMeta"><b>${esc(entry.changeDate || (entry.changedAt || "").slice(0,10))}</b> · ${esc((entry.changedAt || "").slice(11,19))} · ${esc(entry.action || "UPDATE")} · ${esc(entry.user || "sem user")}</div>${(entry.changes || []).map(ch=>`<div class="casesHistoryChange"><b>${esc(ch.fieldLabel || ch.fieldKey)}</b>: <span class="casesHistoryOld">${esc(ch.oldValue || "") || "—"}</span> → <span class="casesHistoryNew">${esc(ch.newValue || "") || "—"}</span></div>`).join("")}</div>`).join("") : `<div class="muted">Sem alterações locais registadas neste separador.</div>`;
       const localRecordsHtml = localRecords.length ? localRecords.map(r=>`<span class="tag">${esc(r.type)} · ${esc(r.carrier)} · entrada ${esc(r.entryDate || r.createdDate || "")}</span>`).join("") : `<span class="muted">Sem registo local neste separador.</span>`;
