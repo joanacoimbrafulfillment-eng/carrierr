@@ -4709,7 +4709,12 @@
   function returnRefundCloseKeyFromAny(r){
     r = r || {};
     const mode = rrStatusText(r.mode || r.Mode || r.type || r.Type || "");
-    const statusText = rrStatusText([
+
+    // Primeiro olha para campos explícitos gravados pelo WH.
+    // Isto é importante para os botões novos de REFUNDS: SWIPE, SEM PRODUTO,
+    // PRODUTO DANIFICADO e CAIXA DANIFICADA. Os produtos picados podem existir,
+    // por isso não podemos decidir apenas pelo campo "prods/items".
+    const explicitText = rrStatusText([
       r.returnStatus,
       r.ReturnStatus,
       r.closeStatus,
@@ -4723,12 +4728,31 @@
       r.buttonLabel
     ].filter(x => x !== undefined && x !== null).join(" "));
     const productText = rrStatusText(r.prods || r.items || r.Items || r.content || r.Items_or_Content || "");
-    const combined = (statusText + " " + productText).trim();
 
-    if(combined.includes("SWIPE")) return "SWIPE";
-    if(combined.includes("NO_PRODUCT") || combined.includes("NO PRODUCT") || combined.includes("SEM PRODUTO") || combined.includes("PRODUTO DANIFICADO") || combined.includes("DANIFICADO") || combined.includes("DAMAGED")) return "NO_PRODUCT_DAMAGED";
-    if(combined.includes("INCOMPLETE") || combined.includes("INCOMPLETO")) return "INCOMPLETE";
-    if(combined.includes("COMPLETE") || combined.includes("COMPLETO")) return "COMPLETE";
+    function classifyCloseText(text){
+      const t = rrStatusText(text || "").replace(/\s+/g, " ").trim();
+      if(!t) return "";
+      if(t.includes("SWIPE")) return "SWIPE";
+
+      // Caixa danificada é separada do produto danificado.
+      if(t.includes("BOX_DAMAGED") || t.includes("BOX DAMAGED") || t.includes("DAMAGED BOX") || t.includes("CAIXA DANIFICADA") || t.includes("CAIXA DANIFICADO")) return "BOX_DAMAGED";
+
+      // Compatibilidade com o botão antigo combinado.
+      if(t.includes("NO_PRODUCT_DAMAGED") || t.includes("NO PRODUCT DAMAGED") || t.includes("SEM PRODUTO/PRODUTO DANIFICADO") || t.includes("SEM PRODUTO / PRODUTO DANIFICADO")) return "NO_PRODUCT_DAMAGED";
+
+      if(t.includes("PRODUCT_DAMAGED") || t.includes("PRODUCT DAMAGED") || t.includes("DAMAGED PRODUCT") || t.includes("PRODUTO DANIFICADO")) return "PRODUCT_DAMAGED";
+      if(t.includes("NO_PRODUCT") || t.includes("NO PRODUCT") || t.includes("SEM PRODUTO")) return "NO_PRODUCT";
+      if(t.includes("INCOMPLETE") || t.includes("INCOMPLETO")) return "INCOMPLETE";
+      if(t.includes("COMPLETE") || t.includes("COMPLETO")) return "COMPLETE";
+      return "";
+    }
+
+    const explicitKey = classifyCloseText(explicitText);
+    if(explicitKey) return explicitKey;
+
+    // Fallback para registos antigos que só tinham o texto no campo de produtos/items.
+    const productKey = classifyCloseText(productText);
+    if(productKey) return productKey;
 
     if(mode.includes("RETURN") || mode.includes("REFUND")){
       const cleanProducts = productText.replace(/\s+/g, " ").trim();
@@ -4740,6 +4764,9 @@
   function returnRefundCloseLabel(key){
     const k = String(key || "").toUpperCase();
     if(k === "SWIPE") return "SWIPE";
+    if(k === "NO_PRODUCT") return "Sem produto";
+    if(k === "PRODUCT_DAMAGED") return "Produto danificado";
+    if(k === "BOX_DAMAGED") return "Caixa danificada";
     if(k === "NO_PRODUCT_DAMAGED") return "Sem produto/produto danificado";
     if(k === "INCOMPLETE") return "Incompleto";
     if(k === "COMPLETE") return "Completo";
