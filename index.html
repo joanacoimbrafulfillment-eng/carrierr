@@ -1070,6 +1070,113 @@
     #tabSemPic .semPic-results-table td:nth-child(8){width:205px; position:sticky; right:0; background:#fff; box-shadow:-8px 0 12px rgba(15,23,42,.06);}
     #tabSemPic .semPic-results-table th:nth-child(8){z-index:12; background:#f1f3f5;}
 
+
+
+    /* ===== Ajuste IDs sem picagem: Ref email completa + filtro flutuante sem corte ===== */
+    #tabSemPic .semPic-results-table{min-width:1580px;}
+    #tabSemPic .semPic-results-table th:nth-child(3),
+    #tabSemPic .semPic-results-table td:nth-child(3){width:340px; min-width:340px;}
+    #tabSemPic .ref-email-cell-input{
+      width:100%;
+      min-width:300px;
+      min-height:58px;
+      height:auto;
+      padding:9px 10px;
+      font-size:12px;
+      line-height:1.3;
+      resize:vertical;
+      white-space:pre-wrap;
+      overflow:auto;
+      word-break:break-word;
+    }
+    #tabSemPic .resultsCard{overflow:visible;}
+    #tabSemPic .tableWrap{overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch; scrollbar-gutter:stable; padding-bottom:96px;}
+    #tabSemPic .semPic-results-table thead th.casesFilterOpenCell,
+    #tabEnvios .envios-results-table thead th.casesFilterOpenCell{
+      z-index:2147482999!important;
+      overflow:visible!important;
+    }
+    .tableMultiFilter[open] .casesMultiMenu{
+      position:fixed!important;
+      z-index:2147483647!important;
+      max-width:calc(100vw - 16px)!important;
+      box-shadow:0 22px 52px rgba(15,23,42,.28)!important;
+    }
+
+
+    /* ===== Ajuste final IDs sem picagem: scroll lateral + ultima coluna visivel ===== */
+    #tabSemPic .resultsCard{
+      overflow:visible!important;
+    }
+    #tabSemPic .tableWrap{
+      max-width:100%!important;
+      max-height:none!important;
+      overflow-x:auto!important;
+      overflow-y:visible!important;
+      -webkit-overflow-scrolling:touch!important;
+      scrollbar-gutter:stable!important;
+      padding-right:0!important;
+      padding-bottom:18px!important;
+      overscroll-behavior-x:contain!important;
+    }
+    #tabSemPic .semPic-results-table{
+      min-width:1740px!important;
+      width:max-content!important;
+      table-layout:fixed!important;
+    }
+    #tabSemPic .semPic-results-table th:nth-child(3),
+    #tabSemPic .semPic-results-table td:nth-child(3){
+      width:360px!important;
+      min-width:360px!important;
+    }
+    #tabSemPic .semPic-results-table th:nth-child(8),
+    #tabSemPic .semPic-results-table td:nth-child(8){
+      width:230px!important;
+      min-width:230px!important;
+      position:sticky!important;
+      right:0!important;
+      background:#fff!important;
+      z-index:8!important;
+      box-shadow:-8px 0 12px rgba(15,23,42,.08)!important;
+    }
+    #tabSemPic .semPic-results-table th:nth-child(8){
+      background:#f1f3f5!important;
+      z-index:18!important;
+    }
+    #tabSemPic .semPic-results-table td:nth-child(8) .btn-row{
+      min-width:205px!important;
+      justify-content:flex-start!important;
+    }
+    #tabSemPic .ref-email-cell-input{
+      min-width:320px!important;
+      max-height:120px!important;
+      overflow:auto!important;
+    }
+    #tabSemPic .tableMultiFilter[open] .casesMultiMenu,
+    #tabSemPic .casesMultiFilter[open] .casesMultiMenu{
+      max-height:min(360px, calc(100vh - 90px))!important;
+      overflow-y:auto!important;
+      overflow-x:hidden!important;
+      scrollbar-gutter:stable!important;
+    }
+
+
+    /* ===== IDs sem picagem: barra horizontal superior sincronizada ===== */
+    #tabSemPic .semPicTopScroll{
+      display:none;
+      max-width:100%;
+      height:18px;
+      overflow-x:auto;
+      overflow-y:hidden;
+      border:1px solid #dbe3ef;
+      border-radius:12px;
+      background:#f8fafc;
+      margin:0 0 8px 0;
+      scrollbar-gutter:stable;
+    }
+    #tabSemPic .semPicTopScrollInner{height:1px;}
+
+
 </style>
 </head>
 <body>
@@ -2131,7 +2238,10 @@
             </select>
           </div>
         </div>
-        <div class="tableWrap">
+        <div id="semPicTopScroll" class="semPicTopScroll" aria-label="Barra horizontal superior da tabela IDs sem picagem">
+          <div id="semPicTopScrollInner" class="semPicTopScrollInner"></div>
+        </div>
+        <div id="semPicTableWrap" class="tableWrap">
           <table class="semPic-results-table">
             <thead id="semPicThead">
               <tr>
@@ -2887,7 +2997,8 @@
 
   function realtimeRegistoModeRelevant(r){
     const mode = String(r && (r.mode || r.Mode || r.type || r.Type) || "").toUpperCase();
-    return mode.includes("PACK") || mode.includes("RETURN") || mode.includes("REFUND");
+    const inferredMode = returnRefundModeFromAny(r || {});
+    return mode.includes("PACK") || mode.includes("RETURN") || mode.includes("REFUND") || !!inferredMode;
   }
 
   function realtimeRecordTouchesEnvios(id){
@@ -4827,8 +4938,40 @@
     return returnRefundCloseLabel(returnRefundCloseKeyFromAny(r));
   }
 
+  function returnRefundModeFromAny(r){
+    r = r || {};
+    const rawMode = rrStatusText(r.mode || r.Mode || r.type || r.Type || "");
+    if(rawMode.includes("REFUND")) return "REFUND";
+    if(rawMode.includes("RETURN")) return "RETURN";
+
+    const explicitText = rrStatusText([
+      r.returnStatus,
+      r.ReturnStatus,
+      r.closeStatus,
+      r.closedWith,
+      r.closeWith,
+      r.refundReason,
+      r.reason,
+      r.status,
+      r.Status,
+      r.button,
+      r.buttonLabel
+    ].filter(x => x !== undefined && x !== null).join(" "));
+    const key = returnRefundCloseKeyFromAny(r);
+
+    // Botões especiais do WH são sempre REFUND, mesmo quando não têm tracking/produtos.
+    if(["SWIPE", "NO_PRODUCT", "PRODUCT_DAMAGED", "BOX_DAMAGED", "NO_PRODUCT_DAMAGED"].includes(key)) return "REFUND";
+    if(explicitText.includes("REFUND")) return "REFUND";
+    if(explicitText.includes("RETURN")) return "RETURN";
+    return "";
+  }
+
+  function isReturnRefundRecordAny(r){
+    return !!returnRefundModeFromAny(r || {});
+  }
+
   function normalizeRegistoRecord(key, r){
-    const mode = String(r.mode || r.Mode || r.type || r.Type || "").trim().toUpperCase();
+    const mode = String(r.mode || r.Mode || r.type || r.Type || returnRefundModeFromAny(r) || "").trim().toUpperCase();
     const tracking = fmt(r.track || r.tracking || r.Tracking || "");
     return {
       key: key || "",
@@ -4912,7 +5055,10 @@
   }
 
   function modeIs(record, token){
-    return String(record && record.mode || "").toUpperCase().includes(token);
+    const explicitMode = String(record && record.mode || "").toUpperCase();
+    if(explicitMode.includes(token)) return true;
+    const inferredMode = returnRefundModeFromAny(record && (record.raw || record) || {});
+    return String(inferredMode || "").toUpperCase().includes(token);
   }
 
   async function fetchRegistosForOrderId(id){
@@ -4946,7 +5092,7 @@
       const snap = await db.ref("id_history/" + id).once("value");
       const hist = snap.val() || {};
       return Object.entries(hist).map(([key,e])=>{
-        const mode = String(e.Type || e.type || "").toUpperCase();
+        const mode = String(e.Type || e.type || returnRefundModeFromAny(e) || "").toUpperCase();
         const dateTime = fmt(e.DateTime || dt(e.dateClean, e.time));
         const dateClean = extractDateFromDateTime(dateTime);
         return {
@@ -5786,17 +5932,25 @@
     if(!summary || !menu) return;
     const rect = summary.getBoundingClientRect();
     const margin = 8;
-    const desiredWidth = Math.min(280, Math.max(220, window.innerWidth - (margin * 2)));
+    const desiredWidth = Math.min(360, Math.max(260, window.innerWidth - (margin * 2)));
+    menu.style.position = 'fixed';
+    menu.style.zIndex = '2147483647';
     menu.style.width = desiredWidth + 'px';
     menu.style.left = Math.max(margin, Math.min(rect.left, window.innerWidth - desiredWidth - margin)) + 'px';
-    menu.style.top = (rect.bottom + 6) + 'px';
-    requestAnimationFrame(()=>{
-      const menuRect = menu.getBoundingClientRect();
-      if(menuRect.bottom > window.innerHeight - margin){
-        const aboveTop = rect.top - menuRect.height - 6;
-        menu.style.top = Math.max(margin, aboveTop) + 'px';
-      }
-    });
+
+    const gap = 6;
+    const below = Math.max(0, window.innerHeight - rect.bottom - margin - gap);
+    const above = Math.max(0, rect.top - margin - gap);
+    const naturalHeight = Math.min(menu.scrollHeight || 360, 360);
+    const openBelow = below >= Math.min(naturalHeight, 220) || below >= above;
+    const maxHeight = Math.max(160, Math.min(360, openBelow ? below : above));
+    menu.style.maxHeight = maxHeight + 'px';
+    menu.style.overflow = 'auto';
+    if(openBelow){
+      menu.style.top = Math.min(rect.bottom + gap, window.innerHeight - margin - maxHeight) + 'px';
+    } else {
+      menu.style.top = Math.max(margin, rect.top - maxHeight - gap) + 'px';
+    }
   }
   window.positionTableMultiFilterMenu = positionTableMultiFilterMenu;
 
@@ -7519,6 +7673,39 @@
   }
   window.setSemPicPageSize = setSemPicPageSize;
 
+  function updateSemPicTopScrollbar(){
+    const top = document.getElementById("semPicTopScroll");
+    const inner = document.getElementById("semPicTopScrollInner");
+    const wrap = document.getElementById("semPicTableWrap");
+    const table = document.querySelector("#tabSemPic .semPic-results-table");
+    if(!top || !inner || !wrap || !table) return;
+
+    const width = Math.max(table.scrollWidth || 0, table.offsetWidth || 0, wrap.scrollWidth || 0);
+    inner.style.width = width + "px";
+    const needsScroll = width > (wrap.clientWidth + 8);
+    top.style.display = needsScroll ? "block" : "none";
+
+    if(top.dataset.bound !== "1"){
+      let syncing = false;
+      top.addEventListener("scroll", function(){
+        if(syncing) return;
+        syncing = true;
+        wrap.scrollLeft = top.scrollLeft;
+        syncing = false;
+      });
+      wrap.addEventListener("scroll", function(){
+        if(syncing) return;
+        syncing = true;
+        top.scrollLeft = wrap.scrollLeft;
+        syncing = false;
+      });
+      window.addEventListener("resize", function(){ setTimeout(updateSemPicTopScrollbar, 60); });
+      top.dataset.bound = "1";
+    }
+    top.scrollLeft = wrap.scrollLeft;
+  }
+  window.updateSemPicTopScrollbar = updateSemPicTopScrollbar;
+
   function renderSemPicTable(){
     renderSemPicTableHeader();
     updateSemPicCarrierFilterOptions();
@@ -7532,6 +7719,7 @@
       tbody.innerHTML = `<tr><td colspan="8" class="muted" style="padding:16px;">Sem linhas para mostrar.</td></tr>`;
       updateSemPicPaginationControls(allRows.length, rows.length, pageInfo);
       updateSemPicKPIs();
+      setTimeout(updateSemPicTopScrollbar, 0);
       return;
     }
     tbody.innerHTML = rows.map(r=>{
@@ -7553,7 +7741,7 @@
       return `<tr class="${rowClass}">
         <td class="mono"><b>${escapeHtml(r.id)}</b></td>
         <td><span class="mono"><b>${escapeHtml(r.insertedDate || "-")}</b></span>${r.createdBy ? `<span class="envio-subline">${escapeHtml(r.createdBy)}</span>` : ""}</td>
-        <td><input class="manual-saiu-input" value="${refEmail}" placeholder="Ref email..." onblur="saveSemPicRefEmail('${escapeJs(r.id)}','${escapeJs(r.expectedCarrier)}', this.value)" onkeydown="if(event.key==='Enter'){this.blur();}"></td>
+        <td><textarea class="manual-saiu-input ref-email-cell-input" title="${refEmail}" placeholder="Ref email..." onblur="saveSemPicRefEmail('${escapeJs(r.id)}','${escapeJs(r.expectedCarrier)}', this.value)" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); this.blur();}">${refEmail}</textarea></td>
         <td><b>${escapeHtml(r.expectedCarrier || "-")}</b></td>
         <td>
           <span class="envio-status-line">Packing carrier: ${r.packingCarrier ? `<b>${escapeHtml(r.packingCarrier)}</b>` : `<b class="bad">nao encontrado</b>`}</span>
@@ -7567,6 +7755,7 @@
     }).join("");
     updateSemPicPaginationControls(allRows.length, rows.length, pageInfo);
     updateSemPicKPIs();
+    setTimeout(updateSemPicTopScrollbar, 0);
   }
   window.renderSemPicTable = renderSemPicTable;
 
@@ -9747,7 +9936,7 @@ Esta ação remove estes registos guardados na Firebase.`);
     const V4_MISSING_PATH = v4Path("RETCROSS_MISSING_DB_PATH", "sem_returns_refund/items");
     const V4_RESOLVED_PATH = v4Path("RETCROSS_RESOLVED_DB_PATH", "returns_com_diferenca_produtos/resolvidos");
 
-    function v4Mode(record){ return String(record && (record.mode || record.Mode || record.type || record.Type) || "").toUpperCase(); }
+    function v4Mode(record){ return String(record && (record.mode || record.Mode || record.type || record.Type) || returnRefundModeFromAny(record || {}) || "").toUpperCase(); }
     function v4IsReturnRefund(record){ const m = v4Mode(record); return m.includes("RETURN") || m.includes("REFUND"); }
     function v4IsReturn(record){ return v4Mode(record).includes("RETURN"); }
     function v4IsRefund(record){ return v4Mode(record).includes("REFUND"); }
@@ -11219,7 +11408,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       const m = s.match(/\d{4}-\d{2}-\d{2}/);
       return m ? m[0] : "";
     }
-    function regMode(r){ return String((r && (r.mode || r.Mode || r.type || r.Type)) || "").toUpperCase(); }
+    function regMode(r){ return String((r && (r.mode || r.Mode || r.type || r.Type)) || (typeof returnRefundModeFromAny === "function" ? returnRefundModeFromAny(r || {}) : "") || "").toUpperCase(); }
     function regItems(r){ return String((r && (r.prods || r.items || r.Items || r.content || r.Items_or_Content || r.expectedContent)) || "").trim(); }
     function regTracking(r){ return String((r && (r.track || r.tracking || r.Tracking || r.trackingId)) || "").trim(); }
     function regCarrier(r){ return String((r && (r.carrier || r.Carrier)) || "").trim(); }
