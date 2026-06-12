@@ -1035,6 +1035,41 @@
       #tabCases .casesInlineEditorGrid{grid-template-columns:1fr!important;}
     }
 
+
+    /* ===== Ref email em Envios / IDs sem picagem ===== */
+    #tabEnvios .envios-results-table{min-width:1865px;}
+    #tabEnvios .envios-results-table th:nth-child(1),
+    #tabEnvios .envios-results-table td:nth-child(1){width:92px;}
+    #tabEnvios .envios-results-table th:nth-child(2),
+    #tabEnvios .envios-results-table td:nth-child(2){width:105px;}
+    #tabEnvios .envios-results-table th:nth-child(3),
+    #tabEnvios .envios-results-table td:nth-child(3){width:185px;}
+    #tabEnvios .envios-results-table th:nth-child(4),
+    #tabEnvios .envios-results-table td:nth-child(4){width:130px;}
+    #tabEnvios .envios-results-table th:nth-child(5),
+    #tabEnvios .envios-results-table td:nth-child(5){width:210px;}
+    #tabEnvios .envios-results-table th:nth-child(6),
+    #tabEnvios .envios-results-table td:nth-child(6){width:220px;}
+    #tabEnvios .envios-results-table th:nth-child(7),
+    #tabEnvios .envios-results-table td:nth-child(7){width:115px;}
+    #tabEnvios .envios-results-table th:nth-child(8),
+    #tabEnvios .envios-results-table td:nth-child(8){width:270px;}
+    #tabEnvios .envios-results-table th:nth-child(9),
+    #tabEnvios .envios-results-table td:nth-child(9){width:200px;}
+    #tabEnvios .envios-results-table th:nth-child(10),
+    #tabEnvios .envios-results-table td:nth-child(10){width:200px;}
+    #tabEnvios .envios-results-table th:nth-child(11),
+    #tabEnvios .envios-results-table td:nth-child(11){width:160px;}
+    #tabSemPic .semPic-results-table{min-width:1360px;}
+    #tabSemPic .semPic-results-table th:nth-child(3),
+    #tabSemPic .semPic-results-table td:nth-child(3){width:190px;}
+    #tabSemPic .semPic-results-table th:nth-child(7),
+    #tabSemPic .semPic-results-table td:nth-child(7){position:static; right:auto; background:#fff; box-shadow:none; width:210px;}
+    #tabSemPic .semPic-results-table th:nth-child(7){background:#f1f3f5;}
+    #tabSemPic .semPic-results-table th:nth-child(8),
+    #tabSemPic .semPic-results-table td:nth-child(8){width:205px; position:sticky; right:0; background:#fff; box-shadow:-8px 0 12px rgba(15,23,42,.06);}
+    #tabSemPic .semPic-results-table th:nth-child(8){z-index:12; background:#f1f3f5;}
+
 </style>
 </head>
 <body>
@@ -1682,6 +1717,10 @@
           <label style="margin-top:14px;">Observações <span style="font-weight:500;color:#94a3b8;text-transform:none;letter-spacing:0;">(aplicadas a todos os IDs inseridos acima)</span></label>
           <textarea id="enviosObs" placeholder="Ex: IDs com problema na expedição de ontem / aguardar confirmação do transportador..." style="min-height:80px; font-size:14px; border:2px solid #cbd5e1; border-radius:12px;"></textarea>
           <div class="mini">Esta nota fica guardada na Firebase associada a cada ID deste lote. Podes editar individualmente depois na coluna da tabela.</div>
+
+          <label style="margin-top:14px;">Ref email <span style="font-weight:500;color:#94a3b8;text-transform:none;letter-spacing:0;">(aplicada a todos os IDs inseridos acima)</span></label>
+          <input id="enviosRefEmail" placeholder="Ex: REF123 / assunto do email / email do cliente" autocomplete="off">
+          <div class="mini">Esta referência fica guardada em todos os IDs que introduzires neste momento e pode ser editada depois na tabela.</div>
           <div id="enviosDuplicateWarning" class="enviosDuplicateWarning"></div>
 
           <div class="notice" style="margin-top:12px; background:#f8fafc; border-left:6px solid var(--packing);">
@@ -1904,10 +1943,11 @@
         </div>
         <div class="tableWrap">
           <table class="envios-results-table">
-            <thead>
+            <thead id="enviosThead">
               <tr>
                 <th>Order ID</th>
                 <th>Data inserção</th>
+                <th>Ref email</th>
                 <th>Lista / Estado</th>
                 <th>Tracking / Transportadora</th>
                 <th>Saiu manual / nota</th>
@@ -1919,7 +1959,7 @@
               </tr>
             </thead>
             <tbody id="enviosTbody">
-              <tr><td colspan="10" class="muted" style="padding:16px;">Cola IDs: a data de inserção fica registada automaticamente no dia em que guardas.</td></tr>
+              <tr><td colspan="11" class="muted" style="padding:16px;">Cola IDs: a data de inserção fica registada automaticamente no dia em que guardas.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1963,6 +2003,10 @@
           <label>Order IDs</label>
           <textarea id="semPicIds" placeholder="17989202&#10;17990211&#10;..."></textarea>
           <div class="mini">Aceita um ID por linha ou IDs separados por espacos, virgulas ou ponto-e-virgula.</div>
+
+          <label style="margin-top:14px;">Ref email <span style="font-weight:500;color:#94a3b8;text-transform:none;letter-spacing:0;">(aplicada a todos os IDs inseridos acima)</span></label>
+          <input id="semPicRefEmail" placeholder="Ex: REF123 / assunto do email / email do cliente" autocomplete="off">
+          <div class="mini">Esta referência fica guardada em todos os IDs que introduzires neste momento e pode ser editada depois na tabela.</div>
           <div class="notice" style="margin-top:12px; background:#f8fafc; border-left:6px solid var(--refunds);">
             <b>Data de inserção automática:</b> cada ID fica com a data do dia em que foi introduzido. Essa data fica preservada nas próximas pesquisas e atualizações.
           </div>
@@ -2089,10 +2133,11 @@
         </div>
         <div class="tableWrap">
           <table class="semPic-results-table">
-            <thead>
+            <thead id="semPicThead">
               <tr>
                 <th>Order ID</th>
                 <th>Data insercao</th>
+                <th>Ref email</th>
                 <th>Transportadora esperada</th>
                 <th>Firebase / Packing</th>
                 <th>Situacao</th>
@@ -2101,7 +2146,7 @@
               </tr>
             </thead>
             <tbody id="semPicTbody">
-              <tr><td colspan="7" class="muted" style="padding:16px;">Cola IDs, escolhe a transportadora e clica em Guardar IDs e pesquisar.</td></tr>
+              <tr><td colspan="8" class="muted" style="padding:16px;">Cola IDs, escolhe a transportadora e clica em Guardar IDs e pesquisar.</td></tr>
             </tbody>
           </table>
         </div>
@@ -2314,7 +2359,9 @@
     realtimeListening: false,
     page: 1,
     pageSize: 25,
-    lastPaginationSignature: ""
+    lastPaginationSignature: "",
+    columnFilters: {},
+    tableSort: {key:"packing", dir:"asc"}
   };
 
   const ENVIOS_DB_PATH = "envios_analise/items";
@@ -2333,7 +2380,9 @@
     realtimeListening: false,
     page: 1,
     pageSize: 25,
-    lastPaginationSignature: ""
+    lastPaginationSignature: "",
+    columnFilters: {},
+    tableSort: {key:"packing", dir:"asc"}
   };
 
   const retCrossState = {
@@ -5075,6 +5124,7 @@
     const insertedDate = fmt(saved.insertedDate || (saved.createdAt ? String(saved.createdAt).slice(0,10) : ""));
     const createdBy = fmt(saved.createdBy || "");
     const observacoes = fmt(saved.observacoes || "");
+    const refEmail = fmt(saved.refEmail || saved.emailRef || saved.ref_email || "");
     const savedTerminal = envioTerminalList(saved);
     const entregue_paid = !!saved.entregue_paid || savedTerminal === "ENTREGUE_PAID";
     const entregue = !!saved.entregue || savedTerminal === "ENTREGUE" || entregue_paid;
@@ -5152,6 +5202,7 @@
       packedEffective,
       manualSaiu,
       observacoes,
+      refEmail,
       entregue,
       entregue_paid,
       return: !!ret || manualReturn,
@@ -5264,7 +5315,7 @@
     await db.ref("/").update(updates);
   }
 
-  async function persistEnviosIds(ids, observacoes){
+  async function persistEnviosIds(ids, observacoes, refEmailValue){
     const uniqueIds = uniq((ids || []).map(normaliseOrderId).filter(Boolean));
     if(!uniqueIds.length) return;
     try{ localStorage.setItem("crosscheck_off_enviosIds_v1", uniqueIds.join("\n")); }catch(e){}
@@ -5273,6 +5324,7 @@
     const today = now.slice(0,10);
     const by = enviosCurrentUser();
     const obs = String(observacoes || "").trim();
+    const refEmail = String(refEmailValue || "").trim();
     const patches = {};
     uniqueIds.forEach(id=>{
       const existing = savedEnvio(id);
@@ -5293,6 +5345,7 @@
       if(!existing.createdAt) patch.createdAt = now;
       if(!existing.createdBy) patch.createdBy = by;
       if(obs) patch.observacoes = obs;
+      if(refEmail) patch.refEmail = refEmail;
       patches[key] = patch;
       enviosState.savedItems[id] = Object.assign({}, existing, patch, {id, insertedDate, createdAt: existing.createdAt || now, createdBy: existing.createdBy || by});
     });
@@ -5383,8 +5436,10 @@
     try{
       enviosSetStatus(analysis.existingIds.length ? "A guardar apenas alterações necessárias..." : "A guardar IDs...", analysis.existingIds.length ? "warn" : "");
       const obs = String(($("enviosObs") && $("enviosObs").value) || "").trim();
-      await persistEnviosIds(ids, obs);
+      const refEmail = String(($("enviosRefEmail") && $("enviosRefEmail").value) || "").trim();
+      await persistEnviosIds(ids, obs, refEmail);
       if($("enviosObs")) $("enviosObs").value = "";
+      if($("enviosRefEmail")) $("enviosRefEmail").value = "";
       // Limpar a caixa ANTES de correr a análise para que getEnviosIds use
       // o savedFallback (todos os IDs guardados) e não só o que está na caixa.
       clearEnviosInputBox();
@@ -5610,7 +5665,410 @@
     refreshCarrierFilterOptions("semPicCarrierFilter", semPicState.rows || [], r => r && r.expectedCarrier, "Todas as transportadoras");
   }
 
-  function enviosPassFilters(r){
+
+  /* ===== Filtros por coluna: Envios em Análise + IDs sem picagem ===== */
+  function tableColumnFilterState(area){
+    return area === "semPic" ? semPicState : enviosState;
+  }
+
+  function tableColumnFilterMap(area){
+    const st = tableColumnFilterState(area);
+    if(!st.columnFilters) st.columnFilters = {};
+    return st.columnFilters;
+  }
+
+  function tableColumnFilterTitle(area){
+    return area === "semPic" ? "IDs sem picagem" : "Envios";
+  }
+
+  function tableFilterTokenKey(value){
+    return String(value || "").trim().toUpperCase();
+  }
+
+  function tableFilterCleanArray(value){
+    if(Array.isArray(value)) return value.map(v=>String(v || "").trim()).filter(Boolean);
+    const one = String(value || "").trim();
+    return one ? [one] : [];
+  }
+
+  function getTableColumnFilter(area, key){
+    const filters = tableColumnFilterMap(area);
+    const v = filters[key];
+    return Array.isArray(v) ? "" : String(v || "");
+  }
+
+  function getTableColumnFilterValues(area, key){
+    return tableFilterCleanArray(tableColumnFilterMap(area)[key]);
+  }
+
+  function setTableColumnFilter(area, key, value){
+    const filters = tableColumnFilterMap(area);
+    const val = String(value || "").trim();
+    if(val) filters[key] = val;
+    else delete filters[key];
+    if(area === "semPic"){
+      semPicState.page = 1;
+      renderSemPicTable();
+    } else {
+      enviosState.page = 1;
+      renderEnviosTable();
+    }
+  }
+  window.setTableColumnFilter = setTableColumnFilter;
+
+  function setTableColumnMultiFilter(area, key, values){
+    const filters = tableColumnFilterMap(area);
+    const clean = tableFilterCleanArray(values);
+    if(clean.length) filters[key] = clean;
+    else delete filters[key];
+    if(area === "semPic"){
+      semPicState.page = 1;
+      renderSemPicTable();
+    } else {
+      enviosState.page = 1;
+      renderEnviosTable();
+    }
+  }
+  window.setTableColumnMultiFilter = setTableColumnMultiFilter;
+
+  function clearTableColumnFilter(area, key){
+    const filters = tableColumnFilterMap(area);
+    if(key) delete filters[key];
+    if(area === "semPic"){
+      semPicState.page = 1;
+      renderSemPicTable();
+    } else {
+      enviosState.page = 1;
+      renderEnviosTable();
+    }
+  }
+  window.clearTableColumnFilter = clearTableColumnFilter;
+
+  function clearTableColumnFilters(area){
+    const st = tableColumnFilterState(area);
+    st.columnFilters = {};
+    if(area === "semPic"){
+      semPicState.page = 1;
+      renderSemPicTable();
+    } else {
+      enviosState.page = 1;
+      renderEnviosTable();
+    }
+  }
+  window.clearTableColumnFilters = clearTableColumnFilters;
+
+  function tableFilterInputHtml(area, key, placeholder){
+    const v = escapeHtml(getTableColumnFilter(area, key));
+    return `<input class="casesColFilter" value="${v}" placeholder="${escapeHtml(placeholder || 'Filtrar')}" onchange="setTableColumnFilter('${escapeJs(area)}','${escapeJs(key)}', this.value)" onkeydown="if(event.key==='Enter'){this.blur();}">`;
+  }
+
+  function tableFilterOpenCellsClear(){
+    document.querySelectorAll('.casesFilterOpenCell').forEach(th=>th.classList.remove('casesFilterOpenCell'));
+  }
+
+  function closeOtherTableMultiFilters(current){
+    document.querySelectorAll('.tableMultiFilter[open]').forEach(d=>{
+      if(d !== current) d.removeAttribute('open');
+    });
+    tableFilterOpenCellsClear();
+    if(current && current.open){
+      const th = current.closest ? current.closest('th') : null;
+      if(th) th.classList.add('casesFilterOpenCell');
+    }
+  }
+
+  function positionTableMultiFilterMenu(details){
+    if(!details) return;
+    if(!details.open){ tableFilterOpenCellsClear(); return; }
+    closeOtherTableMultiFilters(details);
+    const summary = details.querySelector('summary');
+    const menu = details.querySelector('.casesMultiMenu');
+    if(!summary || !menu) return;
+    const rect = summary.getBoundingClientRect();
+    const margin = 8;
+    const desiredWidth = Math.min(280, Math.max(220, window.innerWidth - (margin * 2)));
+    menu.style.width = desiredWidth + 'px';
+    menu.style.left = Math.max(margin, Math.min(rect.left, window.innerWidth - desiredWidth - margin)) + 'px';
+    menu.style.top = (rect.bottom + 6) + 'px';
+    requestAnimationFrame(()=>{
+      const menuRect = menu.getBoundingClientRect();
+      if(menuRect.bottom > window.innerHeight - margin){
+        const aboveTop = rect.top - menuRect.height - 6;
+        menu.style.top = Math.max(margin, aboveTop) + 'px';
+      }
+    });
+  }
+  window.positionTableMultiFilterMenu = positionTableMultiFilterMenu;
+
+  function repositionOpenTableMultiFilter(){
+    const open = document.querySelector('.tableMultiFilter[open]');
+    if(open) positionTableMultiFilterMenu(open);
+  }
+  window.addEventListener('resize', repositionOpenTableMultiFilter);
+  window.addEventListener('scroll', repositionOpenTableMultiFilter, true);
+
+  function applyTableColumnMultiFilterFromButton(btn){
+    const menu = btn && btn.closest ? btn.closest('.casesMultiMenu') : null;
+    if(!menu) return;
+    const area = menu.getAttribute('data-table-area') || 'envios';
+    const key = menu.getAttribute('data-table-key') || '';
+    const values = Array.from(menu.querySelectorAll("input[type='checkbox']:checked")).map(x=>x.value);
+    setTableColumnMultiFilter(area, key, values);
+  }
+  window.applyTableColumnMultiFilterFromButton = applyTableColumnMultiFilterFromButton;
+
+  function clearTableColumnFilterFromButton(btn){
+    const menu = btn && btn.closest ? btn.closest('.casesMultiMenu') : null;
+    if(!menu) return;
+    clearTableColumnFilter(menu.getAttribute('data-table-area') || 'envios', menu.getAttribute('data-table-key') || '');
+  }
+  window.clearTableColumnFilterFromButton = clearTableColumnFilterFromButton;
+
+  function clearAllTableColumnFiltersFromButton(btn){
+    const menu = btn && btn.closest ? btn.closest('.casesMultiMenu') : null;
+    clearTableColumnFilters(menu ? (menu.getAttribute('data-table-area') || 'envios') : 'envios');
+  }
+  window.clearAllTableColumnFiltersFromButton = clearAllTableColumnFiltersFromButton;
+
+  function enviosColumnTokens(r, key){
+    const rowList = envioList(r);
+    if(key === "list") return [envioListLabel(r) || rowList || "Sem lista"];
+    if(key === "packed") return [r && r.packedEffective ? (hasManualSaiu(r) ? "EMBALADO MANUAL" : "EMBALADO") : "NÃO EMBALADO"];
+    if(key === "carrier") return [String(r && r.carrier || "Sem transportadora").trim() || "Sem transportadora"];
+    if(key === "manual") return [hasManualSaiu(r) ? "COM SAIU MANUAL" : "SEM SAIU MANUAL"];
+    if(key === "rr"){
+      const tokens = [];
+      if(r && r.return) tokens.push(r.manualReturnRefundMode === "RETURN" ? "RETURN MANUAL" : "RETURN");
+      if(r && r.refund) tokens.push(r.manualReturnRefundMode === "REFUND" ? "REFUND MANUAL" : "REFUND");
+      if(r && r.manualReturnRefund) tokens.push("MANUAL");
+      if(!tokens.length) tokens.push("SEM RETURN/REFUND");
+      return tokens;
+    }
+    if(key === "verification") return [String(r && r.verificacao || "Sem verificação").trim() || "Sem verificação"];
+    return [];
+  }
+
+  function enviosColumnText(r, key){
+    if(key === "id") return [r && r.id].join(" ");
+    if(key === "inserted") return [r && r.insertedDate, r && r.createdAt, r && r.createdBy].join(" ");
+    if(key === "refEmail") return [r && r.refEmail].join(" ");
+    if(key === "list") return [envioListLabel(r), enviosColumnTokens(r, "packed")].join(" ");
+    if(key === "trackingCarrier") return [r && r.tracking, r && r.carrier].join(" ");
+    if(key === "manual") return [r && r.manualSaiu, r && r.manualSaiuBy, r && r.manualSaiuAt].join(" ");
+    if(key === "rr") return [r && r.returnCloseLabel, r && r.refundCloseLabel, r && r.returnRefundCloseLabel, r && r.manualReturnRefundMode, r && r.manualReturnRefundDate, r && r.manualReturnRefundNote].join(" ");
+    if(key === "verification") return [r && r.verificacao, r && r.packingDate, r && r.returnRefundDate, r && r.seenBy, r && r.seenAt, r && r.terminalBy, r && r.terminalAt].join(" ");
+    if(key === "obs") return [r && r.observacoes].join(" ");
+    if(key === "items") return [r && r.items, r && r.user, r && r.batch].join(" ");
+    return JSON.stringify(r || {});
+  }
+
+  function semPicColumnTokens(r, key){
+    if(key === "list"){
+      const list = semPicList(r);
+      return [list === "DONE" ? "JÁ COM PICAGEM" : (list === "RESOLUTION" ? "OUTRA RESOLUÇÃO" : "SEM PICAGEM")];
+    }
+    if(key === "expectedCarrier") return [String(r && r.expectedCarrier || "Sem transportadora").trim() || "Sem transportadora"];
+    if(key === "packingCarrier") return [String(r && r.packingCarrier || "Sem packing").trim() || "Sem packing"];
+    if(key === "situation"){
+      const tokens = [];
+      const list = semPicList(r);
+      tokens.push(list === "DONE" ? "JÁ COM PICAGEM" : (list === "RESOLUTION" ? "OUTRA RESOLUÇÃO" : "SEM PICAGEM"));
+      if(r && r.diffCarrier) tokens.push("TRANSPORTADORA DIFERENTE");
+      if(r && r.noRecord) tokens.push("SEM REGISTO");
+      if(r && r.hasPickupFinal) tokens.push("PICAGEM FINAL");
+      return tokens;
+    }
+    return [];
+  }
+
+  function semPicColumnText(r, key){
+    if(key === "id") return [r && r.id].join(" ");
+    if(key === "inserted") return [r && r.insertedDate, r && r.createdBy].join(" ");
+    if(key === "refEmail") return [r && r.refEmail].join(" ");
+    if(key === "expectedCarrier") return [r && r.expectedCarrier].join(" ");
+    if(key === "firebase") return [r && r.packingCarrier, r && r.packingDate, r && r.batch, r && r.status].join(" ");
+    if(key === "situation") return [r && r.status, r && r.note, r && r.resolutionNote, semPicColumnTokens(r, "situation")].join(" ");
+    if(key === "trackingUser") return [r && r.tracking, r && r.user].join(" ");
+    if(key === "refEmail") return [r && r.refEmail].join(" ");
+    return JSON.stringify(r || {});
+  }
+
+  function tableFilterSortedUnique(arr){
+    return Array.from(new Set((arr || []).map(x=>String(x || "").trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b, undefined, {numeric:true}));
+  }
+
+  function tableColumnTokens(area, r, key){
+    return area === "semPic" ? semPicColumnTokens(r, key) : enviosColumnTokens(r, key);
+  }
+
+  function tableColumnText(area, r, key){
+    return area === "semPic" ? semPicColumnText(r, key) : enviosColumnText(r, key);
+  }
+
+  function tableColumnFilterMatches(area, r, ignoreKey){
+    const filters = tableColumnFilterMap(area);
+    return Object.entries(filters).every(([key, raw])=>{
+      if(ignoreKey && key === ignoreKey) return true;
+      const values = tableFilterCleanArray(raw);
+      if(!values.length) return true;
+      if(Array.isArray(raw)){
+        const tokens = tableColumnTokens(area, r, key).map(tableFilterTokenKey).filter(Boolean);
+        return values.some(v=>tokens.includes(tableFilterTokenKey(v)));
+      }
+      const q = String(values[0] || "").trim().toLowerCase();
+      if(!q) return true;
+      return String(tableColumnText(area, r, key) || "").toLowerCase().includes(q);
+    });
+  }
+
+  function tableFilterOptionsFromRows(area, key){
+    const rows = area === "semPic" ? (semPicState.rows || []) : (enviosState.rows || []);
+    const base = rows.filter(r=>{
+      if(area === "semPic") return semPicPassMainFilters(r) && tableColumnFilterMatches(area, r, key);
+      return enviosPassMainFilters(r) && tableColumnFilterMatches(area, r, key);
+    });
+    const opts = [];
+    base.forEach(r=>tableColumnTokens(area, r, key).forEach(v=>{
+      const clean = String(v || "").trim();
+      if(clean) opts.push(clean);
+    }));
+    return tableFilterSortedUnique(opts);
+  }
+
+  function tableFilterOptionCounts(area, key, options){
+    const counts = {};
+    (options || []).forEach(o=>{ counts[String(o)] = 0; });
+    const optionKeyMap = new Map((options || []).map(o=>[tableFilterTokenKey(o), String(o)]));
+    const rows = area === "semPic" ? (semPicState.rows || []) : (enviosState.rows || []);
+    rows.filter(r=>{
+      if(area === "semPic") return semPicPassMainFilters(r) && tableColumnFilterMatches(area, r, key);
+      return enviosPassMainFilters(r) && tableColumnFilterMatches(area, r, key);
+    }).forEach(r=>{
+      const seen = new Set(tableColumnTokens(area, r, key).map(tableFilterTokenKey).filter(Boolean));
+      seen.forEach(token=>{
+        const original = optionKeyMap.get(token);
+        if(original !== undefined) counts[original] = (counts[original] || 0) + 1;
+      });
+    });
+    return counts;
+  }
+
+  function tableFilterMultiHtml(area, key, fallbackOptions){
+    const selected = getTableColumnFilterValues(area, key);
+    const selectedSet = new Set(selected.map(x=>String(x)));
+    const opts = tableFilterSortedUnique((tableFilterOptionsFromRows(area, key).length ? tableFilterOptionsFromRows(area, key) : (fallbackOptions || [])));
+    const counts = tableFilterOptionCounts(area, key, opts);
+    const summary = selected.length ? (selected.length === 1 ? selected[0] : selected.length + " selecionados") : "Todos";
+    const html = opts.length ? opts.map(o=>{
+      const checked = selectedSet.has(String(o)) ? " checked" : "";
+      const count = counts[String(o)] || 0;
+      return `<label class="casesMultiOption"><input type="checkbox" value="${escapeHtml(o)}"${checked}> <span class="casesMultiOptionText">${escapeHtml(o)}</span><span class="casesMultiOptionCount" title="${count} linha(s)">${count}</span></label>`;
+    }).join("") : `<div class="muted" style="font-size:11px;padding:6px 4px;">Sem opções.</div>`;
+    return `<details class="casesMultiFilter tableMultiFilter" ontoggle="positionTableMultiFilterMenu(this)"><summary title="${escapeHtml(selected.join(', ') || 'Todos')}">${escapeHtml(summary)}</summary><div class="casesMultiMenu" data-table-area="${escapeHtml(area)}" data-table-key="${escapeHtml(key)}">${html}<div class="casesMultiActions"><button type="button" onclick="applyTableColumnMultiFilterFromButton(this)">Aplicar</button><button class="secondary" type="button" onclick="clearTableColumnFilterFromButton(this)">Limpar</button><button class="dangerLight" type="button" onclick="clearAllTableColumnFiltersFromButton(this)">Limpar tudo</button></div></div></details>`;
+  }
+
+  function tableHeaderCell(label, filterHtml, hint){
+    return `<th><span class="casesThLabel">${escapeHtml(label)}</span>${filterHtml || ""}${hint ? `<span class="casesColFilterHint">${escapeHtml(hint)}</span>` : ""}</th>`;
+  }
+
+  function tableDateSortValue(value){
+    const raw = String(value || "").trim();
+    if(!raw) return null;
+    const iso = raw.replace(" ", "T");
+    const parsed = Date.parse(iso);
+    if(Number.isFinite(parsed)) return parsed;
+    const m = raw.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})(?:\s+(\d{1,2}):(\d{2}))?/);
+    if(m){
+      const y = String(m[3]).length === 2 ? Number("20" + m[3]) : Number(m[3]);
+      const d = Number(m[1]);
+      const mo = Number(m[2]) - 1;
+      const hh = Number(m[4] || 0);
+      const mm = Number(m[5] || 0);
+      const t = new Date(y, mo, d, hh, mm, 0).getTime();
+      if(Number.isFinite(t)) return t;
+    }
+    return raw.toLowerCase();
+  }
+
+  function compareTableDateValues(aValue, bValue, dir){
+    const av = tableDateSortValue(aValue);
+    const bv = tableDateSortValue(bValue);
+    const aMissing = av === null || av === undefined || av === "";
+    const bMissing = bv === null || bv === undefined || bv === "";
+    if(aMissing && bMissing) return 0;
+    if(aMissing) return 1;
+    if(bMissing) return -1;
+    let cmp = 0;
+    if(typeof av === "number" && typeof bv === "number") cmp = av - bv;
+    else cmp = String(av).localeCompare(String(bv), undefined, {numeric:true, sensitivity:"base"});
+    return dir === "desc" ? -cmp : cmp;
+  }
+
+  function tableSortButtonClass(area, key, dir){
+    const st = area === "semPic" ? semPicState : enviosState;
+    const active = st && st.tableSort && st.tableSort.key === key && st.tableSort.dir === dir;
+    return active ? "background:#2563eb;color:#fff;border-color:#2563eb;" : "background:#fff;color:#334155;border-color:#cbd5e1;";
+  }
+
+  function tableSortButtonsHtml(area, key, ascLabel, descLabel){
+    return `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">` +
+      `<button type="button" title="Ordenar do mais antigo para o mais recente" onclick="setTableColumnSort('${escapeHtml(area)}','${escapeHtml(key)}','asc')" style="border:1px solid #cbd5e1;border-radius:7px;padding:4px 6px;font-size:10px;font-weight:900;cursor:pointer;${tableSortButtonClass(area,key,'asc')}">${escapeHtml(ascLabel || 'Antigo ↑')}</button>` +
+      `<button type="button" title="Ordenar do mais recente para o mais antigo" onclick="setTableColumnSort('${escapeHtml(area)}','${escapeHtml(key)}','desc')" style="border:1px solid #cbd5e1;border-radius:7px;padding:4px 6px;font-size:10px;font-weight:900;cursor:pointer;${tableSortButtonClass(area,key,'desc')}">${escapeHtml(descLabel || 'Recente ↓')}</button>` +
+    `</div>`;
+  }
+
+  function setTableColumnSort(area, key, dir){
+    const st = area === "semPic" ? semPicState : enviosState;
+    if(!st) return;
+    st.tableSort = {key:String(key || ""), dir:dir === "desc" ? "desc" : "asc"};
+    st.page = 1;
+    st.lastPaginationSignature = "";
+    if(area === "semPic") renderSemPicTable();
+    else renderEnviosTable();
+  }
+  window.setTableColumnSort = setTableColumnSort;
+
+  function renderEnviosTableHeader(){
+    const thead = $("enviosThead");
+    if(!thead) return;
+    thead.innerHTML = `<tr>
+      ${tableHeaderCell("Order ID", tableFilterInputHtml("envios", "id", "Filtrar ID"))}
+      ${tableHeaderCell("Data inserção", tableFilterInputHtml("envios", "inserted", "Data/user") + tableSortButtonsHtml("envios", "inserted", "Antigo ↑", "Recente ↓"))}
+      ${tableHeaderCell("Ref email", tableFilterInputHtml("envios", "refEmail", "Ref email"))}
+      ${tableHeaderCell("Lista / Estado", tableFilterMultiHtml("envios", "list", ["Em análise","Returns/Refunds","Entregue","Entregue/Paid","Verificados","Sem registo"]))}
+      ${tableHeaderCell("Tracking / Transportadora", tableFilterInputHtml("envios", "trackingCarrier", "Tracking/carrier"))}
+      ${tableHeaderCell("Saiu manual / nota", tableFilterMultiHtml("envios", "manual", ["COM SAIU MANUAL","SEM SAIU MANUAL"]))}
+      ${tableHeaderCell("Return / Refund", tableFilterMultiHtml("envios", "rr", ["RETURN","REFUND","RETURN MANUAL","REFUND MANUAL","MANUAL","SEM RETURN/REFUND"]))}
+      ${tableHeaderCell("Verificação / Datas", tableFilterMultiHtml("envios", "verification", []))}
+      ${tableHeaderCell("Observações", tableFilterInputHtml("envios", "obs", "Observações"))}
+      ${tableHeaderCell("Items / User", tableFilterInputHtml("envios", "items", "Items/user"))}
+      <th><span class="casesThLabel">Ações</span><button class="casesColClearBtn" type="button" onclick="clearTableColumnFilters('envios')">Limpar filtros</button></th>
+    </tr>`;
+  }
+
+  function renderSemPicTableHeader(){
+    const thead = $("semPicThead");
+    if(!thead) return;
+    thead.innerHTML = `<tr>
+      ${tableHeaderCell("Order ID", tableFilterInputHtml("semPic", "id", "Filtrar ID"))}
+      ${tableHeaderCell("Data inserção", tableFilterInputHtml("semPic", "inserted", "Data/user") + tableSortButtonsHtml("semPic", "inserted", "Antigo ↑", "Recente ↓"))}
+      ${tableHeaderCell("Ref email", tableFilterInputHtml("semPic", "refEmail", "Ref email"))}
+      ${tableHeaderCell("Transportadora esperada", tableFilterMultiHtml("semPic", "expectedCarrier", []))}
+      ${tableHeaderCell("Firebase / Packing", tableFilterInputHtml("semPic", "firebase", "Packing/batch"))}
+      ${tableHeaderCell("Situação", tableFilterMultiHtml("semPic", "situation", ["SEM PICAGEM","JÁ COM PICAGEM","OUTRA RESOLUÇÃO","TRANSPORTADORA DIFERENTE","SEM REGISTO","PICAGEM FINAL"]))}
+      ${tableHeaderCell("Tracking / User", tableFilterInputHtml("semPic", "trackingUser", "Tracking/user"))}
+      <th><span class="casesThLabel">Ações</span><button class="casesColClearBtn" type="button" onclick="clearTableColumnFilters('semPic')">Limpar filtros</button></th>
+    </tr>`;
+  }
+
+  function tableColumnFiltersSummary(area){
+    const filters = tableColumnFilterMap(area);
+    const count = Object.values(filters).filter(v=>tableFilterCleanArray(v).length).length;
+    return count ? (count + " filtro(s) no cabeçalho") : "";
+  }
+
+
+  function enviosPassMainFilters(r){
     const quickLocalSearch = String((enviosState && enviosState.quickSearchAllLists) || "").trim().toLowerCase();
     if(quickLocalSearch){
       const qId = normaliseOrderId(quickLocalSearch);
@@ -5629,6 +6087,7 @@
         r && r.manualSaiu,
         r && r.seenBy,
         r && r.observacoes,
+        r && r.refEmail,
         r && r.batch,
         r && r.statusClass,
         r && JSON.stringify(r || {})
@@ -5658,9 +6117,14 @@
 
     const q = ($("enviosFilterText") ? $("enviosFilterText").value : "").trim().toLowerCase();
     if(!q) return true;
-    const hay = [r.id, r.tracking, r.carrier, r.verificacao, r.packingDate, r.returnRefundDate, r.returnCloseLabel, r.refundCloseLabel, r.returnRefundCloseLabel, r.user, r.items, r.manualSaiu, r.seenBy, r.observacoes]
+    const hay = [r.id, r.tracking, r.carrier, r.verificacao, r.packingDate, r.returnRefundDate, r.returnCloseLabel, r.refundCloseLabel, r.returnRefundCloseLabel, r.user, r.items, r.manualSaiu, r.seenBy, r.observacoes, r.refEmail]
       .join(" ").toLowerCase();
     return hay.includes(q);
+  }
+  window.enviosPassMainFilters = enviosPassMainFilters;
+
+  function enviosPassFilters(r){
+    return enviosPassMainFilters(r) && tableColumnFilterMatches("envios", r);
   }
 
   function updateEnviosActiveFilters(){
@@ -5679,6 +6143,8 @@
     if(kind && kind !== "ALL") parts.push("Mostrar: " + kind);
     if(carrierVal && carrierVal !== "ALL") parts.push("Transportadora: " + carrierText);
     if(q) parts.push("Texto: " + q);
+    const headerSummary = tableColumnFiltersSummary("envios");
+    if(headerSummary) parts.push(headerSummary);
     if($("enviosActiveFilters")) $("enviosActiveFilters").textContent = parts.length ? ("Filtro ativo → " + parts.join(" | ")) : "Sem filtros";
   }
 
@@ -5703,13 +6169,27 @@
     });
   }
 
+  function sortEnviosRows(rows){
+    const sort = enviosState && enviosState.tableSort || {key:"packing", dir:"asc"};
+    if(sort.key === "inserted"){
+      return (rows || []).slice().sort((a,b)=>{
+        const cmp = compareTableDateValues((a && (a.insertedDate || a.createdAt)) || "", (b && (b.insertedDate || b.createdAt)) || "", sort.dir);
+        if(cmp !== 0) return cmp;
+        return String(a && a.id || "").localeCompare(String(b && b.id || ""), undefined, {numeric:true, sensitivity:"base"});
+      });
+    }
+    return sortEnviosByPackingDateAsc(rows);
+  }
+
   function enviosPaginationSignature(){
     return JSON.stringify({
       quick: (enviosState && enviosState.quickSearchAllLists) || "",
       list: enviosState.listFilter || "ACTIVE",
       text: $("enviosFilterText") ? $("enviosFilterText").value : "",
       kind: $("enviosFilterKind") ? $("enviosFilterKind").value : "ALL",
-      carrier: $("enviosCarrierFilter") ? $("enviosCarrierFilter").value : "ALL"
+      carrier: $("enviosCarrierFilter") ? $("enviosCarrierFilter").value : "ALL",
+      columns: JSON.stringify((enviosState && enviosState.columnFilters) || {}),
+      sort: JSON.stringify((enviosState && enviosState.tableSort) || {})
     });
   }
 
@@ -5754,7 +6234,7 @@
   }
 
   function setEnviosPage(page){
-    const total = sortEnviosByPackingDateAsc((enviosState.rows || []).filter(enviosPassFilters)).length;
+    const total = sortEnviosRows((enviosState.rows || []).filter(enviosPassFilters)).length;
     const pageSize = getEnviosPageSize();
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     if(page === "last") enviosState.page = totalPages;
@@ -5777,17 +6257,18 @@
   window.setEnviosPageSize = setEnviosPageSize;
 
   function renderEnviosTable(){
+    renderEnviosTableHeader();
     updateEnviosCarrierFilterOptions();
     updateEnviosActiveFilters();
     updateEnviosListTabs();
     const tbody = $("enviosTbody");
     if(!tbody) return;
-    const allRows = sortEnviosByPackingDateAsc((enviosState.rows || []).filter(enviosPassFilters));
+    const allRows = sortEnviosRows((enviosState.rows || []).filter(enviosPassFilters));
     const pageInfo = ensureEnviosPagination(allRows.length);
     const rows = allRows.slice(pageInfo.start, pageInfo.end);
 
     if(!rows.length){
-      tbody.innerHTML = `<tr><td colspan="10" class="muted" style="padding:16px;">Sem linhas para mostrar.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="11" class="muted" style="padding:16px;">Sem linhas para mostrar.</td></tr>`;
       updateEnviosPaginationControls(allRows.length, rows.length, pageInfo);
       updateEnviosKPIs();
       return;
@@ -5798,6 +6279,7 @@
       const rowClass = rowList === "ENTREGUE_PAID" ? "envio-row-entregue-paid" : (rowList === "ENTREGUE" ? "envio-row-entregue" : (rowList === "VERIFIED" ? "envio-row-verified" : (rowList === "RETURN_OR_REFUND" ? "envio-row-issue" : "")));
       const manual = escapeHtml(r.manualSaiu || "");
       const obs = escapeHtml(r.observacoes || "");
+      const refEmail = escapeHtml(r.refEmail || "");
       const insertedDate = escapeHtml(r.insertedDate || (r.createdAt ? String(r.createdAt).slice(0,10) : "-"));
       const createdBy = r.createdBy ? `<span class="envio-subline">${escapeHtml(r.createdBy)}</span>` : "";
       const packedText = r.packed ? "SIM" : (hasManualSaiu(r) ? "SIM (manual)" : "NÃO");
@@ -5839,6 +6321,7 @@
         <tr class="${rowClass}">
           <td class="mono"><b>${escapeHtml(r.id)}</b></td>
           <td><span class="mono"><b>${insertedDate}</b></span>${createdBy}</td>
+          <td><input class="manual-saiu-input" value="${refEmail}" placeholder="Ref email..." onblur="saveEnvioRefEmail('${escapeJs(r.id)}', this.value)" onkeydown="if(event.key==='Enter'){this.blur();}"></td>
           <td>
             <span class="envio-badge ${envioListClass(r)}">${escapeHtml(envioListLabel(r))}</span>
             ${r.manualReturnRefund ? `<span class="envio-badge manual-rr">${escapeHtml(manualRRModeText)} MANUAL</span>` : ""}
@@ -5877,6 +6360,7 @@
     if($("enviosFilterKind")) $("enviosFilterKind").value = "ALL";
     if($("enviosCarrierFilter")) $("enviosCarrierFilter").value = "ALL";
     if(enviosState) enviosState.quickSearchAllLists = "";
+    if(enviosState) enviosState.columnFilters = {};
     enviosState.listFilter = "ACTIVE";
     enviosState.page = 1;
     renderEnviosTable();
@@ -5886,6 +6370,7 @@
   function clearEnviosAnalise(){
     if($("enviosIds")) $("enviosIds").value = "";
     if($("enviosObs")) $("enviosObs").value = "";
+    if($("enviosRefEmail")) $("enviosRefEmail").value = "";
     enviosState.rows = [];
     enviosState.lastRunAt = null;
     try{ localStorage.removeItem("crosscheck_off_enviosIds_v1"); }catch(e){}
@@ -5938,6 +6423,28 @@
     }
   }
   window.saveEnvioObs = saveEnvioObs;
+
+  async function saveEnvioRefEmail(id, value){
+    id = normaliseOrderId(id);
+    const val = String(value || "").trim();
+    const now = new Date().toISOString();
+    const by = enviosCurrentUser();
+    const old = savedEnvio(id);
+    enviosState.savedItems[id] = Object.assign({}, old, {id, refEmail: val, updatedAt: now, updatedBy: by});
+    const idx = (enviosState.rows || []).findIndex(r=>r.id === id);
+    if(idx >= 0) enviosState.rows[idx] = Object.assign({}, enviosState.rows[idx], {refEmail: val});
+    renderEnviosTable();
+    try{
+      if(auth.currentUser){
+        await db.ref(`${ENVIOS_DB_PATH}/${enviosItemKey(id)}`).update({id, refEmail: val, updatedAt: now, updatedBy: by, deleted:false});
+      }
+      enviosSetStatus(val ? `Ref email guardada para ${id}` : `Ref email removida de ${id}`, "ok");
+    }catch(e){
+      console.error(e);
+      enviosSetStatus("Não consegui guardar a Ref email na Firebase.", "bad");
+    }
+  }
+  window.saveEnvioRefEmail = saveEnvioRefEmail;
 
   async function promptManualSaiu(id, currentValue){
     id = normaliseOrderId(id);
@@ -6257,12 +6764,12 @@
   function exportEnviosCsv(){
     const rows = sortEnviosByPackingDateAsc(enviosState.rows || []);
     if(!rows.length){ enviosSetStatus("Não há resultados para exportar.", "bad"); return; }
-    const header = ["order_id","data_insercao","inserido_por","lista","tracking","transportadora","embalado_sistema","saiu_manual","embalado_final","return","refund","return_fechado_com","refund_fechado_com","return_refund_fechado_com","return_refund_manual","return_refund_manual_tipo","return_refund_manual_data","return_refund_manual_user","visto","visto_por","visto_em","verificacao","data_packing","data_return_refund","user","items","observacoes"];
+    const header = ["order_id","data_insercao","inserido_por","ref_email","lista","tracking","transportadora","embalado_sistema","saiu_manual","embalado_final","return","refund","return_fechado_com","refund_fechado_com","return_refund_fechado_com","return_refund_manual","return_refund_manual_tipo","return_refund_manual_data","return_refund_manual_user","visto","visto_por","visto_em","verificacao","data_packing","data_return_refund","user","items","observacoes"];
     const delimiter = ";";
     const lines = [header.map(csvCell).join(delimiter)];
     rows.forEach(r=>{
       lines.push([
-        r.id, r.insertedDate, r.createdBy, envioListLabel(r), r.tracking, r.carrier, enviosYesNo(r.packed), r.manualSaiu, enviosYesNo(r.packedEffective), enviosYesNo(r.return), enviosYesNo(r.refund),
+        r.id, r.insertedDate, r.createdBy, r.refEmail || "", envioListLabel(r), r.tracking, r.carrier, enviosYesNo(r.packed), r.manualSaiu, enviosYesNo(r.packedEffective), enviosYesNo(r.return), enviosYesNo(r.refund),
         r.returnCloseLabel || "", r.refundCloseLabel || "", r.returnRefundCloseLabel || "",
         enviosYesNo(r.manualReturnRefund), r.manualReturnRefundMode || "", r.manualReturnRefundDate || "", r.manualReturnRefundBy || "",
         enviosYesNo(r.seen), r.seenBy, r.seenAt, r.verificacao, r.packingDate, r.returnRefundDate, r.user, r.items, r.observacoes || ""
@@ -6507,6 +7014,7 @@
   function clearSemPicInputBox(){
     const el = $("semPicIds");
     if(el) el.value = "";
+    if($("semPicRefEmail")) $("semPicRefEmail").value = "";
     showSemPicDuplicateWarning({repeatedInPaste:[], existingIds:[], newIds:[]});
   }
   window.clearSemPicInputBox = clearSemPicInputBox;
@@ -6578,6 +7086,7 @@
     const resolutionAt = fmt((latestResolutionUpdate && latestResolutionUpdate.at) || saved.resolutionAt || "");
     const resolutionBy = fmt((latestResolutionUpdate && latestResolutionUpdate.by) || saved.resolutionBy || "");
     const manualPicked = !!saved.manualCarrierPickup && !otherResolution;
+    const refEmail = fmt(saved.refEmail || saved.emailRef || saved.ref_email || "");
     const packingCarrier = fmt((packing && packing.carrier) || "");
     const systemCarrierMatch = !!(packing && carrierEqual(packingCarrier, carrier));
     const hasPickupFinal = manualPicked;
@@ -6605,6 +7114,7 @@
       id,
       expectedCarrier: carrier,
       insertedDate,
+      refEmail,
       createdAt: fmt(saved.createdAt || ""),
       createdBy: fmt(saved.createdBy || ""),
       manualCarrierPickup: manualPicked,
@@ -6680,7 +7190,7 @@
     }));
   }
 
-  async function persistSemPicIds(ids, carrier){
+  async function persistSemPicIds(ids, carrier, refEmailValue){
     carrier = String(carrier || "").trim().toUpperCase();
     if(!carrier) throw new Error("Transportadora em falta");
     const uniqueIds = uniq((ids || []).map(normaliseOrderId).filter(Boolean));
@@ -6688,12 +7198,14 @@
     const now = new Date().toISOString();
     const today = now.slice(0,10);
     const by = enviosCurrentUser();
+    const refEmail = String(refEmailValue || "").trim();
     const entries = [];
     uniqueIds.forEach(id=>{
       const key = semPicKey(id, carrier);
       const existing = semPicState.savedItems[key] || {};
       const insertedDate = existing.insertedDate || (existing.createdAt ? String(existing.createdAt).slice(0,10) : today);
       const patch = {id, expectedCarrier:carrier, deleted:false, updatedAt:now, updatedBy:by};
+      if(refEmail) patch.refEmail = refEmail;
       if(!existing.insertedDate) patch.insertedDate = insertedDate;
       if(!existing.createdAt) patch.createdAt = now;
       if(!existing.createdBy) patch.createdBy = by;
@@ -6772,7 +7284,9 @@
     if(!info.uniqueIds.length){ semPicSetStatus("Cola pelo menos 1 order_id.", "bad"); return; }
     try{
       semPicSetStatus("A guardar IDs...", "");
-      await persistSemPicIds(info.uniqueIds, carrier);
+      const refEmail = String(($("semPicRefEmail") && $("semPicRefEmail").value) || "").trim();
+      await persistSemPicIds(info.uniqueIds, carrier, refEmail);
+      if($("semPicRefEmail")) $("semPicRefEmail").value = "";
       await runSemPicAnalise({ids:info.uniqueIds, carrier, clearInputAfter:true});
     }catch(e){
       console.error(e);
@@ -6829,7 +7343,7 @@
   }
   window.runSemPicAnalise = runSemPicAnalise;
 
-  function sortSemPicRows(rows){
+  function sortSemPicRowsByPacking(rows){
     // Ordenar por data de embalamento/picking do sistema, do mais antigo para o mais recente.
     // IDs sem data de packing ficam no fim; depois usamos data de inserção e ID como fallback.
     return (rows || []).slice().sort((a,b)=>{
@@ -6849,6 +7363,18 @@
       if(byInserted !== 0) return byInserted;
       return String((a && a.id) || "").localeCompare(String((b && b.id) || ""), undefined, {numeric:true});
     });
+  }
+
+  function sortSemPicRows(rows){
+    const sort = semPicState && semPicState.tableSort || {key:"packing", dir:"asc"};
+    if(sort.key === "inserted"){
+      return (rows || []).slice().sort((a,b)=>{
+        const cmp = compareTableDateValues((a && (a.insertedDate || a.createdAt)) || "", (b && (b.insertedDate || b.createdAt)) || "", sort.dir);
+        if(cmp !== 0) return cmp;
+        return String((a && a.id) || "").localeCompare(String((b && b.id) || ""), undefined, {numeric:true});
+      });
+    }
+    return sortSemPicRowsByPacking(rows);
   }
 
   function setSemPicListFilter(list){ semPicState.listFilter = list || "OPEN"; semPicState.page = 1; renderSemPicTable(); }
@@ -6879,7 +7405,8 @@
     updateSemPicListTabs();
   }
 
-  function semPicPassFilters(r){
+
+  function semPicPassMainFilters(r){
     const list = semPicState.listFilter || "OPEN";
     if(list === "OPEN" && semPicList(r) !== "OPEN") return false;
     if(list === "DONE" && semPicList(r) !== "DONE") return false;
@@ -6894,7 +7421,12 @@
     if(carrierFilter && carrierFilter !== "ALL" && normCarrierForFilter(r.expectedCarrier || "Sem transportadora") !== carrierFilter) return false;
     const q = String($("semPicFilterText") ? $("semPicFilterText").value : "").trim().toLowerCase();
     if(!q) return true;
-    return [r.id, r.expectedCarrier, r.packingCarrier, r.tracking, r.user, r.batch, r.status, r.note, r.resolutionNote].join(" ").toLowerCase().includes(q);
+    return [r.id, r.expectedCarrier, r.refEmail, r.packingCarrier, r.tracking, r.user, r.batch, r.status, r.note, r.resolutionNote].join(" ").toLowerCase().includes(q);
+  }
+  window.semPicPassMainFilters = semPicPassMainFilters;
+
+  function semPicPassFilters(r){
+    return semPicPassMainFilters(r) && tableColumnFilterMatches("semPic", r);
   }
 
   function updateSemPicActiveFilters(){
@@ -6908,6 +7440,8 @@
     if(kind && kind !== "ALL") parts.push("Mostrar: " + kind);
     if(carrierVal && carrierVal !== "ALL") parts.push("Transportadora: " + carrierText);
     if(q) parts.push("Texto: " + q);
+    const headerSummary = tableColumnFiltersSummary("semPic");
+    if(headerSummary) parts.push(headerSummary);
     if($("semPicActiveFilters")) $("semPicActiveFilters").textContent = parts.length ? ("Filtro ativo -> " + parts.join(" | ")) : "Sem filtros";
   }
 
@@ -6916,7 +7450,9 @@
       list: semPicState.listFilter || "OPEN",
       text: $("semPicFilterText") ? $("semPicFilterText").value : "",
       kind: $("semPicFilterKind") ? $("semPicFilterKind").value : "ALL",
-      carrier: $("semPicCarrierFilter") ? $("semPicCarrierFilter").value : "ALL"
+      carrier: $("semPicCarrierFilter") ? $("semPicCarrierFilter").value : "ALL",
+      columns: JSON.stringify((semPicState && semPicState.columnFilters) || {}),
+      sort: JSON.stringify((semPicState && semPicState.tableSort) || {})
     });
   }
 
@@ -6984,6 +7520,7 @@
   window.setSemPicPageSize = setSemPicPageSize;
 
   function renderSemPicTable(){
+    renderSemPicTableHeader();
     updateSemPicCarrierFilterOptions();
     updateSemPicActiveFilters();
     updateSemPicListTabs();
@@ -6992,7 +7529,7 @@
     const pageInfo = ensureSemPicPagination(allRows.length);
     const rows = allRows.slice(pageInfo.start, pageInfo.end);
     if(!rows.length){
-      tbody.innerHTML = `<tr><td colspan="7" class="muted" style="padding:16px;">Sem linhas para mostrar.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="muted" style="padding:16px;">Sem linhas para mostrar.</td></tr>`;
       updateSemPicPaginationControls(allRows.length, rows.length, pageInfo);
       updateSemPicKPIs();
       return;
@@ -7002,6 +7539,7 @@
       const rowClass = list === "DONE" ? "envio-row-verified" : ((r.diffCarrier || list === "RESOLUTION") ? "envio-row-issue" : "");
       const badgeText = list === "DONE" ? "Já com picagem" : (list === "RESOLUTION" ? "Outra resolução" : "Sem picagem");
       const badge = `<span class="semPic-badge ${semPicListClass(r)}">${badgeText}</span>`;
+      const refEmail = escapeHtml(r.refEmail || "");
       const manual = r.manualCarrierPickup ? `<span class="semPicManualNote">Manual: ${escapeHtml(r.manualCarrierPickupBy || "")} ${r.manualCarrierPickupAt ? escapeHtml(r.manualCarrierPickupAt.replace("T"," ").slice(0,16)) : ""}</span>` : "";
       const resolution = r.otherResolution ? `<span class="semPicResolutionNote"><b>Última atualização:</b> ${escapeHtml(r.resolutionNote || "Sem nota")} ${r.resolutionBy ? `<br>Por: ${escapeHtml(r.resolutionBy)}` : ""} ${r.resolutionAt ? `<br>${escapeHtml(r.resolutionAt.replace("T"," ").slice(0,16))}` : ""}${(r.resolutionUpdates || []).length > 1 ? `<br><b>${(r.resolutionUpdates || []).length} atualizações</b>` : ""}</span>` : "";
       let actions = "";
@@ -7015,6 +7553,7 @@
       return `<tr class="${rowClass}">
         <td class="mono"><b>${escapeHtml(r.id)}</b></td>
         <td><span class="mono"><b>${escapeHtml(r.insertedDate || "-")}</b></span>${r.createdBy ? `<span class="envio-subline">${escapeHtml(r.createdBy)}</span>` : ""}</td>
+        <td><input class="manual-saiu-input" value="${refEmail}" placeholder="Ref email..." onblur="saveSemPicRefEmail('${escapeJs(r.id)}','${escapeJs(r.expectedCarrier)}', this.value)" onkeydown="if(event.key==='Enter'){this.blur();}"></td>
         <td><b>${escapeHtml(r.expectedCarrier || "-")}</b></td>
         <td>
           <span class="envio-status-line">Packing carrier: ${r.packingCarrier ? `<b>${escapeHtml(r.packingCarrier)}</b>` : `<b class="bad">nao encontrado</b>`}</span>
@@ -7035,11 +7574,36 @@
     if($("semPicFilterText")) $("semPicFilterText").value = "";
     if($("semPicFilterKind")) $("semPicFilterKind").value = "ALL";
     if($("semPicCarrierFilter")) $("semPicCarrierFilter").value = "ALL";
+    if(semPicState) semPicState.columnFilters = {};
     semPicState.listFilter = "OPEN";
     semPicState.page = 1;
     renderSemPicTable();
   }
   window.clearSemPicFilters = clearSemPicFilters;
+
+  async function saveSemPicRefEmail(id, carrier, value){
+    id = normaliseOrderId(id);
+    carrier = String(carrier || "").trim().toUpperCase();
+    const val = String(value || "").trim();
+    const now = new Date().toISOString();
+    const by = enviosCurrentUser();
+    const key = semPicKey(id, carrier);
+    const old = semPicState.savedItems[key] || {id, expectedCarrier:carrier};
+    semPicState.savedItems[key] = Object.assign({}, old, {id, expectedCarrier:carrier, refEmail: val, updatedAt: now, updatedBy: by, deleted:false});
+    const idx = (semPicState.rows || []).findIndex(r=>r.id===id && carrierEqual(r.expectedCarrier, carrier));
+    if(idx >= 0) semPicState.rows[idx] = Object.assign({}, semPicState.rows[idx], {refEmail: val});
+    renderSemPicTable();
+    try{
+      if(auth.currentUser){
+        await db.ref(`${SEMPIC_DB_PATH}/${key}`).update({id, expectedCarrier:carrier, refEmail: val, updatedAt: now, updatedBy: by, deleted:false});
+      }
+      semPicSetStatus(val ? `Ref email guardada para ${id}` : `Ref email removida de ${id}`, "ok");
+    }catch(e){
+      console.error(e);
+      semPicSetStatus("Nao consegui guardar a Ref email na Firebase.", "bad");
+    }
+  }
+  window.saveSemPicRefEmail = saveSemPicRefEmail;
 
   async function markSemPicReceived(id, carrier, received){
     id = normaliseOrderId(id); carrier = String(carrier || "").trim().toUpperCase();
@@ -7228,10 +7792,10 @@ Queres continuar?`);
   function exportSemPicCsv(){
     const rows = sortSemPicRows(semPicState.rows || []);
     if(!rows.length){ semPicSetStatus("Nao ha resultados para exportar.", "bad"); return; }
-    const header = ["order_id","data_insercao","transportadora_esperada","ja_com_picagem","outra_resolucao","ultima_nota_resolucao","resolucao_por","resolucao_em","atualizacoes_resolucao","packing_transportadora","packing_data","tracking","user","batch","situacao"];
+    const header = ["order_id","data_insercao","ref_email","transportadora_esperada","ja_com_picagem","outra_resolucao","ultima_nota_resolucao","resolucao_por","resolucao_em","atualizacoes_resolucao","packing_transportadora","packing_data","tracking","user","batch","situacao"];
     const delimiter = ";";
     const lines = [header.map(csvCell).join(delimiter)];
-    rows.forEach(r=>lines.push([r.id,r.insertedDate,r.expectedCarrier,enviosYesNo(r.hasPickupFinal),enviosYesNo(r.otherResolution),r.resolutionNote,r.resolutionBy,r.resolutionAt,semPicResolutionUpdatesForCsv(r.resolutionUpdates || []),r.packingCarrier,r.packingDate,r.tracking,r.user,r.batch,r.status].map(csvCell).join(delimiter)));
+    rows.forEach(r=>lines.push([r.id,r.insertedDate,r.refEmail || "",r.expectedCarrier,enviosYesNo(r.hasPickupFinal),enviosYesNo(r.otherResolution),r.resolutionNote,r.resolutionBy,r.resolutionAt,semPicResolutionUpdatesForCsv(r.resolutionUpdates || []),r.packingCarrier,r.packingDate,r.tracking,r.user,r.batch,r.status].map(csvCell).join(delimiter)));
     const blob = new Blob(["\ufeffsep=;\r\n" + lines.join("\r\n")], {type:"text/csv;charset=utf-8"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -10067,6 +10631,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       casesPage: 1,
       casesPageSize: 25,
       casesLastPaginationSignature: "",
+      dateSort: {key:"updated", dir:"desc"},
       realtime: {started:false, refs:[], lastUpdateAt:"", applying:false}
     };
 
@@ -11990,6 +12555,57 @@ Esta ação remove estes registos guardados na Firebase.`);
       return `<th><span class="casesThLabel">${esc(label)}</span>${filterHtml || ""}${hint ? `<span class="casesColFilterHint">${esc(hint)}</span>` : ""}</th>`;
     }
 
+    function caseDateSortValue(value){
+      const raw = String(value || "").trim();
+      if(!raw) return null;
+      const parsed = Date.parse(raw.replace(" ", "T"));
+      if(Number.isFinite(parsed)) return parsed;
+      const m = raw.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})(?:\s+(\d{1,2}):(\d{2}))?/);
+      if(m){
+        const y = String(m[3]).length === 2 ? Number("20" + m[3]) : Number(m[3]);
+        const t = new Date(y, Number(m[2]) - 1, Number(m[1]), Number(m[4] || 0), Number(m[5] || 0), 0).getTime();
+        if(Number.isFinite(t)) return t;
+      }
+      return raw.toLowerCase();
+    }
+
+    function compareCaseDateSort(aValue, bValue, dir){
+      const av = caseDateSortValue(aValue);
+      const bv = caseDateSortValue(bValue);
+      const aMissing = av === null || av === undefined || av === "";
+      const bMissing = bv === null || bv === undefined || bv === "";
+      if(aMissing && bMissing) return 0;
+      if(aMissing) return 1;
+      if(bMissing) return -1;
+      let cmp = 0;
+      if(typeof av === "number" && typeof bv === "number") cmp = av - bv;
+      else cmp = String(av).localeCompare(String(bv), undefined, {numeric:true, sensitivity:"base"});
+      return dir === "desc" ? -cmp : cmp;
+    }
+
+    function caseSortButtonStyle(key, dir){
+      const active = state.dateSort && state.dateSort.key === key && state.dateSort.dir === dir;
+      return active ? "background:#2563eb;color:#fff;border-color:#2563eb;" : "background:#fff;color:#334155;border-color:#cbd5e1;";
+    }
+
+    function caseDateSortButtonsHtml(){
+      const btn = (key, dir, label, title)=>`<button type="button" title="${esc(title)}" onclick="setCasesDateSort('${esc(key)}','${esc(dir)}')" style="border:1px solid #cbd5e1;border-radius:7px;padding:4px 6px;font-size:10px;font-weight:900;cursor:pointer;${caseSortButtonStyle(key,dir)}">${esc(label)}</button>`;
+      return `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">` +
+        btn("entry", "asc", "Entrada ↑", "Data de entrada: mais antigo para mais recente") +
+        btn("entry", "desc", "Entrada ↓", "Data de entrada: mais recente para mais antigo") +
+        btn("updated", "asc", "Atualiz. ↑", "Última atualização: mais antigo para mais recente") +
+        btn("updated", "desc", "Atualiz. ↓", "Última atualização: mais recente para mais antigo") +
+      `</div>`;
+    }
+
+    function setCasesDateSort(key, dir){
+      state.dateSort = {key: key === "entry" ? "entry" : "updated", dir: dir === "asc" ? "asc" : "desc"};
+      state.casesPage = 1;
+      state.casesLastPaginationSignature = "";
+      renderCasesTable();
+    }
+    window.setCasesDateSort = setCasesDateSort;
+
     function caseFirebaseFilterTokens(r){
       const fd = r && r.firebaseData || {};
       const tokens = [];
@@ -12055,11 +12671,19 @@ Esta ação remove estes registos guardados na Firebase.`);
       const type = val("casesFilterType") || "ALL";
       const carrier = val("casesFilterCarrier").toLowerCase();
       const status = val("casesFilterStatus").toLowerCase();
-      return activeCaseRecords(state.records || []).filter(r=>{
+      const rows = activeCaseRecords(state.records || []).filter(r=>{
         if(!recordMatchesMainCaseFilters(r)) return false;
         if(!recordMatchesColumnFilters(r)) return false;
         return true;
-      }).sort((a,b)=>(b.updatedAt || "").localeCompare(a.updatedAt || ""));
+      });
+      const sort = state.dateSort || {key:"updated", dir:"desc"};
+      return rows.sort((a,b)=>{
+        const aDate = sort.key === "entry" ? (a.entryDate || a.createdDate || a.createdAt || "") : (a.updatedAt || a.updatedDate || a.entryDate || a.createdDate || "");
+        const bDate = sort.key === "entry" ? (b.entryDate || b.createdDate || b.createdAt || "") : (b.updatedAt || b.updatedDate || b.entryDate || b.createdDate || "");
+        const cmp = compareCaseDateSort(aDate, bDate, sort.dir);
+        if(cmp !== 0) return cmp;
+        return String(a.id || "").localeCompare(String(b.id || ""), undefined, {numeric:true, sensitivity:"base"});
+      });
     }
 
     function selectedCaseTypeForColumns(){
@@ -12153,7 +12777,8 @@ Esta ação remove estes registos guardados na Firebase.`);
         type: val("casesFilterType") || "ALL",
         status: val("casesFilterStatus"),
         carrier: val("casesFilterCarrier"),
-        columns: col
+        columns: col,
+        sort: state.dateSort || {}
       });
     }
 
@@ -12247,7 +12872,7 @@ Esta ação remove estes registos guardados na Firebase.`);
       }
       thead.innerHTML = `<tr>
         ${caseHeaderCell("Tipo", caseFilterSelectHtml("__type", ["BROKEN","SWIPE","LOST"]))}
-        ${caseHeaderCell("ID / Entrada", caseFilterInputHtml("__id", "ID/data"))}
+        ${caseHeaderCell("ID / Entrada", caseFilterInputHtml("__id", "ID/data") + caseDateSortButtonsHtml())}
         ${caseHeaderCell("Transportadora", caseFilterMultiHtml("__carrier", state.options.carriers || []))}
         ${caseHeaderCell("Firebase", caseFilterSelectHtml("__firebase", ["PACKED","RETURN","REFUND","SEM REGISTO"]))}
         ${caseHeaderCell("Cruzamento", caseFilterSelectHtml("__crosscheck", ["COM COINCIDÊNCIAS","SEM COINCIDÊNCIAS","NÃO VERIFICADO","EM ANÁLISE","SEM REGISTO","RETURNS/REFUNDS","RETURNS/REFUNDS - RETURN","RETURNS/REFUNDS - REFUND","ENTREGUE","ENTREGUE/PAID","VERIFICADOS","IDS SEM PICAGEM","BROKEN/SWIPE/LOST"]))}
